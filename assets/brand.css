@@ -1,0 +1,630 @@
+/* GateIron house style. Token names match GateIron.com's base.css.
+
+   Colour never carries meaning alone: badges state their value in words and
+   the priority ramp is ordered by weight. */
+
+/* Faces are self-hosted. No page here makes a third-party request. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('fonts/fraunces-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('fonts/hanken-grotesk-latin.woff2') format('woff2');
+}
+
+:root {
+  color-scheme: light;
+
+  /* paper / surface tones (light → dark) */
+  --paper-lightest: #f9f5eb;
+  --paper-lighter: #f8f3e8;
+  --paper-light: #f6f1e5;
+  --paper: #f5efe3;
+  --paper-dark: #efe6d4;
+  --paper-darker: #e5d6bb;
+  --paper-darkest: #ddcaa8;
+  --card-bg: #fbf7ee;
+
+  /* ink / text tones */
+  --ink: #2a2520;
+  --ink-light: #4a443b;
+  --ink-lighter: #7a7062;
+  --ink-lightest: #aea69a;
+
+  /* clay accent */
+  --clay-lightest: #eed8c8;
+  --clay-lighter: #e0b59f;
+  --clay-light: #cf8c6d;
+  --clay: #bb5a31;
+  --clay-dark: #9b4623;
+  --clay-darker: #74371e;
+
+  /* pine accent */
+  --pine-lightest: #d5d5ca;
+  --pine-lighter: #acb0a3;
+  --pine-light: #7b8474;
+  --pine: #3f4e3b;
+  --pine-dark: #2c3829;
+
+  /* A third signal between "fine" and "urgent", drawn from --sand. */
+  --ochre-light: #e6c98a;
+  --ochre: #a97c22;
+  --ochre-dark: #7c5a16;
+
+  --sand: #dcc9a6;
+
+  /* roles - the only names page rules should use */
+  --bg: var(--paper-light);
+  --surface: var(--card-bg);
+  --surface-2: var(--paper-dark);
+  --text: var(--ink);
+  --text-muted: var(--ink-lighter);
+  --accent: var(--clay);
+  --accent-hover: var(--clay-dark);
+  --accent-on: #fffaf3;
+  --border-color: rgba(42, 37, 32, 0.14);
+  --border-strong: rgba(42, 37, 32, 0.28);
+  --shadow: 0 1px 2px rgba(42, 37, 32, 0.06), 0 12px 30px -12px rgba(42, 37, 32, 0.18);
+  --focus: var(--clay-dark);
+
+  --ok: var(--pine);
+  --ok-bg: var(--pine-lightest);
+  --warn: var(--ochre-dark);
+  --warn-bg: #f3e7c8;
+  --urgent: var(--clay-dark);
+  --urgent-bg: var(--clay-lightest);
+  --quiet: var(--ink-lighter);
+  --quiet-bg: var(--paper-dark);
+
+  --radius: 0.5rem;
+  --radius-pill: 999px;
+  --bar-h: 4.25rem;
+  --bar-bg: rgba(245, 239, 227, 0.82);
+  --shell: 1140px;   /* GateIron's .wrap */
+}
+
+/* Warm charcoals rather than neutral greys, so clay and pine keep their
+   temperature. Accents move a rung lighter; the dark rungs go muddy here. */
+/* Opt-in: page() adds .gi-dark-auto to <html> for darkMode: 'auto'. */
+:root.gi-dark-auto { color-scheme: light dark; }
+@media (prefers-color-scheme: dark) {
+  :root.gi-dark-auto {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2b2620;
+    --text: #ece5d8;
+    --text-muted: #a89d8c;
+    --accent: var(--clay-light);
+    --accent-hover: var(--clay-lighter);
+    --accent-on: #1a1611;
+    --bar-bg: rgba(33, 29, 23, 0.82);
+    --border-color: rgba(236, 229, 216, 0.14);
+    --border-strong: rgba(236, 229, 216, 0.3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -14px rgba(0, 0, 0, 0.75);
+    --focus: var(--clay-lighter);
+
+    --ok: #9db08f;
+    --ok-bg: rgba(157, 176, 143, 0.16);
+    --warn: var(--ochre-light);
+    --warn-bg: rgba(230, 201, 138, 0.14);
+    --urgent: var(--clay-light);
+    --urgent-bg: rgba(207, 140, 109, 0.16);
+    --quiet: var(--ink-lightest);
+    --quiet-bg: rgba(236, 229, 216, 0.08);
+  }
+}
+
+/* ---------------- page ---------------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  /* The footer ends the page even when the content does not fill the window,
+     and is pushed below the fold as soon as it does. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 2rem 28px 4rem;
+  flex: 1 0 auto;
+}
+main:focus { outline: none; }
+main.narrow { max-width: 42rem; }
+/* Running text gets a reading measure. The page is wide because tables need
+   it; a policy paragraph at 64rem is a wall. */
+.prose { max-width: 42rem; }
+
+h1, h2, h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0 0 0.6rem;
+}
+h1 { font-size: 2rem; }
+.subtitle {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: -0.35rem 0 1.5rem;
+}
+h2 { font-size: 1.3rem; margin-top: 2rem; }
+h3 { font-size: 1.05rem; margin-top: 1.5rem; }
+
+a { color: var(--accent); text-underline-offset: 0.18em; }
+a:hover { color: var(--accent-hover); }
+
+p { margin: 0 0 0.9rem; }
+.muted { color: var(--text-muted); font-size: 0.9rem; }
+.stale { font-weight: 700; }
+
+/* Keyboard focus only. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--accent-on);
+  padding: 0.6rem 1rem;
+  z-index: 100;
+}
+.skip-link:focus { left: 0; }
+
+/* ---------------- top bar ---------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* GateIron.com's own bar: the paper tone at 82% over a blur, so content
+     scrolling under it stays legible through it. */
+  background: var(--bar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  min-height: var(--bar-h);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;   /* the nav drops to its own line rather than disappearing */
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--text);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.brand img { height: 40px; width: auto; display: block; }
+.brand .wordmark {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.brand .wordmark small {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* Pushes the account chip right whatever sits between. */
+.topbar-spacer { flex: 1 1 auto; }
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-wrap: wrap;
+}
+.topnav a {
+  display: inline-block;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+.topnav a:hover { background: var(--surface-2); color: var(--text); }
+.topnav a[aria-current="page"] {
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* ---------------- account chip ---------------- */
+.account { position: relative; flex: 0 0 auto; }
+.account > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.2rem 0.2rem 0.55rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+}
+.account > summary::-webkit-details-marker { display: none; }
+.account > summary:hover,
+.account[open] > summary { border-color: var(--border-strong); }
+.account .who {
+  font-size: 0.86rem;
+  line-height: 1.15;
+  text-align: right;
+  color: var(--text-muted);
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account .who b { display: block; color: var(--text); font-weight: 600; }
+.account .who .role { font-size: 0.8rem; }
+.account.is-accent .who .role { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
+
+.avatar {
+  width: 39px;
+  height: 39px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--pine);
+  color: var(--paper-lightest);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--border-color);
+}
+.avatar.is-accent { background: var(--clay); }
+/* The image fills the circle; the size stays the bar's. */
+.avatar.has-img { padding: 0; overflow: hidden; }
+.avatar.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Holds the bar's height while a client script fills it. */
+.account-slot { display: flex; align-items: center; min-height: 39px; }
+
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 13rem;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.4rem;
+  z-index: 30;
+}
+.account-menu .meta {
+  padding: 0.4rem 0.6rem 0.55rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+.account-menu a,
+.account-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.35rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.account-menu a:hover,
+.account-menu button:hover { background: var(--surface-2); }
+.account-menu form { margin: 0; }
+
+/* ---------------- buttons ---------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.55em 1.2em;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: none; }
+
+.btn-primary { background: var(--accent); color: var(--accent-on); }
+.btn-primary:hover { background: var(--accent-hover); color: var(--accent-on); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover { background: var(--surface-2); }
+
+.btn-quiet { background: none; border-color: transparent; color: var(--text-muted); padding: 0.4em 0.6em; }
+.btn-quiet:hover { color: var(--text); background: var(--surface-2); }
+
+.btn-small { font-size: 0.85rem; padding: 0.3em 0.8em; }
+
+/* Bare <button> in the page body is the secondary pill. Scoped to main so the
+   account menu's own items are untouched. */
+main button:not(.btn):not(.linkish) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.45em 1.1em;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+main button:not(.btn):not(.linkish):hover { background: var(--surface-2); }
+
+/* A form's submit is that screen's primary action. */
+main form > button[type="submit"]:not(.btn):not(.linkish) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+}
+main form > button[type="submit"]:not(.btn):not(.linkish):hover { background: var(--accent-hover); }
+
+/* A button that is really a link, kept for in-sentence actions. */
+.linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------------- forms ---------------- */
+label {
+  display: block;
+  margin: 1.1rem 0 0.3rem;
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+input, textarea, select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { min-height: 8rem; resize: vertical; }
+input[type="checkbox"], input[type="radio"] { width: auto; }
+select {
+  padding-right: 2rem;   /* room for the native arrow */
+}
+.field-hint { color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0; }
+
+/* A column, not the page's full width. Tables still get the whole page. */
+form { max-width: 36rem; }
+/* Except the little ones in a table row, which are controls, not forms. */
+td form, .row-actions form { max-width: none; display: inline; }
+td form > button, .row-actions form > button { margin-top: 0; }
+
+form > button[type="submit"] { margin-top: 1.4rem; }
+
+.field-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0 1rem;
+}
+.field-pair > div > label:first-child { margin-top: 1.1rem; }
+
+/* ---------------- cards, notices, dialogs ---------------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.2rem;
+}
+
+.notice {
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--quiet);
+  background: var(--quiet-bg);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+}
+.notice > :last-child { margin-bottom: 0; }
+.notice-ok { border-left-color: var(--ok); background: var(--ok-bg); }
+.notice-warn { border-left-color: var(--warn); background: var(--warn-bg); }
+.notice-error, .error { border-left-color: var(--urgent); background: var(--urgent-bg); }
+.error {
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--urgent);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+}
+
+/* ---------------- tables ----------------
+   A table scrolls inside its own box rather than making the page scroll. */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-top: 1rem;
+}
+table { border-collapse: collapse; width: 100%; }
+/* Narrower than this, a subject breaks to one word per line. */
+.table-wrap table { min-width: 42rem; }
+th, td {
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+thead th {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface-2); }
+td.num { white-space: nowrap; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.row-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+.row-actions button, .row-actions select { margin-top: 0; padding: 0.25rem 0.5rem; width: auto; }
+
+/* ---------------- badges ---------------- */
+.badge {
+  display: inline-block;
+  padding: 0.12em 0.6em;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.badge-ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+.badge-urgent { background: var(--urgent-bg); color: var(--urgent); border-color: var(--urgent); }
+.badge-quiet { background: var(--quiet-bg); color: var(--quiet); border-color: var(--border-strong); }
+
+/* Weight as well as hue, so the order survives greyscale. */
+.prio-urgent { font-weight: 800; }
+.prio-high { font-weight: 700; }
+.prio-normal { font-weight: 500; }
+.prio-low { font-weight: 400; font-style: italic; }
+
+/* ---------------- footer ----------------
+   The company block sits at the bottom of every site, so the page ends saying
+   GateIron even where the bar says the product. */
+.site-footer {
+  flex-shrink: 0;
+  background: var(--ink);
+  color: rgba(243, 236, 221, 0.7);
+  margin-top: 4rem;
+  padding: 54px 0 40px;
+  font-size: 0.92rem;
+}
+.site-footer .inner { max-width: var(--shell); margin: 0 auto; padding: 0 28px; }
+.site-footer .grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.site-footer .brand { color: #f3ecdd; }
+.site-footer .brand small { color: rgba(243, 236, 221, 0.5); }
+.site-footer .brand img { height: 44px; }
+.site-footer .footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
+.site-footer a { color: rgba(243, 236, 221, 0.78); text-decoration: none; font-weight: 500; }
+.site-footer a:hover { color: #f3ecdd; text-decoration: underline; }
+.site-footer .fine-print {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(243, 236, 221, 0.12);
+  font-size: 0.82rem;
+  color: rgba(243, 236, 221, 0.45);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Hides nothing - the consumer passes a shorter link list - but the byline
+   stops competing for attention. */
+.site-footer.is-classroom { padding: 28px 0 24px; }
+.site-footer.is-classroom .brand img { height: 30px; }
+
+/* ---------------- compact density ----------------
+   A game page keeps its board height. Same markup, one class on <body>. */
+body.gi-compact .topbar-inner { min-height: 2.6rem; padding: 0.2rem 1rem; }
+body.gi-compact .brand img { height: 1.75rem; }
+body.gi-compact .brand .wordmark { font-size: 1rem; }
+body.gi-compact .brand .wordmark small { display: none; }
+body.gi-compact .avatar { width: 1.875rem; height: 1.875rem; font-size: 0.72rem; }
+body.gi-compact .topnav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
+body.gi-compact main { padding-top: 1rem; }
+
+/* ---------------- narrow screens ---------------- */
+@media (max-width: 720px) {
+  .brand .wordmark small { display: none; }
+  .account .who { display: none; }
+  main { padding: 1.25rem 0.9rem 3rem; }
+
+  /* Brand and account share the first line; the nav takes the second. */
+  .topbar-inner { gap: 0.4rem 0.6rem; padding: 0.4rem 0.9rem; }
+  .topbar-spacer { display: none; }
+  .brand { flex: 1 1 auto; }
+  .brand img { height: 1.8rem; }
+  .brand .wordmark { font-size: 1rem; }
+  .account { order: 2; }
+  .topnav { order: 3; flex-basis: 100%; gap: 0; }
+  .topnav a { padding: 0.3rem 0.55rem; font-size: 0.88rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .btn:hover { transform: none; }
+}
