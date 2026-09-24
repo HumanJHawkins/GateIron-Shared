@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.5.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.6.0
 ```
 
 Install a tag, not a branch.

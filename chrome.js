@@ -138,6 +138,8 @@ function topBar(opts) {
  *
  * `variant: 'classroom'` is the quieter footer for pages a child may be
  * reading. It sets the class; the links are still passed in.
+ *
+ * With no brand, no links and no fine print it returns an empty string.
  */
 function siteFooter(opts) {
   const o = opts || {};
@@ -152,9 +154,11 @@ function siteFooter(opts) {
     return '<a href="' + esc(l.href) + '"' + rel + '>' + esc(l.label) + '</a>';
   }).join('');
   const fine = (o.finePrint || []).map((t) => '<span>' + esc(t) + '</span>').join('');
+  // Nothing to show is no footer, not an empty band a site would not notice.
+  if (!brand && !links && !fine) { return ''; }
   return '<footer class="site-footer' + (classroom ? ' is-classroom' : '') + '">'
     + '<div class="inner">'
-    + '<div class="grid">' + brand + '<div class="footer-links">' + links + '</div></div>'
+    + (brand || links ? '<div class="grid">' + brand + '<div class="footer-links">' + links + '</div></div>' : '')
     + (fine ? '<div class="fine-print">' + fine + '</div>' : '')
     + '</div>'
     + '</footer>';

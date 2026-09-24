@@ -198,3 +198,12 @@ test('dark is opt-in', () => {
   assert.ok(brand.page({ title: 't', assets: ASSETS, darkMode: 'auto' })
     .includes('<html lang="en" class="gi-dark-auto">'));
 });
+
+test('a footer with nothing to show is no footer, and one with only fine print has no empty grid', () => {
+  assert.equal(brand.siteFooter({ assets: ASSETS }), '');
+  assert.equal(brand.siteFooter({ assets: ASSETS, variant: 'classroom' }), '');
+  const fine = brand.siteFooter({ assets: ASSETS, finePrint: ['© GateIron, LLC'] });
+  assert.ok(fine.includes('fine-print') && !fine.includes('class="grid"'), fine);
+  const page = brand.page({ title: 'x', assets: ASSETS });
+  assert.ok(!page.includes('site-footer'), 'page() with no footer asked for draws none');
+});

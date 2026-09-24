@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.6.0 — 2026-09-24
+
+- `siteFooter` with no `brand`, no `links` and no `finePrint` returns an empty
+  string, and with only fine print it draws no empty grid. Before, a site that
+  upgraded to 0.5.0 without passing `brand` could get a blank page-wide band
+  and not notice. `page()` with no `footer` therefore draws no footer.
+
 ## 0.5.0 — 2026-09-24
 
 **Breaking.** Nothing of GateIron's renders unless a site asks for it. The
