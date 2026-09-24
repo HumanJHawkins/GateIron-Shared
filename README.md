@@ -146,5 +146,7 @@ a token, renaming a class, or changing what a function returns is a major.
 
 ## License
 
-MIT. Fraunces and Hanken Grotesk ship under the SIL Open Font License 1.1;
-both licence texts are in `assets/fonts`.
+MIT for the code and its documentation. `NOTICE` says what it does not cover:
+GateIron's names and marks wherever they appear, and any file carrying its own
+licence or none. Fraunces and Hanken Grotesk ship under the SIL Open Font
+License 1.1; both licence texts are in `assets/fonts`.

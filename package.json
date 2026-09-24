@@ -15,7 +15,8 @@
     "chrome.js",
     "assets",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "NOTICE"
   ],
   "scripts": {
     "test": "node test/chrome.test.js"

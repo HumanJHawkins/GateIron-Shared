@@ -1,0 +1,29 @@
+GateIron Shared
+Copyright (c) 2026 GateIron, LLC
+
+WHAT THE MIT LICENSE COVERS
+
+The MIT License in LICENSE applies to the source code in this repository
+(JavaScript, CSS and tests) and to its documentation. Nothing else here is
+licensed under it. Any other file is under the licence it carries or, if it
+carries none, all rights are reserved by GateIron, LLC.
+
+The fonts in assets/fonts are under the SIL Open Font License 1.1, whose texts
+are beside them.
+
+TRADEMARKS
+
+"GateIron", the gate mark, and every other name, logo, wordmark, symbol,
+slogan and domain name of GateIron, LLC or of its products and services,
+registered or not, are trademarks of GateIron, LLC. This holds wherever they
+appear in this repository, including inside files the MIT License covers. This
+repository grants no right to use them, by implication, estoppel or otherwise.
+
+They may not be used to name, endorse or promote anything built from this code,
+or in any way that suggests GateIron, LLC made, sponsors or approves of it.
+
+DEFAULTS
+
+Unless told otherwise, topBar() shows the gate mark and the GateIron name, and
+siteFooter() shows GateIron, LLC's name, locality and link. A site that is not
+GateIron's must replace them.
