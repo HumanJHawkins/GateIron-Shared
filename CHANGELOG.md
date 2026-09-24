@@ -3,6 +3,18 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.5.0 — 2026-09-24
+
+**Breaking.** Nothing of GateIron's renders unless a site asks for it. The
+names and the mark are GateIron, LLC's trademarks and are not under MIT, so
+installing the package must not put them on someone else's page.
+
+- `topBar` shows no mark unless passed one; `mark: 'gate'` is GateIron's. With
+  no `product` there is no wordmark, and with neither there is no brand link.
+- `siteFooter` shows no company block unless passed `brand`. `brand: 'gateiron'`
+  is GateIron's; an object `{ href, name, locality, mark }` is anyone's, and
+  shows the gate only if its `mark` is `'gate'`.
+
 ## 0.4.0 — 2026-09-20
 
 - The line under the name in the account chip is a `<span class="role">`, and

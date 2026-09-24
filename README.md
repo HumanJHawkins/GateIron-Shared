@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.4.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.5.0
 ```
 
 Install a tag, not a branch.
@@ -47,6 +47,7 @@ const { page, topBar, siteFooter, initials, assetUrl, esc } = require('gateiron-
 |---|---|
 | `home` | where the mark and wordmark link |
 | `product` | the name in the bar |
+| `mark` | raw HTML for the site's own mark, or `'gate'` for GateIron's; omit for none |
 | `context` | the smaller line beneath it — a district, a class |
 | `nav` | `[{ href, label, current?, external? }]` |
 | `account` | `{ name, email, role?, avatarSrc?, accent?, menu }`, or omit |
@@ -67,11 +68,13 @@ page that is a third-party request on every load.
 
 ### `siteFooter(opts)`
 
-`links`, `byline` (`null` omits it), `finePrint`, `variant: 'classroom'`,
-`assets`.
+`brand`, `links`, `finePrint`, `variant: 'classroom'`, `assets`.
+
+`brand: 'gateiron'` is GateIron, LLC's company block with the gate. Another
+company passes `{ href, name, locality, mark }`. Omit it for none.
 
 The classroom variant is the quieter footer for pages a child may be reading.
-It sets the class and the default byline; the links are yours to pass.
+It sets the class; the links are yours to pass.
 
 ### `page(opts)`
 

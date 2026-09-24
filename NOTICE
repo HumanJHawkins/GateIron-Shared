@@ -21,9 +21,3 @@ repository grants no right to use them, by implication, estoppel or otherwise.
 
 They may not be used to name, endorse or promote anything built from this code,
 or in any way that suggests GateIron, LLC made, sponsors or approves of it.
-
-DEFAULTS
-
-Unless told otherwise, topBar() shows the gate mark and the GateIron name, and
-siteFooter() shows GateIron, LLC's name, locality and link. A site that is not
-GateIron's must replace them.

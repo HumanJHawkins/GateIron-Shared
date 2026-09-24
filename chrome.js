@@ -38,16 +38,20 @@ function gateMark(assets, tone) {
 }
 
 /**
- * The image beside a product's wordmark. `mark` is raw HTML - an <img> or an
- * inline <svg> the product supplies - or 'gate' for GateIron's own, or null.
- * Only GateIron.com should wear the gate in its top bar; a product that puts
- * it there is claiming to be the company.
+ * The image beside a wordmark. `mark` is raw HTML - an <img> or an inline
+ * <svg> the site supplies - or 'gate' for GateIron's own. Nothing by default:
+ * the gate is GateIron, LLC's trademark, so a site has to ask for it by name.
  */
-function productMark(mark, assets) {
+function productMark(mark, assets, tone) {
   if (mark === null || mark === undefined) return '';
-  if (mark === 'gate') return gateMark(assets, 'dark');
+  if (mark === 'gate') return gateMark(assets, tone || 'dark');
   return String(mark);
 }
+
+// The company block a GateIron site's footer asks for with `brand: 'gateiron'`.
+const GATEIRON = {
+  href: 'https://gateiron.com', name: 'GateIron, LLC', locality: 'Hood River, Oregon', mark: 'gate',
+};
 
 function navHtml(nav) {
   if (!nav || !nav.length) return '';
@@ -113,12 +117,11 @@ function accountHtml(opts) {
 function topBar(opts) {
   const o = opts || {};
   const context = o.context ? '<small>' + esc(o.context) + '</small>' : '';
+  const mark = productMark(o.mark, o.assets);
+  const wordmark = o.product ? '<span class="wordmark">' + esc(o.product) + context + '</span>' : '';
   return '<header class="topbar">'
     + '<div class="topbar-inner">'
-    + '<a class="brand" href="' + esc(o.home || '/') + '">'
-    + productMark(o.mark === undefined ? 'gate' : o.mark, o.assets)
-    + '<span class="wordmark">' + esc(o.product || 'GateIron') + context + '</span>'
-    + '</a>'
+    + (mark || wordmark ? '<a class="brand" href="' + esc(o.home || '/') + '">' + mark + wordmark + '</a>' : '')
     + navHtml(o.nav)
     + '<span class="topbar-spacer"></span>'
     + (o.actions || '')
@@ -128,9 +131,10 @@ function topBar(opts) {
 }
 
 /**
- * The company block on the left, links on the right, fine print underneath -
- * the same shape on every site, so the bottom of the page says GateIron even
- * where the top says the product.
+ * The company block on the left, links on the right, fine print underneath.
+ * `brand: 'gateiron'` is GateIron's own block, so the bottom of a GateIron
+ * product's page says GateIron even where the top says the product. Another
+ * company passes `{ href, name, locality, mark }`. Omitted, there is none.
  *
  * `variant: 'classroom'` is the quieter footer for pages a child may be
  * reading. It sets the class; the links are still passed in.
@@ -138,13 +142,11 @@ function topBar(opts) {
 function siteFooter(opts) {
   const o = opts || {};
   const classroom = o.variant === 'classroom';
-  const brand = o.brand === null ? '' : (() => {
-    const b = o.brand || {};
-    return '<a class="brand" href="' + esc(b.href || 'https://gateiron.com') + '">'
-      + gateMark(o.assets, 'light')
-      + '<span class="wordmark">' + esc(b.name || 'GateIron, LLC')
-      + '<small>' + esc(b.locality || 'Hood River, Oregon') + '</small></span></a>';
-  })();
+  const b = o.brand === 'gateiron' ? GATEIRON : o.brand;
+  const brand = !b ? '' : '<a class="brand" href="' + esc(b.href || '/') + '">'
+    + productMark(b.mark, o.assets, 'light')
+    + '<span class="wordmark">' + esc(b.name)
+    + (b.locality ? '<small>' + esc(b.locality) + '</small>' : '') + '</span></a>';
   const links = (o.links || []).map((l) => {
     const rel = l.external ? ' target="_blank" rel="noopener"' : '';
     return '<a href="' + esc(l.href) + '"' + rel + '>' + esc(l.label) + '</a>';
