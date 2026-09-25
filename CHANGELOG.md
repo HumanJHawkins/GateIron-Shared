@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.7.0 — 2026-09-25
+
+- `assets/menu.js` closes an open account menu on a click outside it or Escape, and returns focus
+  to its summary. `page()` includes it; a site with its own shell adds the script tag (README).
+
 ## 0.6.0 — 2026-09-24
 
 - `siteFooter` with no `brand`, no `links` and no `finePrint` returns an empty

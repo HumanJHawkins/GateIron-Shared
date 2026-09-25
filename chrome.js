@@ -177,6 +177,7 @@ function page(opts) {
     + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
     + '<title>' + esc(o.title) + '</title>\n'
     + '<link rel="stylesheet" href="' + esc(assetUrl(o.assets, 'brand.css')) + '">\n'
+    + '<script src="' + esc(assetUrl(o.assets, 'menu.js')) + '" defer></script>\n'
     + (o.head || '')
     + '</head>\n<body' + bodyClass + '>\n'
     + '<a class="skip-link" href="#main">Skip to content</a>\n'

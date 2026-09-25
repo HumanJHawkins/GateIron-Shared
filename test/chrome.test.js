@@ -52,7 +52,7 @@ test('the account menu carries no inline script and no event handler', () => {
              { label: 'Sign out', form: { action: '/logout' } }],
     },
   });
-  assert.ok(!/<script/i.test(html), 'a <script> block appeared in the chrome');
+  assert.ok(!/<script(?![^>]*\ssrc=)/i.test(html), 'an inline <script> block appeared in the chrome');
   assert.ok(!/\son[a-z]+\s*=/i.test(html), 'an inline event handler appeared in the chrome');
   assert.ok(html.includes('<details class="account"'), 'the menu is not a details element');
   // A link that changes state is one a prefetcher will follow.
@@ -206,4 +206,10 @@ test('a footer with nothing to show is no footer, and one with only fine print h
   assert.ok(fine.includes('fine-print') && !fine.includes('class="grid"'), fine);
   const page = brand.page({ title: 'x', assets: ASSETS });
   assert.ok(!page.includes('site-footer'), 'page() with no footer asked for draws none');
+});
+
+test('page() loads the menu script, and the script ships', () => {
+  const html = brand.page({ title: 't', assets: ASSETS });
+  assert.ok(html.includes('src="/brand/menu.js?v=7" defer'), 'page() carries the menu script');
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'menu.js')));
 });

@@ -1,6 +1,6 @@
 {
   "name": "gateiron-shared",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "GateIron's house style: palette, faces, top bar, footer and components, shared by every GateIron site.",
   "license": "MIT",
   "author": "GateIron, LLC",

@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.6.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.7.0
 ```
 
 Install a tag, not a branch.
@@ -32,6 +32,14 @@ app.use('/brand', express.static(ASSETS, { maxAge: '365d', immutable: true }));
 
 Pass the package version as `assets.version` and cache hard. A new release is a
 new address.
+
+## Close the account menu on an outside click or Escape
+
+`page()` includes `menu.js`. A site with its own shell adds it once:
+
+```html
+<script src="/brand/menu.js" defer></script>
+```
 
 ## API
 
