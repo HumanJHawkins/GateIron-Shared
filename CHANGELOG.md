@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.9.1 — 2026-09-25
+
+- The bar and footer set their own text alignment and zero their images' margins, so a page that
+  centres its body text or images (Not Hangman) no longer moves them. GateIron.com renders the
+  same.
+
 ## 0.9.0 — 2026-09-25
 
 - The contact form is a component: `require('gateiron-shared/contact')` gives `contactForm(opts)`

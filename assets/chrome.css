@@ -122,11 +122,13 @@
 }
 
 /* ---------------- chrome roots ----------------
-   The chrome sets its own face and box model, so a page's own typeface does not reach the bar or
-   the footer; size and line height stay the page's. */
+   The chrome sets its own face, alignment and box model, so a page's own typeface or centring does
+   not reach the bar or the footer; size and line height stay the page's. */
 :where(.topbar, .site-footer, .skip-link, .btn),
 :where(.topbar, .site-footer) * { box-sizing: border-box; }
-:where(.topbar, .site-footer) { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+:where(.topbar, .site-footer) { font-family: 'Hanken Grotesk', system-ui, sans-serif; text-align: start; }
+/* A page's own img rule (a centring margin, a max-width) must not move the marks or the avatar. */
+.topbar img, .site-footer img { margin: 0; }
 :where(.topbar, .site-footer) :focus-visible,
 .btn:focus-visible,
 .skip-link:focus-visible {
