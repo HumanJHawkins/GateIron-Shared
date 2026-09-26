@@ -173,6 +173,9 @@ request in scope.** The functions take plain data — never an Express `req`.
 
 **GateIron's CSP sets `script-src-attr 'none'` and forbids inline `<script>`.**
 Nothing here emits either. The account menu is a `<details>` element.
+`menu.js` and `contact.js` are files served beside the stylesheets, so a site's
+policy needs `script-src 'self'`; with `default-src 'none'` and no `script-src`
+they are blocked silently and the menu stays open on an outside click.
 
 **Game pages tighten the bar.** `body.gi-compact`, or
 `page({ density: 'compact' })`.
