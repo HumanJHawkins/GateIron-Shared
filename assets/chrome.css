@@ -1,0 +1,418 @@
+/* GateIron's chrome: the tokens, the two faces, the top bar, the account menu, buttons and the
+   footer. Every rule is scoped to a chrome class, so a page with its own layout can load this
+   file alone and keep its own look everywhere else. brand.css imports it and adds the page rules.
+
+   Generic names (.brand, .account, .avatar, .topnav) are matched only inside the bar or the
+   footer. :where() keeps that scoping at zero specificity, so every cascade is what it was when
+   these rules were unscoped. */
+
+/* Faces are self-hosted. No page here makes a third-party request. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('fonts/fraunces-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('fonts/hanken-grotesk-latin.woff2') format('woff2');
+}
+
+:root {
+  /* paper / surface tones (light → dark) */
+  --paper-lightest: #f9f5eb;
+  --paper-lighter: #f8f3e8;
+  --paper-light: #f6f1e5;
+  --paper: #f5efe3;
+  --paper-dark: #efe6d4;
+  --paper-darker: #e5d6bb;
+  --paper-darkest: #ddcaa8;
+  --card-bg: #fbf7ee;
+
+  /* ink / text tones */
+  --ink: #2a2520;
+  --ink-light: #4a443b;
+  --ink-lighter: #7a7062;
+  --ink-lightest: #aea69a;
+
+  /* clay accent */
+  --clay-lightest: #eed8c8;
+  --clay-lighter: #e0b59f;
+  --clay-light: #cf8c6d;
+  --clay: #bb5a31;
+  --clay-dark: #9b4623;
+  --clay-darker: #74371e;
+
+  /* pine accent */
+  --pine-lightest: #d5d5ca;
+  --pine-lighter: #acb0a3;
+  --pine-light: #7b8474;
+  --pine: #3f4e3b;
+  --pine-dark: #2c3829;
+
+  /* A third signal between "fine" and "urgent", drawn from --sand. */
+  --ochre-light: #e6c98a;
+  --ochre: #a97c22;
+  --ochre-dark: #7c5a16;
+
+  --sand: #dcc9a6;
+
+  /* roles - the only names page rules should use */
+  --bg: var(--paper-light);
+  --surface: var(--card-bg);
+  --surface-2: var(--paper-dark);
+  --text: var(--ink);
+  --text-muted: var(--ink-lighter);
+  --accent: var(--clay);
+  --accent-hover: var(--clay-dark);
+  --accent-on: #fffaf3;
+  --border-color: rgba(42, 37, 32, 0.14);
+  --border-strong: rgba(42, 37, 32, 0.28);
+  --shadow: 0 1px 2px rgba(42, 37, 32, 0.06), 0 12px 30px -12px rgba(42, 37, 32, 0.18);
+  --focus: var(--clay-dark);
+
+  --ok: var(--pine);
+  --ok-bg: var(--pine-lightest);
+  --warn: var(--ochre-dark);
+  --warn-bg: #f3e7c8;
+  --urgent: var(--clay-dark);
+  --urgent-bg: var(--clay-lightest);
+  --quiet: var(--ink-lighter);
+  --quiet-bg: var(--paper-dark);
+
+  --radius: 0.5rem;
+  --radius-pill: 999px;
+  --bar-h: 4.25rem;
+  --bar-bg: rgba(245, 239, 227, 0.82);
+  --shell: 1140px;   /* GateIron's .wrap */
+}
+
+/* Warm charcoals rather than neutral greys, so clay and pine keep their
+   temperature. Accents move a rung lighter; the dark rungs go muddy here. */
+/* Opt-in: page() adds .gi-dark-auto to <html> for darkMode: 'auto'. */
+@media (prefers-color-scheme: dark) {
+  :root.gi-dark-auto {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2b2620;
+    --text: #ece5d8;
+    --text-muted: #a89d8c;
+    --accent: var(--clay-light);
+    --accent-hover: var(--clay-lighter);
+    --accent-on: #1a1611;
+    --bar-bg: rgba(33, 29, 23, 0.82);
+    --border-color: rgba(236, 229, 216, 0.14);
+    --border-strong: rgba(236, 229, 216, 0.3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -14px rgba(0, 0, 0, 0.75);
+    --focus: var(--clay-lighter);
+
+    --ok: #9db08f;
+    --ok-bg: rgba(157, 176, 143, 0.16);
+    --warn: var(--ochre-light);
+    --warn-bg: rgba(230, 201, 138, 0.14);
+    --urgent: var(--clay-light);
+    --urgent-bg: rgba(207, 140, 109, 0.16);
+    --quiet: var(--ink-lightest);
+    --quiet-bg: rgba(236, 229, 216, 0.08);
+  }
+}
+
+/* ---------------- chrome roots ----------------
+   The chrome sets its own face and box model, so a page's own typeface does not reach the bar or
+   the footer; size and line height stay the page's. */
+:where(.topbar, .site-footer, .skip-link, .btn),
+:where(.topbar, .site-footer) * { box-sizing: border-box; }
+:where(.topbar, .site-footer) { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+:where(.topbar, .site-footer) :focus-visible,
+.btn:focus-visible,
+.skip-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--accent-on);
+  padding: 0.6rem 1rem;
+  z-index: 100;
+}
+.skip-link:focus { left: 0; }
+
+/* ---------------- top bar ---------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* GateIron.com's own bar: the paper tone at 82% over a blur, so content
+     scrolling under it stays legible through it. */
+  background: var(--bar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  min-height: var(--bar-h);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;   /* the nav drops to its own line rather than disappearing */
+}
+
+:where(.topbar, .site-footer) .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--text);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+:where(.topbar, .site-footer) .brand img { height: 40px; width: auto; display: block; }
+:where(.topbar, .site-footer) .brand .wordmark {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+:where(.topbar, .site-footer) .brand .wordmark small {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* Pushes the account chip right whatever sits between. */
+.topbar-spacer { flex: 1 1 auto; }
+
+:where(.topbar) .topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-wrap: wrap;
+}
+:where(.topbar) .topnav a {
+  display: inline-block;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+:where(.topbar) .topnav a:hover { background: var(--surface-2); color: var(--text); }
+:where(.topbar) .topnav a[aria-current="page"] {
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* ---------------- account chip ---------------- */
+:where(.topbar) .account { position: relative; flex: 0 0 auto; }
+:where(.topbar) .account > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.2rem 0.2rem 0.55rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+}
+:where(.topbar) .account > summary::-webkit-details-marker { display: none; }
+:where(.topbar) .account > summary:hover,
+:where(.topbar) .account[open] > summary { border-color: var(--border-strong); }
+:where(.topbar) .account .who {
+  font-size: 0.86rem;
+  line-height: 1.15;
+  text-align: right;
+  color: var(--text-muted);
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:where(.topbar) .account .who b { display: block; color: var(--text); font-weight: 600; }
+:where(.topbar) .account .who .role { font-size: 0.8rem; }
+:where(.topbar) .account.is-accent .who .role { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
+
+:where(.topbar) .avatar {
+  width: 39px;
+  height: 39px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--pine);
+  color: var(--paper-lightest);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--border-color);
+}
+:where(.topbar) .avatar.is-accent { background: var(--clay); }
+/* The image fills the circle; the size stays the bar's. */
+:where(.topbar) .avatar.has-img { padding: 0; overflow: hidden; }
+:where(.topbar) .avatar.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Holds the bar's height while a client script fills it. */
+:where(.topbar) .account-slot { display: flex; align-items: center; min-height: 39px; }
+
+:where(.topbar) .account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 13rem;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.4rem;
+  z-index: 30;
+}
+:where(.topbar) .account-menu .meta {
+  padding: 0.4rem 0.6rem 0.55rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+:where(.topbar) .account-menu a,
+:where(.topbar) .account-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.35rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+}
+:where(.topbar) .account-menu a:hover,
+:where(.topbar) .account-menu button:hover { background: var(--surface-2); }
+:where(.topbar) .account-menu form { margin: 0; }
+
+/* ---------------- buttons ---------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.55em 1.2em;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: none; }
+
+.btn-primary { background: var(--accent); color: var(--accent-on); }
+.btn-primary:hover { background: var(--accent-hover); color: var(--accent-on); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover { background: var(--surface-2); }
+
+.btn-quiet { background: none; border-color: transparent; color: var(--text-muted); padding: 0.4em 0.6em; }
+.btn-quiet:hover { color: var(--text); background: var(--surface-2); }
+
+.btn-small { font-size: 0.85rem; padding: 0.3em 0.8em; }
+
+/* ---------------- footer ----------------
+   The company block sits at the bottom of every site, so the page ends saying
+   GateIron even where the bar says the product. */
+.site-footer {
+  flex-shrink: 0;
+  background: var(--ink);
+  color: rgba(243, 236, 221, 0.7);
+  margin-top: 4rem;
+  padding: 54px 0 40px;
+  font-size: 0.92rem;
+}
+.site-footer .inner { max-width: var(--shell); margin: 0 auto; padding: 0 28px; }
+.site-footer .grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.site-footer .brand { color: #f3ecdd; }
+.site-footer .brand small { color: rgba(243, 236, 221, 0.5); }
+.site-footer .brand img { height: 44px; }
+.site-footer .footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
+.site-footer a { color: rgba(243, 236, 221, 0.78); text-decoration: none; font-weight: 500; }
+.site-footer a:hover { color: #f3ecdd; text-decoration: underline; }
+.site-footer .fine-print {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(243, 236, 221, 0.12);
+  font-size: 0.82rem;
+  color: rgba(243, 236, 221, 0.45);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Hides nothing - the consumer passes a shorter link list - but the byline
+   stops competing for attention. */
+.site-footer.is-classroom { padding: 28px 0 24px; }
+.site-footer.is-classroom .brand img { height: 30px; }
+
+/* ---------------- compact density ----------------
+   A game page keeps its board height. Same markup, one class on <body>. */
+body.gi-compact .topbar-inner { min-height: 2.6rem; padding: 0.2rem 1rem; }
+body.gi-compact :where(.topbar, .site-footer) .brand img { height: 1.75rem; }
+body.gi-compact :where(.topbar, .site-footer) .brand .wordmark { font-size: 1rem; }
+body.gi-compact :where(.topbar, .site-footer) .brand .wordmark small { display: none; }
+body.gi-compact :where(.topbar) .avatar { width: 1.875rem; height: 1.875rem; font-size: 0.72rem; }
+body.gi-compact :where(.topbar) .topnav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
+
+/* ---------------- narrow screens ---------------- */
+@media (max-width: 720px) {
+  :where(.topbar, .site-footer) .brand .wordmark small { display: none; }
+  :where(.topbar) .account .who { display: none; }
+
+  /* Brand and account share the first line; the nav takes the second. */
+  .topbar-inner { gap: 0.4rem 0.6rem; padding: 0.4rem 0.9rem; }
+  .topbar-spacer { display: none; }
+  :where(.topbar, .site-footer) .brand { flex: 1 1 auto; }
+  :where(.topbar, .site-footer) .brand img { height: 1.8rem; }
+  :where(.topbar, .site-footer) .brand .wordmark { font-size: 1rem; }
+  :where(.topbar) .account { order: 2; }
+  :where(.topbar) .topnav { order: 3; flex-basis: 100%; gap: 0; }
+  :where(.topbar) .topnav a { padding: 0.3rem 0.55rem; font-size: 0.88rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:hover { transform: none; }
+}

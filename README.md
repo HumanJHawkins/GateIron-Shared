@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.7.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.8.0
 ```
 
 Install a tag, not a branch.
@@ -32,6 +32,17 @@ app.use('/brand', express.static(ASSETS, { maxAge: '365d', immutable: true }));
 
 Pass the package version as `assets.version` and cache hard. A new release is a
 new address.
+
+## A page with its own layout
+
+`brand.css` styles the whole page: body, headings, links, bare buttons, form fields, tables. A page
+that has its own look (a game board, an editor) loads `chrome.css` instead. It carries only the
+tokens, the two faces, the bar, the account menu, `.btn`, the footer and the compact rules, each
+scoped to its own class, so nothing outside them changes.
+
+```html
+<link rel="stylesheet" href="/brand/chrome.css?v=0.8.0">
+```
 
 ## Close the account menu on an outside click or Escape
 

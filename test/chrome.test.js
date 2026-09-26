@@ -213,3 +213,24 @@ test('page() loads the menu script, and the script ships', () => {
   assert.ok(html.includes('src="/brand/menu.js?v=7" defer'), 'page() carries the menu script');
   assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'menu.js')));
 });
+
+test('chrome.css styles nothing but the chrome', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const selectors = [];
+  const re = /([^{}]+)\{/g; let m;
+  while ((m = re.exec(css))) {
+    const sel = m[1].trim();
+    if (!sel || sel.startsWith('@')) continue;
+    selectors.push(...sel.split(',').map((s) => s.trim()).filter(Boolean));
+  }
+  const unscoped = selectors.filter((s) => !/\./.test(s) && !/^:root/.test(s));
+  assert.deepEqual(unscoped, [], 'every chrome rule names a class (or only sets tokens on :root)');
+  assert.ok(selectors.length > 50);
+});
+
+test('brand.css imports the chrome of this very release', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'brand.css'), 'utf8');
+  const version = require('../package.json').version;
+  assert.ok(css.startsWith(`@import url('chrome.css?v=${version}');`), 'brand.css must import chrome.css?v=' + version);
+});

@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.8.0 — 2026-09-25
+
+- `assets/chrome.css`: the tokens, faces, top bar, account menu, `.btn`, footer and compact rules,
+  every rule scoped to a chrome class, for a page with its own layout. `brand.css` imports it
+  (versioned) and keeps the element rules, so a page that loads `brand.css` renders as before.
+- Generic chrome names (`.brand`, `.account`, `.avatar`, `.topnav`) match only inside the bar or
+  the footer, through `:where()`, so their specificity is unchanged.
+
 ## 0.7.0 — 2026-09-25
 
 - `assets/menu.js` closes an open account menu on a click outside it or Escape, and returns focus
