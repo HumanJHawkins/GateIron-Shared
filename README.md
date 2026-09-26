@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.8.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.9.0
 ```
 
 Install a tag, not a branch.
@@ -41,7 +41,7 @@ tokens, the two faces, the bar, the account menu, `.btn`, the footer and the com
 scoped to its own class, so nothing outside them changes.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.8.0">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.9.0">
 ```
 
 ## Close the account menu on an outside click or Escape
@@ -106,6 +106,60 @@ GateIron has one — it should call `topBar` and `siteFooter` into it.
 For a site rendering part of the bar itself and wanting the same initials,
 addresses and escaping.
 
+## Contact form
+
+The section GateIron.com's `/contactForm` wears: backdrop, heading, the four fields, a hidden field
+for bots, optional Cloudflare Turnstile, and a status line. The site keeps its route, its rate
+limit, its mail transport and the words it answers with.
+
+```js
+const { contactForm, readContact, verifyTurnstile } = require('gateiron-shared/contact');
+
+// the page, at serve time
+html = contactForm({
+  action: '/contact',
+  title: 'What can we do for you?',
+  placeholder: 'If requesting custom colors or a quote, please give as much detail as possible.',
+  backdrop: '/image/valley.jpg',
+  turnstileSiteKey: '...',
+});
+
+// the route
+const got = readContact(req.body);          // { spam } | { problem } | { fields }
+if (got.spam) return res.json({ message: 'Sent.' });
+if (got.problem) return res.status(400).json({ error: myWords[got.problem] });
+if (!await verifyTurnstile(secret, req.body['cf-turnstile-response'], req.ip)) ...
+// send got.fields your own way; answer { message } or { error }
+```
+
+```html
+<link rel="stylesheet" href="/brand/contact.css">
+<script src="/brand/contact.js" defer></script>
+```
+
+The options are listed above `contactForm` in `contact.js`; the look is reskinned through the
+custom properties listed at the top of `assets/contact.css`. `backdrop` is set as an inline style;
+a site whose policy forbids inline styles sets `--gi-contact-backdrop` in its own CSS instead.
+
+## Rules for a shared component
+
+Every component here meets these; the tests check the first four.
+
+1. **Plain data in, escaped HTML out.** No request object. Raw HTML only through an option whose
+   name ends in `Html`.
+2. **Its CSS cannot restyle the page it lands in.** Every selector names the component's own
+   classes; a new component's classes start with `gi-`. No element, universal or `:root` rule
+   outside the tokens.
+3. **No inline script and no inline handler.** Behaviour is an asset loaded with `defer`,
+   configured by `data-` attributes.
+4. **Every word a user reads is an option,** with GateIron's words as the default.
+5. **Reskinned through custom properties,** listed at the top of its stylesheet with GateIron's
+   values as the defaults, rather than by overriding its rules.
+6. **Accessible:** every control labelled, results announced in a live region, focus visible,
+   usable by keyboard alone.
+7. **A server-side part only checks what the component submits.** Transport, storage, rate limits
+   and authentication stay with the site.
+
 ## Constraints
 
 What the consuming sites need, and what this package does about it.
@@ -158,7 +212,8 @@ Not here:
 - **Anything requiring a build step.**
 - **Business logic, database helpers, auth, date maths.** A second kind of
   shared code gets a second package, so a site can upgrade one without taking
-  the others.
+  the others. A component's check of its own fields (`readContact`) is part of
+  the component; sending, storing and throttling are not.
 
 ## Versioning
 

@@ -1,0 +1,146 @@
+/* The contact section (contact.js: contactForm()). Scoped to .gi-contact, so it looks the same on
+   any page; needs chrome.css for the tokens and .btn. A site reskins it by setting these on
+   .gi-contact (or passing backdrop to contactForm()):
+
+     --gi-contact-backdrop       background image, url("...")          default: none
+     --gi-contact-overlay        gradient laid over it                  default: paper fading out and back
+     --gi-contact-bg             colour behind both                     default: --paper
+     --gi-contact-accent         the small label above the heading      default: --clay-dark
+     --gi-contact-title-font     the heading's face                     default: Fraunces
+     --gi-contact-field-label    field label colour                     default: cream (for an image behind)
+     --gi-contact-field-shadow   field label shadow                     default: dark, soft
+     --gi-contact-field-bg       input background                       default: --paper-lightest
+     --gi-contact-width          the column                             default: 660px
+     --gi-contact-form-width     the form inside it                     default: 36rem
+     --gi-contact-pad-top / --gi-contact-pad-bottom                       default: GateIron's section rhythm */
+
+.gi-contact {
+  position: relative;
+  padding: var(--gi-contact-pad-top, clamp(32px, 4.5vw, 59px)) 0 var(--gi-contact-pad-bottom, clamp(64px, 9vw, 118px));
+  background-color: var(--gi-contact-bg, var(--paper));
+  background-image:
+    var(--gi-contact-overlay, linear-gradient(
+      180deg,
+      rgba(245, 239, 227, 0.92) 0%,
+      rgba(245, 239, 227, 0.74) 16%,
+      rgba(245, 239, 227, 0)    40%,
+      rgba(245, 239, 227, 0)    66%,
+      rgba(245, 239, 227, 0.62) 88%,
+      rgba(245, 239, 227, 0.94) 100%
+    )),
+    var(--gi-contact-backdrop, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.gi-contact *, .gi-contact *::before, .gi-contact *::after { box-sizing: border-box; }
+
+.gi-contact-inner {
+  max-width: calc(var(--gi-contact-width, 660px) + 56px);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.gi-contact-head { margin-bottom: clamp(28px, 4vw, 44px); }
+.gi-contact-label {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gi-contact-accent, var(--clay-dark));
+}
+.gi-contact-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--gi-contact-title-font, 'Fraunces', Georgia, serif);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 3.8vw, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  max-width: 18ch;
+  text-wrap: pretty;
+}
+.gi-contact-lead {
+  margin: 1rem 0 0;
+  font-size: clamp(1.08rem, 1.6vw, 1.22rem);
+  color: var(--ink-light);
+  max-width: 54ch;
+}
+
+.gi-contact-form { max-width: var(--gi-contact-form-width, 36rem); margin: 0; }
+
+.gi-contact-field { margin-bottom: 20px; }
+.gi-contact-field label {
+  display: block;
+  margin: 1.1rem 0 7px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gi-contact-field-label, #fbf7ee);
+  text-shadow: var(--gi-contact-field-shadow, 0 1px 3px rgba(20, 17, 14, 0.55));
+}
+.gi-contact-field input,
+.gi-contact-field textarea {
+  width: 100%;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--gi-contact-field-bg, var(--paper-lightest));
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.7em 0.85em;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.gi-contact-field textarea { min-height: 152px; resize: vertical; }
+.gi-contact-field input:focus,
+.gi-contact-field textarea:focus {
+  outline: none;
+  border-color: var(--clay);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(187, 90, 49, 0.14);
+}
+.gi-contact-field input::placeholder,
+.gi-contact-field textarea::placeholder { color: var(--ink-lightest); }
+
+/* Hidden from people, filled by bots. */
+.gi-contact-extra {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.gi-contact-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.gi-contact-submit { cursor: pointer; }
+.gi-contact-submit[disabled] { opacity: 0.65; cursor: progress; }
+.gi-contact-arrow { transition: transform 0.18s ease; }
+.gi-contact-submit:hover .gi-contact-arrow { transform: translateX(4px); }
+.gi-contact-note { font-size: 0.88rem; }
+
+.gi-contact-status {
+  display: none;
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+.gi-contact-status.is-shown { display: block; }
+.gi-contact-status.is-ok { background: #e6ecdb; border: 1px solid #c4cdb3; color: var(--pine-dark); }
+.gi-contact-status.is-error { background: #f7e2dd; border: 1px solid #e3b3a6; color: #842016; }
+
+/* afterHtml: a line of other ways to get in touch. */
+.gi-contact-after { margin: 26px 0 0.9rem; font-size: 0.96rem; color: var(--ink-light); }
+.gi-contact-after a { color: var(--clay-dark); font-weight: 600; text-decoration: none; }
+.gi-contact-after a:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gi-contact-field input, .gi-contact-field textarea, .gi-contact-arrow { transition: none; }
+  .gi-contact-submit:hover .gi-contact-arrow { transform: none; }
+}

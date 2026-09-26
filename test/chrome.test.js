@@ -234,3 +234,38 @@ test('brand.css imports the chrome of this very release', () => {
   const version = require('../package.json').version;
   assert.ok(css.startsWith(`@import url('chrome.css?v=${version}');`), 'brand.css must import chrome.css?v=' + version);
 });
+
+const contact = require('../contact.js');
+
+test('contactForm escapes what it is given and needs an action', () => {
+  assert.throws(() => contact.contactForm({}), /action is required/);
+  const html = contact.contactForm({
+    action: '/contact', title: '<script>x</script>', placeholder: '"quoted" <b>',
+    backdrop: '/img/a"b.jpg', messages: { unexpected: 'Try <Etsy>' },
+  });
+  assert.ok(!html.includes('<script>x'), 'title not escaped');
+  assert.ok(html.includes('placeholder="&quot;quoted&quot; &lt;b&gt;"'));
+  assert.ok(html.includes('style="--gi-contact-backdrop: url(&quot;/img/a\\&quot;b.jpg&quot;)"'), html.match(/style="[^"]*"/)[0]);
+  assert.ok(html.includes('data-msg-unexpected="Try &lt;Etsy&gt;"'));
+  assert.ok(!/<script(?![^>]*\ssrc=)/i.test(html) && !/\son[a-z]+\s*=/i.test(html), 'no inline script or handler');
+  assert.ok(html.includes('name="homepage" tabindex="-1"'), 'the hidden field is there');
+  assert.ok(!html.includes('cf-turnstile'), 'no Turnstile without a site key');
+  assert.ok(contact.contactForm({ action: '/c', turnstileSiteKey: 'k' }).includes('data-sitekey="k"'));
+});
+
+test('readContact: spam, incomplete, too long, or clean fields', () => {
+  assert.deepEqual(contact.readContact({ homepage: 'x', name: 'a' }), { spam: true });
+  assert.deepEqual(contact.readContact({ name: 'A', email: 'nope', subject: 's', message: 'm' }), { problem: 'incomplete' });
+  assert.deepEqual(contact.readContact({ name: 'A', email: 'a@b.co', subject: 's', message: 'x'.repeat(50001) }), { problem: 'too-long' });
+  assert.deepEqual(contact.readContact({ name: ' <b>Ada</b>\n', email: ' a@b.co ', subject: 'Hi\r\nthere', message: '<p>Hello</p> ' }),
+    { fields: { name: 'Ada', email: 'a@b.co', subject: 'Hi there', message: 'Hello' } });
+});
+
+test('contact.css styles nothing outside .gi-contact', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'contact.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const selectors = [];
+  const re = /([^{}]+)\{/g; let m;
+  while ((m = re.exec(css))) { const s = m[1].trim(); if (s && !s.startsWith('@')) { selectors.push(...s.split(',').map((x) => x.trim())); } }
+  assert.deepEqual(selectors.filter((s) => !/^\.gi-contact/.test(s)), []);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'contact.js')));
+});

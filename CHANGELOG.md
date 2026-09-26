@@ -3,6 +3,15 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.9.0 — 2026-09-25
+
+- The contact form is a component: `require('gateiron-shared/contact')` gives `contactForm(opts)`
+  (the section as HTML), `readContact(body)` (spam, incomplete, too long, or clean fields) and
+  `verifyTurnstile(secret, token, ip)`. `assets/contact.css` is scoped to `.gi-contact` and
+  reskinned through custom properties; `assets/contact.js` sends in the background, shows the
+  answer and keeps a draft. GateIron.com renders it exactly as its own page did.
+- README: the rules every shared component meets.
+
 ## 0.8.0 — 2026-09-25
 
 - `assets/chrome.css`: the tokens, faces, top bar, account menu, `.btn`, footer and compact rules,
