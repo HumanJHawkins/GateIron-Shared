@@ -161,8 +161,10 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* The whole window wide, so the account menu is in the corner where people look for it. A site
+   that wants its bar aligned to its content column sets --bar-max (e.g. to var(--shell)). */
 .topbar-inner {
-  max-width: var(--shell);
+  max-width: var(--bar-max, none);
   margin: 0 auto;
   min-height: var(--bar-h);
   padding: 14px 28px;
@@ -358,7 +360,7 @@
   padding: 54px 0 40px;
   font-size: 0.92rem;
 }
-.site-footer .inner { max-width: var(--shell); margin: 0 auto; padding: 0 28px; }
+.site-footer .inner { max-width: var(--bar-max, none); margin: 0 auto; padding: 0 28px; }
 .site-footer .grid {
   display: flex;
   justify-content: space-between;

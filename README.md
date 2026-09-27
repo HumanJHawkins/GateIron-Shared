@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.9.1
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.10.0
 ```
 
 Install a tag, not a branch.
@@ -41,7 +41,7 @@ tokens, the two faces, the bar, the account menu, `.btn`, the footer and the com
 scoped to its own class, so nothing outside them changes.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.9.1">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.10.0">
 ```
 
 ## Close the account menu on an outside click or Escape

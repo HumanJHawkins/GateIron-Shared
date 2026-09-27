@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.10.0 — 2026-09-26
+
+- The top bar and the footer span the whole window (28px side padding), so the logo and the
+  account menu sit at the window's edges on a wide screen instead of 1140px apart in the middle.
+  `--bar-max` restores a cap (`--bar-max: var(--shell)` aligns them with the content column).
+  Narrower than about 1200px nothing moves.
+
 ## 0.9.1 — 2026-09-25
 
 - The bar and footer set their own text alignment and zero their images' margins, so a page that
