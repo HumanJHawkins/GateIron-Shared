@@ -143,7 +143,8 @@ a site whose policy forbids inline styles sets `--gi-contact-backdrop` in its ow
 
 ## Rules for a shared component
 
-Every component here meets these; the tests check the first four.
+Every component here meets these; `test/chrome.test.js` checks escaping, the chrome's scoping and
+the absence of inline script.
 
 1. **Plain data in, escaped HTML out.** No request object. Raw HTML only through an option whose
    name ends in `Html`.
@@ -162,8 +163,6 @@ Every component here meets these; the tests check the first four.
 
 ## Constraints
 
-What the consuming sites need, and what this package does about it.
-
 **GateIron has no build step and uses `require()`.** Plain files, CommonJS, no
 compile. The `module.exports` object is statically analysable, so ESM consumers
 get named imports.
@@ -180,9 +179,8 @@ they are blocked silently and the menu stays open on an outside click.
 **Game pages tighten the bar.** `body.gi-compact`, or
 `page({ density: 'compact' })`.
 
-**GateIron stamps its own build marker on every asset and serves images through
-a CDN.** No address is hard-coded; `assetUrl({ base, version }, name)` builds
-them all.
+**No asset address is hard-coded.** `assetUrl({ base, version }, name)` builds
+them all from the base and version the site passes.
 
 **GateIron fills the account slot client-side from `/api/me`; NotUserError
 renders it server-side.** Both work.
