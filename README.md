@@ -82,8 +82,8 @@ Omitting both `account` and `signIn` emits `<span class="account-slot"></span>`
 for a client script to fill after load. Pass `accountSlot: false` to leave
 nothing.
 
-Avatars are initials by default. Pass `avatarSrc` for a picture; on a signed-in
-page that is a third-party request on every load.
+Pass `avatarSrc` with the picture from the person's sign-in whenever there is one
+(`~/Projects/CLAUDE.md`, SIGN-IN IDENTITY); initials are for an account without one.
 
 ### `siteFooter(opts)`
 
