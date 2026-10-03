@@ -141,6 +141,27 @@ The options are listed above `contactForm` in `contact.js`; the look is reskinne
 custom properties listed at the top of `assets/contact.css`. `backdrop` is set as an inline style;
 a site whose policy forbids inline styles sets `--gi-contact-backdrop` in its own CSS instead.
 
+## Forms
+
+Every GateIron form follows these, whether or not it is a shared component.
+
+- No label says "optional".
+- A form with both required and optional fields marks each required label with a red asterisk,
+  `<span class="required-mark" aria-hidden="true">*</span>`, and puts
+  `<p class="required-note"><span class="required-mark" aria-hidden="true">*</span> Required field</p>`
+  directly above the first field. A form whose fields are all required shows neither.
+- Each required input carries `required`; that is what a screen reader announces.
+- The submit button is disabled, and looks it, until every required field is filled and valid.
+- An email address is checked in the browser by the same rule the server applies. A bad one is
+  flagged under its field ("Enter a valid email address.") when the person leaves the field, not
+  while they type.
+- A hint under a label ("(for age-gated content)") is a `<span class="label-hint">` inside the
+  label.
+
+GateIron.com's `webroot/js/forms.js` (a form marked `data-submit-gate`), `webroot/js/validEmail.js`
+(one file the server requires and the page loads) and the matching rules in its
+`webroot/css/base.css` are the working version.
+
 ## Rules for a shared component
 
 Every component here meets these; `test/chrome.test.js` checks escaping, the chrome's scoping and
