@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.12.1 — 2026-10-05
+
+- The contact form's email field turns `--urgent` when `forms.js` flags it; `contact.css`'s field
+  rule had outranked `brand.css`'s.
+
 ## 0.12.0 — 2026-10-05
 
 The form rules (README, Forms) are in the package. Nothing a site uses changes; GateIron.com's own

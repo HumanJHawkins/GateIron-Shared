@@ -99,6 +99,7 @@
   background: #fff;
   box-shadow: 0 0 0 3px rgba(187, 90, 49, 0.14);
 }
+.gi-contact-field input[aria-invalid="true"] { border-color: var(--urgent); }
 .gi-contact-field input::placeholder,
 .gi-contact-field textarea::placeholder { color: var(--ink-lightest); }
 
