@@ -1,12 +1,34 @@
-/* GateIron's chrome: the tokens, the two faces, the top bar, the account menu, buttons and the
-   footer. Every rule is scoped to a chrome class, so a page with its own layout can load this
-   file alone and keep its own look everywhere else. brand.css imports it and adds the page rules.
+/* GateIron's chrome: the tokens, the two faces, the skip link, the top bar, the account menu,
+   buttons and the footer. Every rule names a gi- class (or .btn), so a page with its own layout can
+   load this file alone and keep its own look everywhere else. brand.css imports it and adds the
+   page rules.
 
-   Generic names (.brand, .account, .avatar, .topnav) are matched only inside the bar or the
-   footer. :where() keeps that scoping at zero specificity, so every cascade is what it was when
-   these rules were unscoped. */
+   A site reskins the chrome through custom properties, never by overriding its rules. The role
+   tokens on :root below (--bg, --surface, --surface-2, --text, --text-muted, --accent,
+   --accent-hover, --accent-on, --border-color, --border-strong, --field-border, --focus, --shadow,
+   --ok/--warn/--urgent/--quiet and their -bg, --radius, --radius-pill) restyle everything that
+   uses them, the chrome and brand.css alike. The palette above them (--paper-*, --ink-*, --clay-*,
+   --pine-*, --ochre-*, --sand) is GateIron's and is not for overriding: change the role instead.
+   test/contrast.test.js holds every pairing to WCAG's ratios in both schemes.
 
-/* Faces are self-hosted. No page here makes a third-party request. */
+   These change one component only, set on :root or on the component; GateIron's values are on
+   :root below:
+
+     --bar-bg                  the bar's translucent ground
+     --bar-h                   the bar's minimum height
+     --bar-max                 the bar's and footer's content cap (unset: the whole window)
+     --gi-avatar-bg            initials' circle
+     --gi-avatar-accent-bg     the same, for an accented account
+     --gi-avatar-text          initials
+     --gi-footer-bg            the footer's ground
+     --gi-footer-text          its text and links
+     --gi-footer-strong        the company name, a hovered link
+     --gi-footer-muted         the locality and the fine print
+     --gi-footer-rule          the line above the fine print
+
+   The footer's gate is the light one, drawn for a dark ground. */
+
+/* Faces are self-hosted. */
 @font-face {
   font-family: 'Fraunces';
   font-style: normal;
@@ -36,7 +58,7 @@
   /* ink / text tones */
   --ink: #2a2520;
   --ink-light: #4a443b;
-  --ink-lighter: #7a7062;
+  --ink-lighter: #6b6255;
   --ink-lightest: #aea69a;
 
   /* clay accent */
@@ -67,11 +89,13 @@
   --surface-2: var(--paper-dark);
   --text: var(--ink);
   --text-muted: var(--ink-lighter);
-  --accent: var(--clay);
-  --accent-hover: var(--clay-dark);
+  /* --clay itself is under 4.5:1 as text on paper and under white text. */
+  --accent: var(--clay-dark);
+  --accent-hover: var(--clay-darker);
   --accent-on: #fffaf3;
   --border-color: rgba(42, 37, 32, 0.14);
   --border-strong: rgba(42, 37, 32, 0.28);
+  --field-border: var(--text-muted);
   --shadow: 0 1px 2px rgba(42, 37, 32, 0.06), 0 12px 30px -12px rgba(42, 37, 32, 0.18);
   --focus: var(--clay-dark);
 
@@ -89,6 +113,15 @@
   --bar-h: 4.25rem;
   --bar-bg: rgba(245, 239, 227, 0.82);
   --shell: 1140px;   /* GateIron's .wrap */
+
+  --gi-avatar-bg: var(--pine);
+  --gi-avatar-accent-bg: var(--clay-dark);
+  --gi-avatar-text: var(--paper-lightest);
+  --gi-footer-bg: var(--ink);
+  --gi-footer-text: rgba(243, 236, 221, 0.78);
+  --gi-footer-strong: #f3ecdd;
+  --gi-footer-muted: rgba(243, 236, 221, 0.62);
+  --gi-footer-rule: rgba(243, 236, 221, 0.12);
 }
 
 /* Warm charcoals rather than neutral greys, so clay and pine keep their
@@ -124,20 +157,34 @@
 /* ---------------- chrome roots ----------------
    The chrome sets its own face, alignment and box model, so a page's own typeface or centring does
    not reach the bar or the footer; size and line height stay the page's. */
-:where(.topbar, .site-footer, .skip-link, .btn),
-:where(.topbar, .site-footer) * { box-sizing: border-box; }
-:where(.topbar, .site-footer) { font-family: 'Hanken Grotesk', system-ui, sans-serif; text-align: start; }
+.gi-bar, .gi-footer, .gi-skip-link, .btn,
+.gi-bar *, .gi-footer * { box-sizing: border-box; }
+.gi-bar, .gi-footer { font-family: 'Hanken Grotesk', system-ui, sans-serif; text-align: start; }
 /* A page's own img rule (a centring margin, a max-width) must not move the marks or the avatar. */
-.topbar img, .site-footer img { margin: 0; }
-:where(.topbar, .site-footer) :focus-visible,
+.gi-bar img, .gi-footer img { margin: 0; }
+.gi-bar :focus-visible,
+.gi-footer :focus-visible,
 .btn:focus-visible,
-.skip-link:focus-visible {
+.gi-skip-link:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
-.skip-link {
+/* Read aloud, not shown. */
+.gi-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gi-skip-link {
   position: absolute;
   left: -9999px;
   top: 0;
@@ -146,24 +193,22 @@
   padding: 0.6rem 1rem;
   z-index: 100;
 }
-.skip-link:focus { left: 0; }
+.gi-skip-link:focus { left: 0; }
 
 /* ---------------- top bar ---------------- */
-.topbar {
+.gi-bar {
   position: sticky;
   top: 0;
   z-index: 20;
-  /* GateIron.com's own bar: the paper tone at 82% over a blur, so content
-     scrolling under it stays legible through it. */
+  /* The paper tone at 82% over a blur, so content scrolling under it stays legible through it. */
   background: var(--bar-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
 }
 
-/* The whole window wide, so the account menu is in the corner where people look for it. A site
-   that wants its bar aligned to its content column sets --bar-max (e.g. to var(--shell)). */
-.topbar-inner {
+/* The whole window wide, so the account menu is in the corner where people look for it. */
+.gi-bar-inner {
   max-width: var(--bar-max, none);
   margin: 0 auto;
   min-height: var(--bar-h);
@@ -174,7 +219,7 @@
   flex-wrap: wrap;   /* the nav drops to its own line rather than disappearing */
 }
 
-:where(.topbar, .site-footer) .brand {
+.gi-brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -183,8 +228,8 @@
   white-space: nowrap;
   flex: 0 0 auto;
 }
-:where(.topbar, .site-footer) .brand img { height: 40px; width: auto; display: block; }
-:where(.topbar, .site-footer) .brand .wordmark {
+.gi-brand img { height: 40px; width: auto; display: block; }
+.gi-wordmark {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;
   font-size: 1.3rem;
@@ -193,7 +238,7 @@
   flex-direction: column;
   line-height: 1.15;
 }
-:where(.topbar, .site-footer) .brand .wordmark small {
+.gi-wordmark small {
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.78rem;
@@ -202,15 +247,15 @@
 }
 
 /* Pushes the account chip right whatever sits between. */
-.topbar-spacer { flex: 1 1 auto; }
+.gi-bar-spacer { flex: 1 1 auto; }
 
-:where(.topbar) .topnav {
+.gi-nav {
   display: flex;
   align-items: center;
   gap: 0.15rem;
   flex-wrap: wrap;
 }
-:where(.topbar) .topnav a {
+.gi-nav a {
   display: inline-block;
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius);
@@ -219,15 +264,15 @@
   font-weight: 600;
   font-size: 0.93rem;
 }
-:where(.topbar) .topnav a:hover { background: var(--surface-2); color: var(--text); }
-:where(.topbar) .topnav a[aria-current="page"] {
+.gi-nav a:hover { background: var(--surface-2); color: var(--text); }
+.gi-nav a[aria-current="page"] {
   color: var(--accent);
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 /* ---------------- account chip ---------------- */
-:where(.topbar) .account { position: relative; flex: 0 0 auto; }
-:where(.topbar) .account > summary {
+.gi-account { position: relative; flex: 0 0 auto; }
+.gi-account > summary {
   list-style: none;
   cursor: pointer;
   display: flex;
@@ -237,10 +282,10 @@
   border-radius: var(--radius-pill);
   border: 1.5px solid transparent;
 }
-:where(.topbar) .account > summary::-webkit-details-marker { display: none; }
-:where(.topbar) .account > summary:hover,
-:where(.topbar) .account[open] > summary { border-color: var(--border-strong); }
-:where(.topbar) .account .who {
+.gi-account > summary::-webkit-details-marker { display: none; }
+.gi-account > summary:hover,
+.gi-account[open] > summary { border-color: var(--border-strong); }
+.gi-account-who {
   font-size: 0.86rem;
   line-height: 1.15;
   text-align: right;
@@ -250,33 +295,33 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:where(.topbar) .account .who b { display: block; color: var(--text); font-weight: 600; }
-:where(.topbar) .account .who .role { font-size: 0.8rem; }
-:where(.topbar) .account.is-accent .who .role { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
+.gi-account-who b { display: block; color: var(--text); font-weight: 600; }
+.gi-account-role { font-size: 0.8rem; }
+.gi-account.gi-accent .gi-account-role { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
 
-:where(.topbar) .avatar {
+.gi-avatar {
   width: 39px;
   height: 39px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--pine);
-  color: var(--paper-lightest);
+  background: var(--gi-avatar-bg);
+  color: var(--gi-avatar-text);
   font-weight: 700;
   font-size: 0.82rem;
   letter-spacing: 0.02em;
   flex: 0 0 auto;
   border: 1.5px solid var(--border-color);
 }
-:where(.topbar) .avatar.is-accent { background: var(--clay); }
+.gi-avatar.gi-accent { background: var(--gi-avatar-accent-bg); }
 /* The image fills the circle; the size stays the bar's. */
-:where(.topbar) .avatar.has-img { padding: 0; overflow: hidden; }
-:where(.topbar) .avatar.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gi-avatar-img { padding: 0; overflow: hidden; }
+.gi-avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* Holds the bar's height while a client script fills it. */
-:where(.topbar) .account-slot { display: flex; align-items: center; min-height: 39px; }
+.gi-account-slot { display: flex; align-items: center; min-height: 39px; }
 
-:where(.topbar) .account-menu {
+.gi-account-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 0.5rem);
@@ -288,7 +333,7 @@
   padding: 0.4rem;
   z-index: 30;
 }
-:where(.topbar) .account-menu .meta {
+.gi-account-meta {
   padding: 0.4rem 0.6rem 0.55rem;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 0.35rem;
@@ -296,8 +341,8 @@
   color: var(--text-muted);
   word-break: break-all;
 }
-:where(.topbar) .account-menu a,
-:where(.topbar) .account-menu button {
+.gi-account-menu a,
+.gi-account-menu button {
   display: block;
   width: 100%;
   text-align: left;
@@ -311,11 +356,13 @@
   text-decoration: none;
   cursor: pointer;
 }
-:where(.topbar) .account-menu a:hover,
-:where(.topbar) .account-menu button:hover { background: var(--surface-2); }
-:where(.topbar) .account-menu form { margin: 0; }
+.gi-account-menu a:hover,
+.gi-account-menu button:hover { background: var(--surface-2); }
+.gi-account-menu form { margin: 0; }
+.gi-account-menu [hidden] { display: none; }
 
-/* ---------------- buttons ---------------- */
+/* ---------------- buttons ----------------
+   .btn is the one button class every page uses, in the chrome and out of it. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -349,37 +396,44 @@
 
 .btn-small { font-size: 0.85rem; padding: 0.3em 0.8em; }
 
+/* A button waiting on its form looks it. */
+.btn:disabled,
+.btn:disabled:hover { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-primary:disabled:hover { background: var(--accent); }
+.btn-secondary:disabled:hover,
+.btn-quiet:disabled:hover { background: transparent; }
+
 /* ---------------- footer ----------------
    The company block sits at the bottom of every site, so the page ends saying
    GateIron even where the bar says the product. */
-.site-footer {
+.gi-footer {
   flex-shrink: 0;
-  background: var(--ink);
-  color: rgba(243, 236, 221, 0.7);
+  background: var(--gi-footer-bg);
+  color: var(--gi-footer-text);
   margin-top: 4rem;
   padding: 54px 0 40px;
   font-size: 0.92rem;
 }
-.site-footer .inner { max-width: var(--bar-max, none); margin: 0 auto; padding: 0 28px; }
-.site-footer .grid {
+.gi-footer-inner { max-width: var(--bar-max, none); margin: 0 auto; padding: 0 28px; }
+.gi-footer-grid {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 30px;
   flex-wrap: wrap;
 }
-.site-footer .brand { color: #f3ecdd; }
-.site-footer .brand small { color: rgba(243, 236, 221, 0.5); }
-.site-footer .brand img { height: 44px; }
-.site-footer .footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
-.site-footer a { color: rgba(243, 236, 221, 0.78); text-decoration: none; font-weight: 500; }
-.site-footer a:hover { color: #f3ecdd; text-decoration: underline; }
-.site-footer .fine-print {
+.gi-footer .gi-brand { color: var(--gi-footer-strong); }
+.gi-footer .gi-wordmark small { color: var(--gi-footer-muted); }
+.gi-footer .gi-brand img { height: 44px; }
+.gi-footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
+.gi-footer a { color: var(--gi-footer-text); text-decoration: none; font-weight: 500; }
+.gi-footer a:hover { color: var(--gi-footer-strong); text-decoration: underline; }
+.gi-fine-print {
   margin-top: 30px;
   padding-top: 22px;
-  border-top: 1px solid rgba(243, 236, 221, 0.12);
+  border-top: 1px solid var(--gi-footer-rule);
   font-size: 0.82rem;
-  color: rgba(243, 236, 221, 0.45);
+  color: var(--gi-footer-muted);
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -388,32 +442,39 @@
 
 /* Hides nothing - the consumer passes a shorter link list - but the byline
    stops competing for attention. */
-.site-footer.is-classroom { padding: 28px 0 24px; }
-.site-footer.is-classroom .brand img { height: 30px; }
+.gi-footer-classroom { padding: 28px 0 24px; }
+.gi-footer-classroom .gi-brand img { height: 30px; }
 
 /* ---------------- compact density ----------------
    A game page keeps its board height. Same markup, one class on <body>. */
-body.gi-compact .topbar-inner { min-height: 2.6rem; padding: 0.2rem 1rem; }
-body.gi-compact :where(.topbar, .site-footer) .brand img { height: 1.75rem; }
-body.gi-compact :where(.topbar, .site-footer) .brand .wordmark { font-size: 1rem; }
-body.gi-compact :where(.topbar, .site-footer) .brand .wordmark small { display: none; }
-body.gi-compact :where(.topbar) .avatar { width: 1.875rem; height: 1.875rem; font-size: 0.72rem; }
-body.gi-compact :where(.topbar) .topnav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
+body.gi-compact .gi-bar-inner { min-height: 2.6rem; padding: 0.2rem 1rem; }
+body.gi-compact .gi-brand img { height: 1.75rem; }
+body.gi-compact .gi-wordmark { font-size: 1rem; }
+body.gi-compact .gi-wordmark small { display: none; }
+body.gi-compact .gi-avatar { width: 1.875rem; height: 1.875rem; font-size: 0.72rem; }
+body.gi-compact .gi-nav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
 
 /* ---------------- narrow screens ---------------- */
 @media (max-width: 720px) {
-  :where(.topbar, .site-footer) .brand .wordmark small { display: none; }
-  :where(.topbar) .account .who { display: none; }
+  .gi-wordmark small { display: none; }
+  /* Still the summary's name for a screen reader. */
+  .gi-account-who {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
 
   /* Brand and account share the first line; the nav takes the second. */
-  .topbar-inner { gap: 0.4rem 0.6rem; padding: 0.4rem 0.9rem; }
-  .topbar-spacer { display: none; }
-  :where(.topbar, .site-footer) .brand { flex: 1 1 auto; }
-  :where(.topbar, .site-footer) .brand img { height: 1.8rem; }
-  :where(.topbar, .site-footer) .brand .wordmark { font-size: 1rem; }
-  :where(.topbar) .account { order: 2; }
-  :where(.topbar) .topnav { order: 3; flex-basis: 100%; gap: 0; }
-  :where(.topbar) .topnav a { padding: 0.3rem 0.55rem; font-size: 0.88rem; }
+  .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0.4rem 0.9rem; }
+  .gi-bar-spacer { display: none; }
+  .gi-brand { flex: 1 1 auto; }
+  .gi-brand img { height: 1.8rem; }
+  .gi-wordmark { font-size: 1rem; }
+  .gi-account { order: 2; }
+  .gi-nav { order: 3; flex-basis: 100%; gap: 0; }
+  .gi-nav a { padding: 0.3rem 0.55rem; font-size: 0.88rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

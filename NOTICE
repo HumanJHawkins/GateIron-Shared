@@ -11,6 +11,13 @@ carries none, all rights are reserved by GateIron, LLC.
 The fonts in assets/fonts are under the SIL Open Font License 1.1, whose texts
 are beside them.
 
+assets/google-signin.svg is Google LLC's "Sign in with Google" button, unchanged
+from Google's signin-assets. It and the Google "G" in it are Google's
+trademarks. Neither the MIT License nor this repository grants any right to
+them; their use is governed by Google's Sign in with Google branding guidelines
+(https://developers.google.com/identity/branding-guidelines) and Google's
+terms.
+
 TRADEMARKS
 
 "GateIron", the gate mark, and every other name, logo, wordmark, symbol,

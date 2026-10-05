@@ -3,6 +3,72 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.11.0 — 2026-10-05
+
+**Breaking.** Every chrome class is renamed to a `gi-` name, raw-HTML options end in `Html`, and
+the accent and muted text are darker. A site upgrading changes the names below; an old option name
+throws, naming its replacement.
+
+| was | is |
+|---|---|
+| `skip-link` | `gi-skip-link` (or call `skipLink()`) |
+| `topbar` | `gi-bar` |
+| `topbar-inner` | `gi-bar-inner` |
+| `topbar-spacer` | `gi-bar-spacer` |
+| `brand` (bar and footer) | `gi-brand` |
+| `wordmark` | `gi-wordmark` |
+| `topnav` | `gi-nav` |
+| `gate` (the gate's `<img>`) | no class |
+| `account-slot` | `gi-account-slot` |
+| `account` (`<details>`) | `gi-account` |
+| `account is-accent` | `gi-account gi-accent` |
+| `who` | `gi-account-who` |
+| `role` | `gi-account-role` |
+| `avatar` | `gi-avatar` |
+| `avatar is-accent` | `gi-avatar gi-accent` |
+| `avatar has-img` | `gi-avatar gi-avatar-img` |
+| `account-menu` | `gi-account-menu` |
+| `meta` (in the menu) | `gi-account-meta` |
+| `site-footer` | `gi-footer` |
+| `site-footer is-classroom` | `gi-footer gi-footer-classroom` |
+| `inner` (in the footer) | `gi-footer-inner` |
+| `grid` (in the footer) | `gi-footer-grid` |
+| `footer-links` (a `<div>`) | `gi-footer-links` (a `<nav aria-label="Footer">`) |
+| `fine-print` | `gi-fine-print` |
+| `topBar({ actions })`, `page({ actions })` | `actionsHtml` |
+| `topBar({ mark: '<svg…>' })`, footer `brand.mark` raw | `markHtml` (`mark: 'gate'` is unchanged) |
+| `page({ body, head })` | `bodyHtml`, `headHtml` |
+| menu `form: { hidden }` | `form: { hiddenHtml }` |
+| `nav.label` | `navLabel` |
+
+- `assets/account.js` draws the account chip. `chrome.js` renders with it on the server, and a page
+  filling the slot after load calls `GateIronChrome.fillAccount(slot, { account } | { signIn })`
+  instead of building the markup itself. A menu entry `{ label, button }` is a
+  `<button data-gi-action>` the page binds; an entry with the `hidden` attribute stays hidden.
+- The account chip has no `aria-label`: a screen reader hears its name and role, then "Account
+  menu" (`account.menuLabel`). On a narrow screen the name is hidden from sight, not from the
+  reader.
+- `menu.js`: ArrowDown and ArrowUp open the menu from the chip and move through it, Home and End
+  jump to the ends, and Tab leaving it closes it. Escape returns focus to the chip only from inside
+  the menu.
+- A bar with a mark and no product name labels its home link (`homeLabel`, default "Home").
+- `skipLink({ label, target })`; `page({ skipLabel })`.
+- `page({ density: 'compact', bodyClass })` keeps both classes; before, `bodyClass` was dropped.
+- Contrast, computed in both schemes by `test/contrast.test.js`: `--accent` is `--clay-dark` and
+  `--accent-hover` `--clay-darker` (clay was 4.0:1 as a link and 4.4:1 under white);
+  `--ink-lighter`, so `--text-muted`, is `#6b6255` (was 3.9:1 on `--surface-2`); the accented
+  avatar is `--clay-dark`; the footer's locality and fine print are 62% cream (were 50% and 45%).
+- `--field-border` (default `--text-muted`) edges inputs, selects and textareas in `brand.css`; the
+  old edge was 1.8:1.
+- The footer is reskinned through `--gi-footer-bg`, `-text`, `-strong`, `-muted` and `-rule`, the
+  initials through `--gi-avatar-bg`, `--gi-avatar-accent-bg` and `--gi-avatar-text`; the top of
+  `chrome.css` lists every token a site may set.
+- `brand.css`'s bare-button and form-submit rules are at zero specificity, so a site's own button
+  rule wins without outranking them. A disabled `.btn` or bare button is faded and inert.
+- `assets/google-signin.svg`: Google's light pill "Sign in with Google" button, unchanged, under
+  Google's terms (`NOTICE`, README).
+- The company block's link reads `https://GateIron.com`.
+
 ## 0.10.0 — 2026-09-26
 
 - The top bar and the footer span the whole window (28px side padding), so the logo and the

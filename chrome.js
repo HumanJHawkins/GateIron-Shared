@@ -4,8 +4,7 @@
 // Nothing here may touch a request object. GateIron substitutes its chrome into
 // static HTML at serve time, with no request in scope.
 
-const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ESC[c]);
+const { esc, initials, accountHtml } = require('./assets/account.js');
 
 // Consumers serve the files from their own path and stamp their own cache
 // marker, so no address is hard-coded.
@@ -15,17 +14,14 @@ function assetUrl(assets, name) {
   return base + '/' + name + (v ? '?v=' + encodeURIComponent(v) : '');
 }
 
-/** Two letters from a name, one from an address. Never empty. */
-function initials(person) {
-  const name = ((person && person.name) || '').trim();
-  if (name) {
-    const parts = name.split(/\s+/);
-    const letters = parts.length > 1
-      ? parts[0][0] + parts[parts.length - 1][0]
-      : parts[0].slice(0, 2);
-    return letters.toUpperCase();
+// An option renamed in 0.11.0 fails loudly rather than rendering nothing.
+function refuseRenamed(o, where, names) {
+  for (const old of Object.keys(names)) {
+    if (o[old] !== undefined) { throw new Error('gateiron-shared: ' + where + ' takes ' + names[old] + ' since 0.11.0, not ' + old); }
   }
-  return (((person && person.email) || '?')).slice(0, 1).toUpperCase();
+  if (typeof o.mark === 'string' && o.mark !== 'gate') {
+    throw new Error('gateiron-shared: ' + where + ' takes markHtml for its own mark since 0.11.0; mark is only \'gate\'');
+  }
 }
 
 /**
@@ -34,97 +30,57 @@ function initials(person) {
  */
 function gateMark(assets, tone) {
   const file = tone === 'light' ? 'gate-light.png' : 'gate-dark.png';
-  return '<img class="gate" src="' + esc(assetUrl(assets, file)) + '" alt="" width="148" height="96">';
+  return '<img src="' + esc(assetUrl(assets, file)) + '" alt="" width="148" height="96">';
 }
 
 /**
- * The image beside a wordmark. `mark` is raw HTML - an <img> or an inline
- * <svg> the site supplies - or 'gate' for GateIron's own. Nothing by default:
- * the gate is GateIron, LLC's trademark, so a site has to ask for it by name.
+ * The image beside a wordmark: `mark: 'gate'` for GateIron's own, or `markHtml`, an <img> or inline
+ * <svg> the site supplies. Nothing by default: the gate is GateIron, LLC's trademark, so a site has
+ * to ask for it by name.
  */
-function productMark(mark, assets, tone) {
-  if (mark === null || mark === undefined) return '';
-  if (mark === 'gate') return gateMark(assets, tone || 'dark');
-  return String(mark);
+function productMark(o, assets, tone) {
+  if (o.mark === 'gate') return gateMark(assets, tone);
+  return o.markHtml ? String(o.markHtml) : '';
 }
 
 // The company block a GateIron site's footer asks for with `brand: 'gateiron'`.
 const GATEIRON = {
-  href: 'https://gateiron.com', name: 'GateIron, LLC', locality: 'Hood River, Oregon', mark: 'gate',
+  href: 'https://GateIron.com', name: 'GateIron, LLC', locality: 'Hood River, Oregon', mark: 'gate',
 };
 
-function navHtml(nav) {
-  if (!nav || !nav.length) return '';
-  const items = nav.map((item) => {
+function navHtml(o) {
+  if (!o.nav || !o.nav.length) return '';
+  const items = o.nav.map((item) => {
     const current = item.current ? ' aria-current="page"' : '';
     const rel = item.external ? ' target="_blank" rel="noopener"' : '';
     return '<a href="' + esc(item.href) + '"' + current + rel + '>' + esc(item.label) + '</a>';
   }).join('');
-  return '<nav class="topnav" aria-label="' + esc((nav.label) || 'Sections') + '">' + items + '</nav>';
+  return '<nav class="gi-nav" aria-label="' + esc(o.navLabel || 'Sections') + '">' + items + '</nav>';
 }
 
-function avatarHtml(account) {
-  const cls = 'avatar' + (account.accent ? ' is-accent' : '');
-  // An image is a third-party request on every signed-in page. Initials default.
-  if (account.avatarSrc) {
-    return '<span class="' + cls + ' has-img"><img src="' + esc(account.avatarSrc)
-      + '" alt="" width="64" height="64" referrerpolicy="no-referrer"></span>';
-  }
-  return '<span class="' + cls + '" aria-hidden="true">' + esc(initials(account)) + '</span>';
+/** The skip link. It comes before the bar, so it is the first thing a Tab press reaches. */
+function skipLink(opts) {
+  const o = opts || {};
+  return '<a class="gi-skip-link" href="#' + esc(o.target || 'main') + '">' + esc(o.label || 'Skip to content') + '</a>';
 }
 
 /**
- * The account chip. <details> rather than a click handler: GateIron's CSP
- * forbids inline script and inline event handlers.
- *
- * Pass `signIn` without `account` for the signed-out state, or neither to leave
- * an empty slot for a client script to fill.
+ * `context` is the smaller line under the product name - a district, a class. A mark with no
+ * product name is labelled `homeLabel`.
  */
-function accountHtml(opts) {
-  const account = opts.account;
-  if (!account) {
-    if (opts.signIn) {
-      return '<a class="btn btn-secondary btn-small" href="' + esc(opts.signIn.href) + '">'
-        + esc(opts.signIn.label || 'Sign in') + '</a>';
-    }
-    return opts.accountSlot === false ? '' : '<span class="account-slot"></span>';
-  }
-  const menu = (account.menu || []).map((item) => {
-    if (item.form) {
-      return '<form method="' + esc(item.form.method || 'post') + '" action="' + esc(item.form.action)
-        + '">' + (item.form.hidden || '') + '<button type="submit">' + esc(item.label) + '</button></form>';
-    }
-    return '<a href="' + esc(item.href) + '">' + esc(item.label) + '</a>';
-  }).join('');
-  const who = account.name || account.email;
-  // The second line says how you are signed in, which matters most when it is
-  // not the ordinary way. `accent` colours it and the avatar together.
-  const sub = account.role
-    ? '<span class="role">' + esc(account.role) + '</span>' : '';
-  return '<details class="account' + (account.accent ? ' is-accent' : '') + '">'
-    + '<summary aria-label="' + esc(account.menuLabel || 'Account menu') + '">'
-    + '<span class="who"><b>' + esc(who) + '</b>' + sub + '</span>'
-    + avatarHtml(account)
-    + '</summary>'
-    + '<div class="account-menu">'
-    + (account.email ? '<div class="meta">' + esc(account.email) + '</div>' : '')
-    + menu
-    + '</div>'
-    + '</details>';
-}
-
-/** `context` is the smaller line under the product name - a district, a class. */
 function topBar(opts) {
   const o = opts || {};
+  refuseRenamed(o, 'topBar', { actions: 'actionsHtml' });
   const context = o.context ? '<small>' + esc(o.context) + '</small>' : '';
-  const mark = productMark(o.mark, o.assets);
-  const wordmark = o.product ? '<span class="wordmark">' + esc(o.product) + context + '</span>' : '';
-  return '<header class="topbar">'
-    + '<div class="topbar-inner">'
-    + (mark || wordmark ? '<a class="brand" href="' + esc(o.home || '/') + '">' + mark + wordmark + '</a>' : '')
-    + navHtml(o.nav)
-    + '<span class="topbar-spacer"></span>'
-    + (o.actions || '')
+  const mark = productMark(o, o.assets, 'dark');
+  const wordmark = o.product ? '<span class="gi-wordmark">' + esc(o.product) + context + '</span>' : '';
+  const label = wordmark ? '' : ' aria-label="' + esc(o.homeLabel || 'Home') + '"';
+  return '<header class="gi-bar">'
+    + '<div class="gi-bar-inner">'
+    + (mark || wordmark ? '<a class="gi-brand" href="' + esc(o.home || '/') + '"' + label + '>' + mark + wordmark + '</a>' : '')
+    + navHtml(o)
+    + '<span class="gi-bar-spacer"></span>'
+    + (o.actionsHtml || '')
     + accountHtml(o)
     + '</div>'
     + '</header>';
@@ -134,7 +90,7 @@ function topBar(opts) {
  * The company block on the left, links on the right, fine print underneath.
  * `brand: 'gateiron'` is GateIron's own block, so the bottom of a GateIron
  * product's page says GateIron even where the top says the product. Another
- * company passes `{ href, name, locality, mark }`. Omitted, there is none.
+ * company passes `{ href, name, locality, mark: 'gate' | markHtml }`. Omitted, there is none.
  *
  * `variant: 'classroom'` is the quieter footer for pages a child may be
  * reading. It sets the class; the links are still passed in.
@@ -143,11 +99,11 @@ function topBar(opts) {
  */
 function siteFooter(opts) {
   const o = opts || {};
-  const classroom = o.variant === 'classroom';
   const b = o.brand === 'gateiron' ? GATEIRON : o.brand;
-  const brand = !b ? '' : '<a class="brand" href="' + esc(b.href || '/') + '">'
-    + productMark(b.mark, o.assets, 'light')
-    + '<span class="wordmark">' + esc(b.name)
+  if (b && typeof b === 'object') { refuseRenamed(b, 'siteFooter brand', {}); }
+  const brand = !b ? '' : '<a class="gi-brand" href="' + esc(b.href || '/') + '">'
+    + productMark(b, o.assets, 'light')
+    + '<span class="gi-wordmark">' + esc(b.name)
     + (b.locality ? '<small>' + esc(b.locality) + '</small>' : '') + '</span></a>';
   const links = (o.links || []).map((l) => {
     const rel = l.external ? ' target="_blank" rel="noopener"' : '';
@@ -156,18 +112,20 @@ function siteFooter(opts) {
   const fine = (o.finePrint || []).map((t) => '<span>' + esc(t) + '</span>').join('');
   // Nothing to show is no footer, not an empty band a site would not notice.
   if (!brand && !links && !fine) { return ''; }
-  return '<footer class="site-footer' + (classroom ? ' is-classroom' : '') + '">'
-    + '<div class="inner">'
-    + (brand || links ? '<div class="grid">' + brand + '<div class="footer-links">' + links + '</div></div>' : '')
-    + (fine ? '<div class="fine-print">' + fine + '</div>' : '')
+  const nav = links ? '<nav class="gi-footer-links" aria-label="' + esc(o.linksLabel || 'Footer') + '">' + links + '</nav>' : '';
+  return '<footer class="gi-footer' + (o.variant === 'classroom' ? ' gi-footer-classroom' : '') + '">'
+    + '<div class="gi-footer-inner">'
+    + (brand || nav ? '<div class="gi-footer-grid">' + brand + nav + '</div>' : '')
+    + (fine ? '<div class="gi-fine-print">' + fine + '</div>' : '')
     + '</div>'
     + '</footer>';
 }
 
-/** A whole document. Sites with their own shell use topBar and siteFooter. */
+/** A whole document. Sites with their own shell use skipLink, topBar and siteFooter. */
 function page(opts) {
   const o = opts || {};
-  const bodyClass = o.density === 'compact' ? ' class="gi-compact"' : (o.bodyClass ? ' class="' + esc(o.bodyClass) + '"' : '');
+  refuseRenamed(o, 'page', { body: 'bodyHtml', head: 'headHtml', actions: 'actionsHtml' });
+  const classes = [o.density === 'compact' ? 'gi-compact' : '', o.bodyClass || ''].filter(Boolean).join(' ');
   // Light unless the page asks. A product whose users arrive worried - a help
   // desk, a classroom - reads better bright, and GateIron has only ever had
   // paper, so honouring the system preference is opt-in.
@@ -178,11 +136,11 @@ function page(opts) {
     + '<title>' + esc(o.title) + '</title>\n'
     + '<link rel="stylesheet" href="' + esc(assetUrl(o.assets, 'brand.css')) + '">\n'
     + '<script src="' + esc(assetUrl(o.assets, 'menu.js')) + '" defer></script>\n'
-    + (o.head || '')
-    + '</head>\n<body' + bodyClass + '>\n'
-    + '<a class="skip-link" href="#main">Skip to content</a>\n'
-    + topBar(o)
-    + '\n<main id="main" tabindex="-1">\n' + (o.body || '') + '\n</main>\n'
+    + (o.headHtml || '')
+    + '</head>\n<body' + (classes ? ' class="' + esc(classes) + '"' : '') + '>\n'
+    + skipLink({ label: o.skipLabel })
+    + '\n' + topBar(o)
+    + '\n<main id="main" tabindex="-1">\n' + (o.bodyHtml || '') + '\n</main>\n'
     + siteFooter(o.footer || { assets: o.assets })
     + '\n</body>\n</html>';
 }
@@ -198,6 +156,7 @@ module.exports = {
   assetUrl,
   initials,
   gateMark,
+  skipLink,
   topBar,
   siteFooter,
   page,

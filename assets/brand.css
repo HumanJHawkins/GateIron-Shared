@@ -1,4 +1,4 @@
-@import url('chrome.css?v=0.10.0');
+@import url('chrome.css?v=0.11.0');
 
 /* GateIron house style for a whole page: chrome.css (tokens, faces, bar, account menu, buttons,
    footer) and the element rules below. A page with its own layout loads chrome.css alone.
@@ -72,9 +72,10 @@ p { margin: 0 0 0.9rem; }
   border-radius: 3px;
 }
 
-/* Bare <button> in the page body is the secondary pill. Scoped to main so the
-   account menu's own items are untouched. */
-main button:not(.btn):not(.linkish) {
+/* Bare <button> in the page body is the secondary pill, and a form's submit is that screen's primary
+   action. :where() keeps these at zero specificity, so any rule of the page's own wins. Scoped to
+   main, so the account menu's items are untouched; .btn and .linkish opt out. */
+:where(main button:not(.btn, .linkish)) {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
@@ -88,15 +89,18 @@ main button:not(.btn):not(.linkish) {
   color: var(--text);
   cursor: pointer;
 }
-main button:not(.btn):not(.linkish):hover { background: var(--surface-2); }
+:where(main button:not(.btn, .linkish)):hover { background: var(--surface-2); }
 
-/* A form's submit is that screen's primary action. */
-main form > button[type="submit"]:not(.btn):not(.linkish) {
+:where(main form > button[type="submit"]:not(.btn, .linkish)) {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-on);
 }
-main form > button[type="submit"]:not(.btn):not(.linkish):hover { background: var(--accent-hover); }
+:where(main form > button[type="submit"]:not(.btn, .linkish)):hover { background: var(--accent-hover); }
+
+:where(main button:not(.btn, .linkish)):disabled { opacity: 0.45; cursor: not-allowed; }
+:where(main button:not(.btn, .linkish)):disabled:hover { background: transparent; }
+:where(main form > button[type="submit"]:not(.btn, .linkish)):disabled:hover { background: var(--accent); }
 
 /* A button that is really a link, kept for in-sentence actions. */
 .linkish {
@@ -123,7 +127,7 @@ input, textarea, select {
   font: inherit;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius);
 }
 input:focus, textarea:focus, select:focus { border-color: var(--accent); }
@@ -140,7 +144,7 @@ form { max-width: 36rem; }
 td form, .row-actions form { max-width: none; display: inline; }
 td form > button, .row-actions form > button { margin-top: 0; }
 
-form > button[type="submit"] { margin-top: 1.4rem; }
+:where(form > button[type="submit"]) { margin-top: 1.4rem; }
 
 .field-pair {
   display: grid;

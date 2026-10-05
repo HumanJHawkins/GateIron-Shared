@@ -44,7 +44,7 @@ test('initials: two letters from a name, one from an address', () => {
 test('the account menu carries no inline script and no event handler', () => {
   const html = brand.page({
     title: 'x',
-    body: '<p>y</p>',
+    bodyHtml: '<p>y</p>',
     assets: ASSETS,
     account: {
       name: 'Ada Lovelace', email: 'ada@example.test', role: 'admin',
@@ -54,7 +54,7 @@ test('the account menu carries no inline script and no event handler', () => {
   });
   assert.ok(!/<script(?![^>]*\ssrc=)/i.test(html), 'an inline <script> block appeared in the chrome');
   assert.ok(!/\son[a-z]+\s*=/i.test(html), 'an inline event handler appeared in the chrome');
-  assert.ok(html.includes('<details class="account"'), 'the menu is not a details element');
+  assert.ok(html.includes('<details class="gi-account"'), 'the menu is not a details element');
   // A link that changes state is one a prefetcher will follow.
   assert.ok(html.includes('<form method="post" action="/logout">'));
 });
@@ -64,7 +64,7 @@ test('signed out renders a sign-in button; no account at all leaves a slot', () 
   assert.ok(out.includes('href="/login"') && out.includes('Staff sign in'));
 
   const slot = brand.topBar({ assets: ASSETS });
-  assert.ok(slot.includes('<span class="account-slot"></span>'));
+  assert.ok(slot.includes('<span class="gi-account-slot"></span>'));
 
   const none = brand.topBar({ assets: ASSETS, accountSlot: false });
   assert.ok(!none.includes('account-slot'));
@@ -86,15 +86,15 @@ test('compact density sets the body class GateIron already uses', () => {
 
 test('the classroom footer is a variant, and its links are passed in', () => {
   const f = brand.siteFooter({ variant: 'classroom', links: [{ href: '/privacy', label: 'Privacy' }] });
-  assert.ok(f.includes('is-classroom'));
+  assert.ok(f.includes('gi-footer-classroom'));
   assert.ok(f.includes('href="/privacy"'));
   // Nothing commercial may be invented by this package.
   assert.ok(!/etsy|shop/i.test(f));
 });
 
 test('the skip link comes before the bar in the DOM', () => {
-  const html = brand.page({ title: 't', body: '', assets: ASSETS });
-  assert.ok(html.indexOf('class="skip-link"') < html.indexOf('<header class="topbar"'));
+  const html = brand.page({ title: 't', bodyHtml: '', assets: ASSETS });
+  assert.ok(html.indexOf('class="gi-skip-link"') < html.indexOf('<header class="gi-bar"'));
   assert.ok(html.includes('<main id="main" tabindex="-1">'));
 });
 
@@ -108,7 +108,7 @@ test('an ESM consumer can import the named exports', () => {
 });
 
 test('every asset the chrome asks for is actually in the package', () => {
-  const html = brand.page({ title: 't', body: '', mark: 'gate', assets: { base: '/brand' },
+  const html = brand.page({ title: 't', bodyHtml: '', mark: 'gate', assets: { base: '/brand' },
     footer: { brand: 'gateiron', assets: { base: '/brand' } } });
   const names = [...html.matchAll(/\/brand\/([\w./-]+)/g)].map((m) => m[1]);
   assert.ok(names.length >= 3, 'expected the stylesheet and both gate marks');
@@ -127,11 +127,13 @@ test('the fonts carry their licences', () => {
   }
 });
 
-test('the stylesheet fetches nothing from a third party', () => {
-  const css = fs.readFileSync(path.resolve(__dirname, '..', 'assets', 'brand.css'), 'utf8');
-  const urls = [...css.matchAll(/url\(\s*['"]?([^'")]+)/g)].map((m) => m[1]);
-  for (const u of urls) {
-    assert.ok(!/^https?:|^\/\//.test(u), 'the stylesheet reaches off-site: ' + u);
+test('no stylesheet fetches from a third party', () => {
+  for (const file of ['brand.css', 'chrome.css', 'contact.css']) {
+    const css = fs.readFileSync(path.resolve(__dirname, '..', 'assets', file), 'utf8');
+    const urls = [...css.matchAll(/(?:url\(|@import\s+)\s*['"]?([^'")\s]+)/g)].map((m) => m[1]);
+    for (const u of urls) {
+      assert.ok(!/^https?:|^\/\//.test(u), file + ' reaches off-site: ' + u);
+    }
   }
 });
 
@@ -145,13 +147,13 @@ test('the bar GateIron needs can be built from this package', () => {
     context: 'Hood River · Oregon',
     density: 'compact',
     assets: { base: '/brand', version: '20260920-a' },
-    actions: '<a class="btn btn-line" href="/games/">Games</a>'
+    actionsHtml: '<a class="btn btn-line" href="/games/">Games</a>'
            + '<a class="btn btn-primary" href="https://www.etsy.com/shop/GateIronLLC"'
            + ' target="_blank" rel="noopener">Shop</a>',
   });
   assert.ok(html.includes('Hood River'));
   assert.ok(html.includes('href="/games/"'), 'the consumer\'s own action row was dropped');
-  assert.ok(html.indexOf('btn-primary') < html.indexOf('account-slot'),
+  assert.ok(html.indexOf('btn-primary') < html.indexOf('gi-account-slot'),
     'actions must come before the account chip, as GateIron orders them');
   assert.ok(html.includes('?v=20260920-a'), 'the consumer\'s cache marker was not used');
   assert.ok(!/<script|\son[a-z]+\s*=/i.test(html));
@@ -173,9 +175,9 @@ test('only a site that passes mark: "gate" wears the gate in its bar', () => {
 // The names and the mark are GateIron, LLC's trademarks, not MIT. Someone
 // installing the package must not ship them without asking.
 test('nothing of GateIron\'s appears unless a site asks for it', () => {
-  const html = brand.page({ title: 't', body: '', assets: ASSETS });
+  const html = brand.page({ title: 't', bodyHtml: '', assets: ASSETS });
   assert.ok(!/GateIron|Hood River|gate-(dark|light)\.png/.test(html));
-  assert.ok(!html.includes('<a class="brand"'), 'an empty brand link was left in the bar');
+  assert.ok(!html.includes('gi-brand'), 'an empty brand link was left in the bar');
 });
 
 test('brand: "gateiron" puts the company in the footer, whatever the bar says', () => {
@@ -183,12 +185,12 @@ test('brand: "gateiron" puts the company in the footer, whatever the bar says', 
     links: [{ href: '/privacy', label: 'Privacy' }], finePrint: ['© 2026 GateIron, LLC'] });
   assert.ok(f.includes('GateIron, LLC') && f.includes('Hood River, Oregon'));
   assert.ok(f.includes('gate-light.png'), 'the dark footer needs the light mark');
-  assert.ok(f.includes('fine-print'));
+  assert.ok(f.includes('gi-fine-print'));
 });
 
 test('another company\'s footer wears its own mark, not the gate', () => {
   const f = brand.siteFooter({ assets: ASSETS,
-    brand: { href: 'https://example.test', name: 'Example Co', mark: '<svg></svg>' } });
+    brand: { href: 'https://example.test', name: 'Example Co', markHtml: '<svg></svg>' } });
   assert.ok(f.includes('Example Co') && f.includes('<svg></svg>'));
   assert.ok(!f.includes('gate-light.png') && !f.includes('<small>'));
 });
@@ -203,9 +205,9 @@ test('a footer with nothing to show is no footer, and one with only fine print h
   assert.equal(brand.siteFooter({ assets: ASSETS }), '');
   assert.equal(brand.siteFooter({ assets: ASSETS, variant: 'classroom' }), '');
   const fine = brand.siteFooter({ assets: ASSETS, finePrint: ['© GateIron, LLC'] });
-  assert.ok(fine.includes('fine-print') && !fine.includes('class="grid"'), fine);
+  assert.ok(fine.includes('gi-fine-print') && !fine.includes('gi-footer-grid'), fine);
   const page = brand.page({ title: 'x', assets: ASSETS });
-  assert.ok(!page.includes('site-footer'), 'page() with no footer asked for draws none');
+  assert.ok(!page.includes('gi-footer'), 'page() with no footer asked for draws none');
 });
 
 test('page() loads the menu script, and the script ships', () => {
@@ -214,9 +216,8 @@ test('page() loads the menu script, and the script ships', () => {
   assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'menu.js')));
 });
 
-test('chrome.css styles nothing but the chrome', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '');
+function selectorsOf(file) {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const selectors = [];
   const re = /([^{}]+)\{/g; let m;
   while ((m = re.exec(css))) {
@@ -224,9 +225,84 @@ test('chrome.css styles nothing but the chrome', () => {
     if (!sel || sel.startsWith('@')) continue;
     selectors.push(...sel.split(',').map((s) => s.trim()).filter(Boolean));
   }
-  const unscoped = selectors.filter((s) => !/\./.test(s) && !/^:root/.test(s));
-  assert.deepEqual(unscoped, [], 'every chrome rule names a class (or only sets tokens on :root)');
+  return selectors;
+}
+
+// A site's own .brand or .avatar must not reach into the bar, and the bar's must not reach out.
+test('chrome.css styles nothing but its own gi- classes and .btn', () => {
+  const selectors = selectorsOf('chrome.css');
+  const foreign = selectors.filter((s) => !/^:root/.test(s) && !/\.gi-|^\.btn/.test(s.replace(/^body\.gi-compact\s+/, '')));
+  assert.deepEqual(foreign, []);
   assert.ok(selectors.length > 50);
+});
+
+test('every class the chrome renders is a gi- class or .btn, and chrome.css styles it', () => {
+  const html = brand.page({
+    title: 't', assets: ASSETS, mark: 'gate', product: 'P', context: 'c', density: 'compact',
+    nav: [{ href: '/a', label: 'A', current: true }],
+    account: { name: 'Ada', email: 'a@b.test', role: 'r', accent: true, avatarSrc: 'https://x.test/a.png',
+      menu: [{ href: '/p', label: 'P' }, { label: 'Out', form: { action: '/o' } }, { label: 'Go', button: 'go' }] },
+    footer: { brand: 'gateiron', variant: 'classroom', links: [{ href: '/x', label: 'X' }], finePrint: ['f'], assets: ASSETS },
+  });
+  const classes = new Set([...html.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)));
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8');
+  for (const c of classes) {
+    assert.ok(/^(gi-|btn)/.test(c), 'an unscoped class in the chrome: ' + c);
+    assert.ok(css.includes('.' + c), 'chrome.css never styles .' + c);
+  }
+});
+
+test('an option renamed in 0.11.0 throws instead of rendering nothing', () => {
+  assert.throws(() => brand.page({ title: 't', body: '<p>x</p>' }), /bodyHtml/);
+  assert.throws(() => brand.page({ title: 't', head: '<link>' }), /headHtml/);
+  assert.throws(() => brand.topBar({ actions: '<a>' }), /actionsHtml/);
+  assert.throws(() => brand.topBar({ mark: '<svg></svg>' }), /markHtml/);
+  assert.throws(() => brand.siteFooter({ brand: { name: 'X', mark: '<svg></svg>' } }), /markHtml/);
+  assert.throws(() => brand.topBar({ account: { name: 'A', menu: [{ label: 'Out', form: { action: '/o', hidden: '<input>' } }] } }), /hiddenHtml/);
+  assert.ok(brand.topBar({ markHtml: '<svg class="m"></svg>', product: 'P' }).includes('<svg class="m"></svg>'));
+});
+
+test('a bar with a mark and no name still names its home link', () => {
+  assert.ok(brand.topBar({ markHtml: '<svg></svg>', homeLabel: 'Example home' }).includes('<a class="gi-brand" href="/" aria-label="Example home">'));
+  assert.ok(!brand.topBar({ markHtml: '<svg></svg>', product: 'P' }).includes('aria-label="Home"'));
+});
+
+test('the chip is named by what it shows, then what it is', () => {
+  const html = brand.topBar({ account: { name: 'Ada Lovelace', role: 'Operator', menu: [] } });
+  const summary = html.match(/<summary>([\s\S]*?)<\/summary>/)[1];
+  assert.ok(!/aria-label/.test(html.match(/<summary[^>]*>/)[0]), 'an aria-label would replace the visible name');
+  const text = summary.replace(/<span class="gi-avatar[^"]*" aria-hidden="true">[^<]*<\/span>/, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  assert.equal(text, 'Ada Lovelace Operator Account menu');
+});
+
+test('menu items: a link, a form that posts, a button the page binds', () => {
+  const html = brand.topBar({ account: { name: 'A', menu: [
+    { href: '/p', label: 'Profile' },
+    { label: 'Sign out', form: { action: '/out', hiddenHtml: '<input type="hidden" name="_csrf" value="t">' } },
+    { label: 'Everywhere', button: 'sign-out-everywhere' },
+  ] } });
+  assert.ok(html.includes('<a href="/p">Profile</a>'));
+  assert.ok(html.includes('<form method="post" action="/out"><input type="hidden" name="_csrf" value="t"><button type="submit">Sign out</button></form>'));
+  assert.ok(html.includes('<button type="button" data-gi-action="sign-out-everywhere">Everywhere</button>'));
+});
+
+test('compact density keeps the page\'s own body class', () => {
+  assert.ok(brand.page({ title: 't', density: 'compact', bodyClass: 'game', assets: ASSETS }).includes('<body class="gi-compact game">'));
+  assert.ok(brand.page({ title: 't', bodyClass: 'game', assets: ASSETS }).includes('<body class="game">'));
+});
+
+test('the footer\'s links are a labelled nav; the skip link\'s words are an option', () => {
+  const f = brand.siteFooter({ links: [{ href: '/x', label: 'X' }], linksLabel: 'Legal' });
+  assert.ok(f.includes('<nav class="gi-footer-links" aria-label="Legal">'));
+  assert.equal(brand.skipLink({ label: 'Zum Inhalt' }), '<a class="gi-skip-link" href="#main">Zum Inhalt</a>');
+  assert.ok(brand.page({ title: 't', lang: 'de', skipLabel: 'Zum Inhalt' }).includes('>Zum Inhalt</a>'));
+});
+
+test('Google\'s button ships unchanged, and NOTICE keeps it out of the MIT grant', () => {
+  const svg = fs.readFileSync(path.join(__dirname, '..', 'assets', 'google-signin.svg'), 'utf8');
+  assert.ok(svg.includes('stroke="#747775"') && svg.includes('fill="white"'), 'not Google\'s light button');
+  const notice = fs.readFileSync(path.join(__dirname, '..', 'NOTICE'), 'utf8');
+  assert.ok(notice.includes('assets/google-signin.svg') && /Google's\s+trademarks/.test(notice));
 });
 
 test('brand.css imports the chrome of this very release', () => {
