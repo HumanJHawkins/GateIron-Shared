@@ -3,6 +3,22 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.12.0 — 2026-10-05
+
+The form rules (README, Forms) are in the package. Nothing a site uses changes; GateIron.com's own
+copies retire.
+
+- `assets/forms.js`, one file for both sides: in a page, a form marked `data-submit-gate` keeps its
+  submit disabled until every required field is valid, and a bad email address is flagged when its
+  field is left, in a live region a screen reader announces. On the server,
+  `require('gateiron-shared/forms').validEmail` is the same rule (254 characters at most).
+- `brand.css` styles `.required-mark`, `.required-note`, `.field-error`, an `aria-invalid` field and
+  a `.field-hint` inside a label, all from `--urgent` and `--text-muted`. `.label-hint` is not a
+  class here: a hint is `.field-hint`.
+- `contactForm()` marks its form `data-submit-gate`, and `readContact()` checks the address with
+  `validEmail`. The contact form's Send stays disabled until its fields are valid when the page
+  loads `forms.js`, and again after a message is sent.
+
 ## 0.11.0 — 2026-10-05
 
 **Breaking.** Every chrome class is renamed to a `gi-` name, raw-HTML options end in `Html`, and

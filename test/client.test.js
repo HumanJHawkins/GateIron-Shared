@@ -119,3 +119,45 @@ test('menu.js: a click outside or Tab leaving closes it; a click inside does not
   assert.ok(!p.menu.open);
   assert.notEqual(p.doc.activeElement, p.summary, 'leaving by Tab does not pull focus back');
 });
+
+test('forms.js: one email rule for the server and the page', () => {
+  const { validEmail } = require('../assets/forms.js');
+  for (const ok of ['a@b.co', 'first.last+tag@sub.example.org']) { assert.ok(validEmail(ok), ok); }
+  for (const bad of ['', 'a@b', 'a@b.', 'a@.b', 'a b@c.de', 'a@b..c', '@b.co', 'x'.repeat(250) + '@b.co', null]) { assert.ok(!validEmail(bad), String(bad)); }
+  const win = {};
+  win.self = win;
+  vm.runInNewContext(source('forms.js'), win);
+  assert.equal(typeof win.GateIronForms.validEmail, 'function');
+});
+
+test('forms.js gates a form: submit waits for validity, a bad address is flagged and announced', () => {
+  const { gate } = require('../assets/forms.js');
+  const make = (tag) => {
+    const n = { tag, attrs: {}, listeners: {}, textContent: '', disabled: false,
+      setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+      removeAttribute(k) { delete this.attrs[k]; }, addEventListener(t, fn) { (this.listeners[t] = this.listeners[t] || []).push(fn); },
+      fire(t) { (this.listeners[t] || []).forEach((fn) => fn()); } };
+    return n;
+  };
+  const button = make('button');
+  const email = make('input');
+  email.id = 'em'; email.value = '';
+  let placed = null;
+  email.setCustomValidity = (m) => { email.validity = m; };
+  email.closest = () => ({ insertAdjacentElement: (where, el) => { placed = el; } });
+  const form = make('form');
+  form.ownerDocument = { createElement: make };
+  form.querySelectorAll = (sel) => (sel.startsWith('button') ? [button] : [email]);
+  form.checkValidity = () => email.value !== '' && !email.validity;
+  gate(form);
+  assert.equal(button.disabled, true, 'empty form: submit disabled');
+  assert.equal(placed.getAttribute('aria-live'), 'polite', 'the error note is a live region from the start');
+  email.value = 'not-an-address'; email.fire('input'); form.fire('input');
+  assert.equal(button.disabled, true, 'a bad address keeps it disabled');
+  email.fire('blur');
+  assert.equal(email.getAttribute('aria-invalid'), 'true');
+  assert.equal(placed.textContent, 'Enter a valid email address.');
+  email.value = 'ada@example.test'; email.fire('input'); form.fire('input');
+  assert.equal(button.disabled, false, 'a valid form enables it');
+  assert.equal(placed.textContent, '', 'and clears the error');
+});

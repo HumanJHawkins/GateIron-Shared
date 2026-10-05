@@ -4,10 +4,10 @@
 // its own route, rate limit, mail transport and the words it answers with. Styles are
 // assets/contact.css, behaviour assets/contact.js; both are scoped to .gi-contact.
 const { esc } = require('./chrome.js');
+const { validEmail } = require('./assets/forms.js');
 
 // The same limits the fields carry as maxlength, so the browser and the server agree.
 const LIMITS = Object.freeze({ name: 200, email: 254, subject: 200, message: 50000 });
-const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
 const DEFAULT_MESSAGES = Object.freeze({
   sending: 'Sending…',
@@ -56,7 +56,8 @@ function contactForm(opts) {
     + '<h1 class="gi-contact-title">' + esc(o.title || 'What can we do for you?') + '</h1>'
     + (o.lead ? '<p class="gi-contact-lead">' + esc(o.lead) + '</p>' : '')
     + '</div>'
-    + '<form class="gi-contact-form" action="' + esc(o.action) + '" method="POST"' + data + '>'
+    // Every field is required, so there are no required marks (README, Forms).
+    + '<form class="gi-contact-form" action="' + esc(o.action) + '" method="POST" data-submit-gate' + data + '>'
     + field(p + '-name', 'Name', '<input type="text" id="' + p + '-name" name="name" maxlength="' + LIMITS.name + '" required autocomplete="name">')
     + field(p + '-email', 'Email address', '<input type="email" id="' + p + '-email" name="email" maxlength="' + LIMITS.email + '" required autocomplete="email">')
     + field(p + '-subject', 'Subject', '<input type="text" id="' + p + '-subject" name="subject" maxlength="' + LIMITS.subject + '" required>')
@@ -94,7 +95,7 @@ function readContact(body) {
     name: oneLine(b.name || ''), email: String(b.email || '').trim(),
     subject: oneLine(b.subject || ''), message: stripTags(b.message || '').trim(),
   };
-  if (!f.name || !f.subject || !f.message || !EMAIL_RE.test(f.email)) { return { problem: 'incomplete' }; }
+  if (!f.name || !f.subject || !f.message || !validEmail(f.email)) { return { problem: 'incomplete' }; }
   if (Object.keys(LIMITS).some((k) => f[k].length > LIMITS[k])) { return { problem: 'too-long' }; }
   return { fields: f };
 }

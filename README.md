@@ -241,12 +241,13 @@ Every GateIron form follows these, whether or not it is a shared component.
 - An email address is checked in the browser by the same rule the server applies. A bad one is
   flagged under its field ("Enter a valid email address.") when the person leaves the field, not
   while they type.
-- A hint under a label ("(for age-gated content)") is a `<span class="label-hint">` inside the
-  label.
+- A hint is `class="field-hint"`: a `<span>` inside the label ("(for age-gated content)"), or a
+  `<p>` under the field.
 
-GateIron.com's `webroot/js/forms.js` (a form marked `data-submit-gate`), `webroot/js/validEmail.js`
-(one file the server requires and the page loads) and the matching rules in its
-`webroot/css/base.css` are the working version.
+`assets/forms.js` does the browser half: serve it and load it with `defer`, then mark a form
+`data-submit-gate` (and `data-msg-email` for other words). The server half is the same file:
+`require('gateiron-shared/forms').validEmail`. `brand.css` styles the marks, the hint and the error,
+which is announced to a screen reader when it appears. `contactForm()` follows these rules.
 
 ## Rules for a shared component
 

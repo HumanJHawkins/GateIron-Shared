@@ -43,6 +43,8 @@ const PAIRS = [
   ['table heading', 'var(--text-muted)', 'var(--surface-2)', null, 4.5],
   ['link', 'var(--accent)', 'var(--bg)', null, 4.5],
   ['link on a card', 'var(--accent)', 'var(--surface)', null, 4.5],
+  ['field error and required mark', 'var(--urgent)', 'var(--bg)', null, 4.5],
+  ['field error on a card', 'var(--urgent)', 'var(--surface)', null, 4.5],
   ['link, hovered', 'var(--accent-hover)', 'var(--bg)', null, 4.5],
   ['primary button', 'var(--accent-on)', 'var(--accent)', null, 4.5],
   ['primary button, hovered', 'var(--accent-on)', 'var(--accent-hover)', null, 4.5],

@@ -1,4 +1,4 @@
-@import url('chrome.css?v=0.11.0');
+@import url('chrome.css?v=0.12.0');
 
 /* GateIron house style for a whole page: chrome.css (tokens, faces, bar, account menu, buttons,
    footer) and the element rules below. A page with its own layout loads chrome.css alone.
@@ -137,6 +137,13 @@ select {
   padding-right: 2rem;   /* room for the native arrow */
 }
 .field-hint { color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0; }
+label .field-hint { display: block; font-weight: 400; margin: 0; }
+/* The form rules (README, Forms; assets/forms.js). */
+.required-mark { color: var(--urgent); font-weight: 700; }
+.required-note { margin: 0 0 0.1rem; font-size: 0.88rem; color: var(--text-muted); }
+input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--urgent); }
+.field-error { margin: 0.1rem 0 0.4rem; font-size: 0.86rem; color: var(--urgent); }
+.field-error:empty { margin: 0; }
 
 /* A column, not the page's full width. Tables still get the whole page. */
 form { max-width: 36rem; }

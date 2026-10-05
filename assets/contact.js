@@ -20,7 +20,7 @@
       status.className = 'gi-contact-status is-shown is-' + kind;
       status.textContent = text;
     }
-    function done() { button.disabled = false; label.textContent = idle; resetTurnstile(); }
+    function done() { button.disabled = !form.checkValidity(); label.textContent = idle; resetTurnstile(); }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -41,6 +41,7 @@
           if (r.ok && r.data) {
             say('ok', r.data.message || d.msgSent);
             form.reset();
+            button.disabled = true;   // empty again (forms.js re-enables it as the fields fill)
             try { localStorage.removeItem(d.draftKey); } catch (err) { /* no storage */ }
           } else {
             say('error', (r.data && r.data.error) || d.msgUnexpected);

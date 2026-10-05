@@ -325,6 +325,7 @@ test('contactForm escapes what it is given and needs an action', () => {
   assert.ok(html.includes('data-msg-unexpected="Try &lt;Etsy&gt;"'));
   assert.ok(!/<script(?![^>]*\ssrc=)/i.test(html) && !/\son[a-z]+\s*=/i.test(html), 'no inline script or handler');
   assert.ok(html.includes('name="homepage" tabindex="-1"'), 'the hidden field is there');
+  assert.ok(/<form class="gi-contact-form"[^>]* data-submit-gate/.test(html) && !html.includes('required-mark'), 'Send waits for valid fields; all required, so no marks');
   assert.ok(!html.includes('cf-turnstile'), 'no Turnstile without a site key');
   assert.ok(contact.contactForm({ action: '/c', turnstileSiteKey: 'k' }).includes('data-sitekey="k"'));
 });
