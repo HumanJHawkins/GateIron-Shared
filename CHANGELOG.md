@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.13.2 — 2026-10-05
+
+- `body.gi-bar-inline` keeps a site's own bar buttons on the first line on a narrow screen, with
+  no second row in `--bar-h`. For a site that knows its buttons fit (NotHangman's compact game
+  pages); without it, a bar with buttons and no nav puts them on a second line, which the package
+  can count.
+
 ## 0.13.1 — 2026-10-05
 
 - A site's own bar buttons (`actionsHtml`) sit in `.gi-bar-actions`. On a narrow screen a bar with

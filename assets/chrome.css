@@ -516,9 +516,10 @@
   /* Brand and account share the first line; the nav takes the second. */
   :root:has(.gi-bar .gi-nav) { --gi-nav-row: 2.4rem; }
   /* A bar with no nav puts its own buttons on that second line instead, so its height is known. */
-  :root:has(.gi-bar .gi-bar-actions):not(:has(.gi-bar .gi-nav)) { --gi-nav-row: 2.4rem; }
-  .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { order: 3; flex-basis: 100%; justify-content: flex-end; gap: 0.4rem; }
-  .gi-bar:not(:has(.gi-nav)) .gi-bar-actions .btn { min-height: 2rem; padding: 0 0.8rem; font-size: 0.88rem; }
+  /* body.gi-bar-inline: the site's buttons stay on the first line; the site sees that they fit. */
+  :root:has(.gi-bar .gi-bar-actions):not(:has(.gi-bar .gi-nav)):not(:has(body.gi-bar-inline)) { --gi-nav-row: 2.4rem; }
+  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { order: 3; flex-basis: 100%; justify-content: flex-end; gap: 0.4rem; }
+  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions .btn { min-height: 2rem; padding: 0 0.8rem; font-size: 0.88rem; }
   .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0 0.9rem; }
   .gi-bar-spacer { display: none; }
   .gi-brand { flex: 1 1 auto; }

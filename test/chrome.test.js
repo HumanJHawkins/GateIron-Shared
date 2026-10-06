@@ -269,7 +269,7 @@ test('the bar and the footer follow the window height in straight lines, without
   near(scaleAt('--bar-h', 900), scaleAt('--gi-bar-size', 900) + 1, '--bar-h is the bar and its rule');
   near(scaleAt('--bar-h', 900, { '--gi-nav-row': '2.4rem' }), scaleAt('--gi-bar-size', 900) + 2.4 * 16 + 1, 'and the nav\'s row on a narrow screen');
   const barCss = require('fs').readFileSync(require('path').join(__dirname, '..', 'assets', 'chrome.css'), 'utf8');
-  assert.ok(/:root:has\(\.gi-bar \.gi-bar-actions\):not\(:has\(\.gi-bar \.gi-nav\)\) \{ --gi-nav-row: 2\.4rem; \}/.test(barCss), 'a bar with buttons and no nav counts its second row in --bar-h too');
+  assert.ok(/:root:has\(\.gi-bar \.gi-bar-actions\):not\(:has\(\.gi-bar \.gi-nav\)\):not\(:has\(body\.gi-bar-inline\)\) \{ --gi-nav-row: 2\.4rem; \}/.test(barCss), 'a bar with buttons and no nav counts its second row in --bar-h too, unless the site keeps them inline');
   let last = scaleAt('--gi-bar-size', 200);
   for (let h = 202; h <= 2000; h += 2) {
     const now = scaleAt('--gi-bar-size', h);
