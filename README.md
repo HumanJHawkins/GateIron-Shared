@@ -7,7 +7,7 @@ forms, tables, badges, notices, the account menu.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.11.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.13.0
 ```
 
 Install a tag, not a branch.
@@ -44,7 +44,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.11.0">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.13.0">
 ```
 
 ## The account menu's script
@@ -126,8 +126,8 @@ Pass `avatarSrc` with the picture from the person's sign-in whenever there is on
 company passes `{ href, name, locality, mark: 'gate' }` or `{ href, name, locality, markHtml }`.
 Omit it for none. The links are a `<nav>` named `linksLabel` (default "Footer").
 
-The classroom variant is the quieter footer for pages a child may be reading.
-It sets the class; the links are yours to pass.
+The classroom variant holds the footer at its smallest, for pages a child may be
+reading; the links are yours to pass.
 
 ### `page(opts)`
 
@@ -198,6 +198,33 @@ both schemes against 4.5:1 for text and 3:1 for a focus ring or a field's edge; 
 changes a role holds its pairings to the same.
 
 The footer's ground is dark in both schemes, and its gate is the light one.
+
+## Layout
+
+Every GateIron page uses the window it is given. A page that leaves most of a wide window empty
+does so because of what it holds, not by default.
+
+- Running text keeps a reading measure: `.prose` and `main.narrow`, `--gi-measure` (42rem).
+- Tables, grids, boards and lists of records take the width there is: `main` runs to `--shell`
+  (96rem); a page that needs more sets its own `main { max-width: none }`.
+- A form is a column of `--gi-form-width` (48rem); `.field-pair` sets fields side by side as it
+  widens.
+- A dialog or a settings page is as wide as its content needs.
+
+## Bar and footer sizes
+
+The bar's height and the footer's mark follow the window's height: their minimum up to 400px tall,
+a straight rise to their standard at 1024px, the standard to 1200px, and a straight rise to their
+maximum at 1600px. The three sizes of each and the four heights are tokens at the top of
+`chrome.css`, set on `:root` or on the bar or footer. Padding, marks, buttons and the avatar follow
+the size; text has rem floors, so browser zoom still enlarges it, and every control keeps a 24px
+target.
+
+`page({ density: 'compact' })` (`body.gi-compact`) holds the bar at its minimum, for a page whose
+board needs the height. `siteFooter({ variant: 'classroom' })` holds the footer at its minimum.
+
+`--bar-h` is the bar's height, for content sized as `calc(100svh - var(--bar-h))`. It counts the
+nav's second row on a narrow screen; a bar whose content wraps further is taller than it says.
 
 ## Buttons
 
@@ -284,7 +311,7 @@ Nothing here emits either. The account menu is a `<details>` element.
 policy needs `script-src 'self'`; with `default-src 'none'` and no `script-src`
 they are blocked silently and the menu stays open on an outside click.
 
-**Game pages tighten the bar.** `body.gi-compact`, or
+**Game pages hold the bar at its minimum.** `body.gi-compact`, or
 `page({ density: 'compact' })`.
 
 **No asset address is hard-coded.** `assetUrl({ base, version }, name)` builds

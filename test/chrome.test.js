@@ -231,9 +231,64 @@ function selectorsOf(file) {
 // A site's own .brand or .avatar must not reach into the bar, and the bar's must not reach out.
 test('chrome.css styles nothing but its own gi- classes and .btn', () => {
   const selectors = selectorsOf('chrome.css');
-  const foreign = selectors.filter((s) => !/^:root/.test(s) && !/\.gi-|^\.btn/.test(s.replace(/^body\.gi-compact\s+/, '')));
+  const foreign = selectors.filter((s) => !/^:root/.test(s) && !/\.gi-|^\.btn/.test(s));
   assert.deepEqual(foreign, []);
   assert.ok(selectors.length > 50);
+});
+
+// The scale as chrome.css writes it, worked out in px for a window `h` px tall: var() resolved
+// against the given tokens, then the CSS maths run as JavaScript.
+const chromeCss = () => fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+function declared(block) {
+  const out = {};
+  for (const m of block.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) { out[m[1]] = m[2].replace(/\s+/g, ' ').trim(); }
+  return out;
+}
+function scaleAt(name, h, overrides) {
+  const css = chromeCss();
+  const tokens = Object.assign(declared(css.match(/:root\s*\{([^}]*)\}/)[1]),
+    declared(css.match(/:root, \.gi-compact, \.gi-bar, \.gi-footer\s*\{([^}]*)\}/)[1]), overrides);
+  let expr = 'var(' + name + ')';
+  for (let i = 0; i < 20 && expr.includes('var('); i++) {
+    expr = expr.replace(/var\((--[\w-]+)(?:,\s*([^()]+))?\)/g, (all, v, fallback) => (tokens[v] !== undefined ? tokens[v] : fallback));
+  }
+  const js = expr.replace(/\bcalc\(/g, '(').replace(/\btan\(/g, 'Math.tan(').replace(/\batan2\(/g, 'Math.atan2(')
+    .replace(/\bmax\(/g, 'Math.max(').replace(/\bmin\(/g, 'Math.min(')
+    .replace(/(\d*\.?\d+)rem\b/g, '($1*16)').replace(/(\d+)svh\b/g, '($1*' + h + '/100)').replace(/(\d*\.?\d+)px\b/g, '$1');
+  return Function('clamp', 'return ' + js)((lo, v, hi) => Math.min(Math.max(v, lo), hi));
+}
+
+test('the bar and the footer follow the window height in straight lines, without steps', () => {
+  const near = (a, b, what) => assert.ok(Math.abs(a - b) < 0.01, what + ': ' + a + ' is not ' + b);
+  for (const [h, bar, footer] of [[300, 40, 24], [400, 40, 24], [712, 50, 30], [1024, 60, 36], [1100, 60, 36],
+    [1200, 60, 36], [1400, 66, 40], [1600, 72, 44], [2400, 72, 44]]) {
+    near(scaleAt('--gi-bar-size', h), bar, 'bar at ' + h);
+    near(scaleAt('--gi-footer-size', h), footer, 'footer at ' + h);
+  }
+  near(scaleAt('--bar-h', 900), scaleAt('--gi-bar-size', 900) + 1, '--bar-h is the bar and its rule');
+  near(scaleAt('--bar-h', 900, { '--gi-nav-row': '2.4rem' }), scaleAt('--gi-bar-size', 900) + 2.4 * 16 + 1, 'and the nav\'s row on a narrow screen');
+  let last = scaleAt('--gi-bar-size', 200);
+  for (let h = 202; h <= 2000; h += 2) {
+    const now = scaleAt('--gi-bar-size', h);
+    assert.ok(now >= last && now - last < 0.1, 'a step at ' + h + 'px: ' + last + ' to ' + now);
+    last = now;
+  }
+  const pinned = { '--gi-bar-size-std': 'var(--gi-bar-size-min)', '--gi-bar-size-max': 'var(--gi-bar-size-min)' };
+  near(scaleAt('--gi-bar-size', 1800, pinned), 40, 'a pinned bar stays at its minimum');
+  near(scaleAt('--gi-avatar-size', 300), 24, 'the account chip keeps a 24px target');
+  const css = chromeCss();
+  assert.ok(css.includes('.gi-compact { --gi-bar-size-std: var(--gi-bar-size-min); --gi-bar-size-max: var(--gi-bar-size-min); }'));
+  assert.ok(css.includes('.gi-footer-classroom { --gi-footer-size-std: var(--gi-footer-size-min); --gi-footer-size-max: var(--gi-footer-size-min); }'));
+});
+
+test('brand.css: one error notice, and the measures are tokens', () => {
+  const selectors = selectorsOf('brand.css');
+  assert.deepEqual(selectors.filter((s) => /\.error\b/.test(s)), [], '.error is .notice-error');
+  assert.equal(selectors.filter((s) => s === '.notice-error').length, 1);
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'brand.css'), 'utf8');
+  for (const rule of ['max-width: var(--shell)', '.prose { max-width: var(--gi-measure); }', 'form { max-width: var(--gi-form-width); }']) {
+    assert.ok(css.includes(rule), rule);
+  }
 });
 
 test('every class the chrome renders is a gi- class or .btn, and chrome.css styles it', () => {

@@ -15,8 +15,17 @@
    :root below:
 
      --bar-bg                  the bar's translucent ground
-     --bar-h                   the bar's minimum height
      --bar-max                 the bar's and footer's content cap (unset: the whole window)
+     --gi-bar-size-min         the bar's height on a short window
+     --gi-bar-size-std         the same, from --gi-scale-std-from to --gi-scale-std-to tall
+     --gi-bar-size-max         the same, on a tall window
+     --gi-footer-size-min      the footer's mark, which sets its spacing, on a short window
+     --gi-footer-size-std      the same, between the two standard heights
+     --gi-footer-size-max      the same, on a tall window
+     --gi-scale-min-at         the window height at and below which both are at their minimum
+     --gi-scale-std-from       the height from which both are at their standard
+     --gi-scale-std-to         the height to which both stay at their standard
+     --gi-scale-max-at         the height at and above which both are at their maximum
      --gi-avatar-bg            initials' circle
      --gi-avatar-accent-bg     the same, for an accented account
      --gi-avatar-text          initials
@@ -25,6 +34,11 @@
      --gi-footer-strong        the company name, a hovered link
      --gi-footer-muted         the locality and the fine print
      --gi-footer-rule          the line above the fine print
+
+   Between those heights the sizes are straight lines, so neither steps as the window changes.
+   Text in them has rem floors and still grows with browser zoom. --bar-h is the bar's height, for
+   content sized as 100svh minus the bar: it is read, not set, and holds while the bar's content
+   fits its row (on a narrow screen, its two rows).
 
    The footer's gate is the light one, drawn for a dark ground. */
 
@@ -110,9 +124,23 @@
 
   --radius: 0.5rem;
   --radius-pill: 999px;
-  --bar-h: 4.25rem;
   --bar-bg: rgba(245, 239, 227, 0.82);
-  --shell: 1140px;   /* GateIron's .wrap */
+
+  /* brand.css's measures: the page, running text, a form. */
+  --shell: 96rem;
+  --gi-measure: 42rem;
+  --gi-form-width: 48rem;
+
+  --gi-bar-size-min: 2.5rem;
+  --gi-bar-size-std: 3.75rem;
+  --gi-bar-size-max: 4.5rem;
+  --gi-footer-size-min: 1.5rem;
+  --gi-footer-size-std: 2.25rem;
+  --gi-footer-size-max: 2.75rem;
+  --gi-scale-min-at: 400px;
+  --gi-scale-std-from: 1024px;
+  --gi-scale-std-to: 1200px;
+  --gi-scale-max-at: 1600px;
 
   --gi-avatar-bg: var(--pine);
   --gi-avatar-accent-bg: var(--clay-dark);
@@ -153,6 +181,28 @@
     --quiet-bg: rgba(236, 229, 216, 0.08);
   }
 }
+
+/* ---------------- the scale ----------------
+   Worked out again wherever a token may be set, because a custom property takes the var()s of the
+   element it is declared on. tan(atan2(a, b)) is a / b as a plain number. */
+:root, .gi-compact, .gi-bar, .gi-footer {
+  --gi-rise-1: clamp(0, tan(atan2(100svh - var(--gi-scale-min-at), var(--gi-scale-std-from) - var(--gi-scale-min-at))), 1);
+  --gi-rise-2: clamp(0, tan(atan2(100svh - var(--gi-scale-std-to), var(--gi-scale-max-at) - var(--gi-scale-std-to))), 1);
+  --gi-bar-size: calc(var(--gi-bar-size-min)
+    + (var(--gi-bar-size-std) - var(--gi-bar-size-min)) * var(--gi-rise-1)
+    + (var(--gi-bar-size-max) - var(--gi-bar-size-std)) * var(--gi-rise-2));
+  --gi-footer-size: calc(var(--gi-footer-size-min)
+    + (var(--gi-footer-size-std) - var(--gi-footer-size-min)) * var(--gi-rise-1)
+    + (var(--gi-footer-size-max) - var(--gi-footer-size-std)) * var(--gi-rise-2));
+  --gi-avatar-size: max(24px, var(--gi-bar-size) * 0.56);
+  --bar-h: calc(var(--gi-bar-size) + var(--gi-nav-row, 0px) + 1px);
+}
+
+/* A game page pins the bar at its minimum (page({ density: 'compact' })); a classroom page, the
+   footer. */
+.gi-compact { --gi-bar-size-std: var(--gi-bar-size-min); --gi-bar-size-max: var(--gi-bar-size-min); }
+.gi-compact .gi-bar .gi-wordmark small { display: none; }
+.gi-footer-classroom { --gi-footer-size-std: var(--gi-footer-size-min); --gi-footer-size-max: var(--gi-footer-size-min); }
 
 /* ---------------- chrome roots ----------------
    The chrome sets its own face, alignment and box model, so a page's own typeface or centring does
@@ -211,11 +261,11 @@
 .gi-bar-inner {
   max-width: var(--bar-max, none);
   margin: 0 auto;
-  min-height: var(--bar-h);
-  padding: 14px 28px;
+  min-height: var(--gi-bar-size);
+  padding: 0 28px;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0 1rem;
   flex-wrap: wrap;   /* the nav drops to its own line rather than disappearing */
 }
 
@@ -228,7 +278,9 @@
   white-space: nowrap;
   flex: 0 0 auto;
 }
-.gi-brand img { height: 40px; width: auto; display: block; }
+.gi-brand img { width: auto; display: block; }
+.gi-bar .gi-brand { min-height: var(--gi-bar-size); }
+.gi-bar .gi-brand img { height: calc(var(--gi-bar-size) * 0.6); }
 .gi-wordmark {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;
@@ -238,6 +290,7 @@
   flex-direction: column;
   line-height: 1.15;
 }
+.gi-bar .gi-wordmark { font-size: clamp(1rem, var(--gi-bar-size) * 0.3, 1.35rem); }
 .gi-wordmark small {
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   font-weight: 500;
@@ -263,6 +316,7 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 0.93rem;
+  line-height: 1.5;
 }
 .gi-nav a:hover { background: var(--surface-2); color: var(--text); }
 .gi-nav a[aria-current="page"] {
@@ -300,8 +354,8 @@
 .gi-account.gi-accent .gi-account-role { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
 
 .gi-avatar {
-  width: 39px;
-  height: 39px;
+  width: var(--gi-avatar-size);
+  height: var(--gi-avatar-size);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -319,7 +373,7 @@
 .gi-avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* Holds the bar's height while a client script fills it. */
-.gi-account-slot { display: flex; align-items: center; min-height: 39px; }
+.gi-account-slot { display: flex; align-items: center; min-height: var(--gi-avatar-size); }
 
 .gi-account-menu {
   position: absolute;
@@ -396,6 +450,9 @@
 
 .btn-small { font-size: 0.85rem; padding: 0.3em 0.8em; }
 
+/* A button in the bar keeps to the bar's height. */
+.gi-bar .btn { padding-block: 0.15em; min-height: calc(var(--gi-bar-size) * 0.62); }
+
 /* A button waiting on its form looks it. */
 .btn:disabled,
 .btn:disabled:hover { opacity: 0.45; cursor: not-allowed; transform: none; }
@@ -410,8 +467,8 @@
   flex-shrink: 0;
   background: var(--gi-footer-bg);
   color: var(--gi-footer-text);
-  margin-top: 4rem;
-  padding: 54px 0 40px;
+  margin-top: calc(var(--gi-footer-size) * 1.45);
+  padding: calc(var(--gi-footer-size) * 1.2) 0 calc(var(--gi-footer-size) * 0.9);
   font-size: 0.92rem;
 }
 .gi-footer-inner { max-width: var(--bar-max, none); margin: 0 auto; padding: 0 28px; }
@@ -419,18 +476,20 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 30px;
+  gap: calc(var(--gi-footer-size) * 0.7);
   flex-wrap: wrap;
 }
 .gi-footer .gi-brand { color: var(--gi-footer-strong); }
 .gi-footer .gi-wordmark small { color: var(--gi-footer-muted); }
-.gi-footer .gi-brand img { height: 44px; }
-.gi-footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
+.gi-footer .gi-brand img { height: var(--gi-footer-size); }
+.gi-footer .gi-wordmark { font-size: clamp(1rem, var(--gi-footer-size) * 0.47, 1.3rem); }
+.gi-footer-links { display: flex; gap: 0.25rem calc(var(--gi-footer-size) * 0.6); flex-wrap: wrap; }
+.gi-footer-links a { display: inline-block; padding-block: 0.15rem; }
 .gi-footer a { color: var(--gi-footer-text); text-decoration: none; font-weight: 500; }
 .gi-footer a:hover { color: var(--gi-footer-strong); text-decoration: underline; }
 .gi-fine-print {
-  margin-top: 30px;
-  padding-top: 22px;
+  margin-top: calc(var(--gi-footer-size) * 0.68);
+  padding-top: calc(var(--gi-footer-size) * 0.5);
   border-top: 1px solid var(--gi-footer-rule);
   font-size: 0.82rem;
   color: var(--gi-footer-muted);
@@ -439,20 +498,6 @@
   flex-wrap: wrap;
   gap: 10px;
 }
-
-/* Hides nothing - the consumer passes a shorter link list - but the byline
-   stops competing for attention. */
-.gi-footer-classroom { padding: 28px 0 24px; }
-.gi-footer-classroom .gi-brand img { height: 30px; }
-
-/* ---------------- compact density ----------------
-   A game page keeps its board height. Same markup, one class on <body>. */
-body.gi-compact .gi-bar-inner { min-height: 2.6rem; padding: 0.2rem 1rem; }
-body.gi-compact .gi-brand img { height: 1.75rem; }
-body.gi-compact .gi-wordmark { font-size: 1rem; }
-body.gi-compact .gi-wordmark small { display: none; }
-body.gi-compact .gi-avatar { width: 1.875rem; height: 1.875rem; font-size: 0.72rem; }
-body.gi-compact .gi-nav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
 
 /* ---------------- narrow screens ---------------- */
 @media (max-width: 720px) {
@@ -467,14 +512,13 @@ body.gi-compact .gi-nav a { padding: 0.25rem 0.55rem; font-size: 0.88rem; }
   }
 
   /* Brand and account share the first line; the nav takes the second. */
-  .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0.4rem 0.9rem; }
+  :root:has(.gi-bar .gi-nav) { --gi-nav-row: 2.4rem; }
+  .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0 0.9rem; }
   .gi-bar-spacer { display: none; }
   .gi-brand { flex: 1 1 auto; }
-  .gi-brand img { height: 1.8rem; }
-  .gi-wordmark { font-size: 1rem; }
   .gi-account { order: 2; }
   .gi-nav { order: 3; flex-basis: 100%; gap: 0; }
-  .gi-nav a { padding: 0.3rem 0.55rem; font-size: 0.88rem; }
+  .gi-nav a { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.55rem; font-size: 0.88rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

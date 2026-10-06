@@ -1,4 +1,4 @@
-@import url('chrome.css?v=0.12.1');
+@import url('chrome.css?v=0.13.0');
 
 /* GateIron house style for a whole page: chrome.css (tokens, faces, bar, account menu, buttons,
    footer) and the element rules below. A page with its own layout loads chrome.css alone.
@@ -35,10 +35,9 @@ main {
   flex: 1 0 auto;
 }
 main:focus { outline: none; }
-main.narrow { max-width: 42rem; }
-/* Running text gets a reading measure. The page is wide because tables need
-   it; a policy paragraph at 64rem is a wall. */
-.prose { max-width: 42rem; }
+main.narrow { max-width: var(--gi-measure); }
+/* Running text keeps a reading measure on a page as wide as the window allows. */
+.prose { max-width: var(--gi-measure); }
 
 h1, h2, h3 {
   font-family: 'Fraunces', Georgia, serif;
@@ -146,7 +145,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .field-error:empty { margin: 0; }
 
 /* A column, not the page's full width. Tables still get the whole page. */
-form { max-width: 36rem; }
+form { max-width: var(--gi-form-width); }
 /* Except the little ones in a table row, which are controls, not forms. */
 td form, .row-actions form { max-width: none; display: inline; }
 td form > button, .row-actions form > button { margin-top: 0; }
@@ -181,14 +180,7 @@ td form > button, .row-actions form > button { margin-top: 0; }
 .notice > :last-child { margin-bottom: 0; }
 .notice-ok { border-left-color: var(--ok); background: var(--ok-bg); }
 .notice-warn { border-left-color: var(--warn); background: var(--warn-bg); }
-.notice-error, .error { border-left-color: var(--urgent); background: var(--urgent-bg); }
-.error {
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--urgent);
-  border-radius: var(--radius);
-  padding: 0.8rem 1rem;
-  margin: 1rem 0;
-}
+.notice-error { border-left-color: var(--urgent); background: var(--urgent-bg); }
 
 /* ---------------- tables ----------------
    A table scrolls inside its own box rather than making the page scroll. */

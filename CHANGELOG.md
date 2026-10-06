@@ -3,6 +3,25 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.13.0 — 2026-10-05
+
+**Breaking.** `.error` is gone, and the bar and the footer change size with the window's height.
+
+- `.error` is removed; it drew the same box as `.notice notice-error`, which replaces it.
+- The bar's height and the footer's mark follow the window's height in straight lines with no
+  steps: minimum up to 400px tall, standard from 1024px to 1200px, maximum from 1600px. Bar
+  2.5rem / 3.75rem / 4.5rem, footer mark 1.5rem / 2.25rem / 2.75rem; padding, the marks, the
+  avatar and buttons in the bar follow, and text keeps rem floors. Tokens `--gi-bar-size-min`,
+  `-std`, `-max`, `--gi-footer-size-min`, `-std`, `-max` and the heights `--gi-scale-min-at`,
+  `--gi-scale-std-from`, `--gi-scale-std-to`, `--gi-scale-max-at` (README, Bar and footer sizes).
+- `--bar-h` is now the bar's height as drawn, nav row included on a narrow screen, for
+  `calc(100svh - var(--bar-h))`. It was the bar's minimum height; setting it no longer sizes the bar.
+- `gi-compact` holds the bar at its minimum and the classroom footer holds the footer at its
+  minimum, in place of their own fixed sizes. `gi-compact` no longer shrinks the footer's mark.
+- Wider measures (README, Layout): `main` runs to `--shell`, now 96rem (was 1140px), and a form to
+  `--gi-form-width`, 48rem (was 36rem). `.prose` and `main.narrow` stay at 42rem, now
+  `--gi-measure`. Running text outside `.prose` runs the page's width.
+
 ## 0.12.1 — 2026-10-05
 
 - The contact form's email field turns `--urgent` when `forms.js` flags it; `contact.css`'s field
