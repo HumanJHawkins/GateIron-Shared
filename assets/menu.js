@@ -48,3 +48,43 @@
     list[next].focus();
   });
 })();
+
+// THE BAR ON ONE LINE WHEN IT FITS (chrome.css, narrow screens). The nav or a site's own buttons
+// take a second line only when they, the brand and the account chip do not fit side by side:
+// html.gi-bar-fits says they do. Measured at start, on resize, when the fonts arrive and when the
+// account chip fills in; each part's width is its children's, the same in either layout.
+(function () {
+  if (typeof window === 'undefined' || !window.matchMedia) { return; }
+  var narrow = window.matchMedia('(max-width: 720px)');
+  var root = document.documentElement;
+  function px(v) { return parseFloat(v) || 0; }
+  function natural(el) {
+    var cs = getComputedStyle(el);
+    var kids = Array.prototype.filter.call(el.children, function (k) { return getComputedStyle(k).position !== 'absolute'; });
+    if (!kids.length) { return el.getBoundingClientRect().width; }
+    var w = kids.reduce(function (sum, k) { return sum + k.getBoundingClientRect().width + px(getComputedStyle(k).marginLeft) + px(getComputedStyle(k).marginRight); }, 0);
+    return w + px(cs.columnGap) * (kids.length - 1) + px(cs.paddingLeft) + px(cs.paddingRight) + px(cs.borderLeftWidth) + px(cs.borderRightWidth);
+  }
+  function fit() {
+    var bar = document.querySelector('.gi-bar-inner');
+    var middle = bar && (bar.querySelector('.gi-bar-actions') || bar.querySelector('.gi-nav'));
+    if (!middle || !narrow.matches) { root.classList.remove('gi-bar-fits'); return; }
+    var account = bar.querySelector('.gi-account-slot') || bar.querySelector('.gi-account');
+    var parts = [bar.querySelector('.gi-brand'), middle, account].filter(Boolean);
+    var cs = getComputedStyle(bar);
+    var room = bar.clientWidth - px(cs.paddingLeft) - px(cs.paddingRight);
+    var need = parts.reduce(function (sum, p) { return sum + (p === account ? p.getBoundingClientRect().width : natural(p)); }, 0)
+      + px(cs.columnGap) * (parts.length - 1);
+    root.classList.toggle('gi-bar-fits', need <= room);
+  }
+  var queued = false;
+  function soon() { if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; fit(); }); } }
+  function start() {
+    fit();
+    window.addEventListener('resize', soon);
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(soon); }
+    var bar = document.querySelector('.gi-bar-inner');
+    if (bar && window.MutationObserver) { new MutationObserver(soon).observe(bar, { childList: true, subtree: true }); }
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
+})();

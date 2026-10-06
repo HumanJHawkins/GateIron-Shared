@@ -513,18 +513,22 @@
     clip-path: inset(50%);
   }
 
-  /* Brand and account share the first line; the nav takes the second. */
-  :root:has(.gi-bar .gi-nav) { --gi-nav-row: 2.4rem; }
-  /* A bar with no nav puts its own buttons on that second line instead, so its height is known. */
+  /* Brand and account share the first line; the nav, or a bar's own buttons, take the second, so
+     its height is known. html.gi-bar-fits (menu.js, measured): they all fit on one line, so the
+     nav or buttons sit between brand and account and --bar-h has no second row. */
+  :root:not(.gi-bar-fits):has(.gi-bar .gi-nav) { --gi-nav-row: 2.4rem; }
   /* body.gi-bar-inline: the site's buttons stay on the first line; the site sees that they fit. */
-  :root:has(.gi-bar .gi-bar-actions):not(:has(.gi-bar .gi-nav)):not(:has(body.gi-bar-inline)) { --gi-nav-row: 2.4rem; }
-  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { order: 3; flex-basis: 100%; justify-content: flex-end; gap: 0.4rem; }
-  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions .btn { min-height: 2rem; padding: 0 0.8rem; font-size: 0.88rem; }
-  .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0 0.9rem; }
+  :root:not(.gi-bar-fits):has(.gi-bar .gi-bar-actions):not(:has(.gi-bar .gi-nav)):not(:has(body.gi-bar-inline)) { --gi-nav-row: 2.4rem; }
+  :root:not(.gi-bar-fits) body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { order: 3; flex-basis: 100%; justify-content: flex-end; gap: 0.4rem; }
+  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { gap: 0.4rem; }
+  body:not(.gi-bar-inline) .gi-bar:not(:has(.gi-nav)) .gi-bar-actions .btn { min-height: 2rem; padding: 0 0.65rem; font-size: 0.88rem; }
+  .gi-bar-inner { gap: 0.4rem 0.5rem; padding: 0 0.75rem; }
   .gi-bar-spacer { display: none; }
   .gi-brand { flex: 1 1 auto; }
-  .gi-account { order: 2; }
-  .gi-nav { order: 3; flex-basis: 100%; gap: 0; }
+  .gi-account, .gi-account-slot { order: 2; }
+  :root:not(.gi-bar-fits) .gi-nav { order: 3; flex-basis: 100%; gap: 0; }
+  .gi-bar-fits .gi-nav, .gi-bar-fits .gi-bar-actions { order: 1; }
+  .gi-bar-fits .gi-nav { gap: 0; }
   .gi-nav a { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.55rem; font-size: 0.88rem; }
 }
 

@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.13.3 — 2026-10-06
+
+- On a narrow screen the nav or a site's own bar buttons stay on the first line, between the
+  brand and the account chip, whenever all three fit; they take the second line only when they
+  don't. `menu.js` measures and sets `html.gi-bar-fits`, and `--bar-h` follows. Bar padding,
+  gaps and the buttons' padding are a little tighter there, so GateIron.com's Software and Shop
+  fit from about 375px.
+
 ## 0.13.2 — 2026-10-05
 
 - `body.gi-bar-inline` keeps a site's own bar buttons on the first line on a narrow screen, with

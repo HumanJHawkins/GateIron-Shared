@@ -101,7 +101,7 @@ const { page, skipLink, topBar, siteFooter, initials, assetUrl, esc } = require(
 | `navLabel` | the nav's name for a screen reader (default "Sections") |
 | `account` | `{ name, email, role?, avatarSrc?, accent?, menuLabel?, menu }`, or omit |
 | `signIn` | `{ href, label }` for the signed-out state |
-| `actionsHtml` | placed before the account chip, for the site's own buttons; on a narrow screen they take a second line unless the page's body has `gi-bar-inline` |
+| `actionsHtml` | placed before the account chip, for the site's own buttons; on a narrow screen they take a second line only when they don't fit beside the brand and the account chip (`menu.js` measures; or the page's body has `gi-bar-inline`) |
 | `assets` | `{ base, version }` |
 
 A menu entry is `{ href, label }`; `{ label, form: { action, method, hiddenHtml } }` for anything
