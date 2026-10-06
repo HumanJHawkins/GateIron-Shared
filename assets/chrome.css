@@ -319,6 +319,8 @@
   line-height: 1.5;
 }
 .gi-nav a:hover { background: var(--surface-2); color: var(--text); }
+/* The site's own buttons (actionsHtml). */
+.gi-bar-actions { display: flex; align-items: center; gap: 0.5rem; }
 .gi-nav a[aria-current="page"] {
   color: var(--accent);
   box-shadow: inset 0 -2px 0 var(--accent);
@@ -513,6 +515,10 @@
 
   /* Brand and account share the first line; the nav takes the second. */
   :root:has(.gi-bar .gi-nav) { --gi-nav-row: 2.4rem; }
+  /* A bar with no nav puts its own buttons on that second line instead, so its height is known. */
+  :root:has(.gi-bar .gi-bar-actions):not(:has(.gi-bar .gi-nav)) { --gi-nav-row: 2.4rem; }
+  .gi-bar:not(:has(.gi-nav)) .gi-bar-actions { order: 3; flex-basis: 100%; justify-content: flex-end; gap: 0.4rem; }
+  .gi-bar:not(:has(.gi-nav)) .gi-bar-actions .btn { min-height: 2rem; padding: 0 0.8rem; font-size: 0.88rem; }
   .gi-bar-inner { gap: 0.4rem 0.6rem; padding: 0 0.9rem; }
   .gi-bar-spacer { display: none; }
   .gi-brand { flex: 1 1 auto; }

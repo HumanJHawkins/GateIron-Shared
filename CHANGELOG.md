@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.13.1 — 2026-10-05
+
+- A site's own bar buttons (`actionsHtml`) sit in `.gi-bar-actions`. On a narrow screen a bar with
+  no nav puts them on the second line, as it does a nav, so `--bar-h` is the bar's drawn height
+  there too; before, the buttons wrapped wherever they fell and `--bar-h` was a row short.
+  Site rules that select `.gi-bar .btn` still match.
+
 ## 0.13.0 — 2026-10-05
 
 **Breaking.** `.error` is gone, and the bar and the footer change size with the window's height.

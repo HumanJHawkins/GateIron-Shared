@@ -80,7 +80,7 @@ function topBar(opts) {
     + (mark || wordmark ? '<a class="gi-brand" href="' + esc(o.home || '/') + '"' + label + '>' + mark + wordmark + '</a>' : '')
     + navHtml(o)
     + '<span class="gi-bar-spacer"></span>'
-    + (o.actionsHtml || '')
+    + (o.actionsHtml ? '<div class="gi-bar-actions">' + o.actionsHtml + '</div>' : '')
     + accountHtml(o)
     + '</div>'
     + '</header>';

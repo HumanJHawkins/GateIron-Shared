@@ -156,6 +156,7 @@ test('the bar GateIron needs can be built from this package', () => {
   assert.ok(html.indexOf('btn-primary') < html.indexOf('gi-account-slot'),
     'actions must come before the account chip, as GateIron orders them');
   assert.ok(html.includes('?v=20260920-a'), 'the consumer\'s cache marker was not used');
+  assert.ok(/<div class="gi-bar-actions"><a class="btn btn-line" href="\/games\/">Games<\/a><a class="btn btn-primary"[^>]*>Shop<\/a><\/div>/.test(html), 'the site\'s buttons sit in .gi-bar-actions');
   assert.ok(!/<script|\son[a-z]+\s*=/i.test(html));
 });
 
@@ -267,6 +268,8 @@ test('the bar and the footer follow the window height in straight lines, without
   }
   near(scaleAt('--bar-h', 900), scaleAt('--gi-bar-size', 900) + 1, '--bar-h is the bar and its rule');
   near(scaleAt('--bar-h', 900, { '--gi-nav-row': '2.4rem' }), scaleAt('--gi-bar-size', 900) + 2.4 * 16 + 1, 'and the nav\'s row on a narrow screen');
+  const barCss = require('fs').readFileSync(require('path').join(__dirname, '..', 'assets', 'chrome.css'), 'utf8');
+  assert.ok(/:root:has\(\.gi-bar \.gi-bar-actions\):not\(:has\(\.gi-bar \.gi-nav\)\) \{ --gi-nav-row: 2\.4rem; \}/.test(barCss), 'a bar with buttons and no nav counts its second row in --bar-h too');
   let last = scaleAt('--gi-bar-size', 200);
   for (let h = 202; h <= 2000; h += 2) {
     const now = scaleAt('--gi-bar-size', h);
