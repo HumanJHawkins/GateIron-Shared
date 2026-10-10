@@ -53,7 +53,8 @@ function navHtml(o) {
   const items = o.nav.map((item) => {
     const current = item.current ? ' aria-current="page"' : '';
     const rel = item.external ? ' target="_blank" rel="noopener"' : '';
-    return '<a href="' + esc(item.href) + '"' + current + rel + '>' + esc(item.label) + '</a>';
+    const title = item.title ? ' title="' + esc(item.title) + '"' : '';
+    return '<a href="' + esc(item.href) + '"' + current + rel + title + '>' + esc(item.label) + '</a>';
   }).join('');
   return '<nav class="gi-nav" aria-label="' + esc(o.navLabel || 'Sections') + '">' + items + '</nav>';
 }

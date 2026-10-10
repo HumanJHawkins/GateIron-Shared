@@ -79,6 +79,11 @@ test('nav marks the current item with aria-current, not only a class', () => {
   assert.ok(html.includes('href="/b">B</a>'));
 });
 
+test('a nav item may carry a title, drawn as the link\'s tooltip and escaped', () => {
+  const html = brand.topBar({ assets: ASSETS, nav: [{ href: '/r', label: 'Requests', title: 'Default "List" <x>' }] });
+  assert.ok(html.includes('<a href="/r" title="Default &quot;List&quot; &lt;x&gt;">Requests</a>'), html);
+});
+
 test('compact density sets the body class GateIron already uses', () => {
   assert.ok(brand.page({ title: 't', density: 'compact', assets: ASSETS })
     .includes('<body class="gi-compact">'));

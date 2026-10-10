@@ -3,6 +3,10 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.13.4 — 2026-10-09
+
+- A bar nav item may carry `title`, drawn as its link's `title` attribute (a tooltip).
+
 ## 0.13.3 — 2026-10-06
 
 - On a narrow screen the nav or a site's own bar buttons stay on the first line, between the

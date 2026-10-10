@@ -97,7 +97,7 @@ const { page, skipLink, topBar, siteFooter, initials, assetUrl, esc } = require(
 | `markHtml` | the site's own mark, an `<img>` or inline `<svg>` |
 | `homeLabel` | the home link's name when there is a mark and no `product` (default "Home") |
 | `context` | the smaller line beneath it — a district, a class |
-| `nav` | `[{ href, label, current?, external? }]` |
+| `nav` | `[{ href, label, current?, external?, title? }]`; `title` is the link's tooltip |
 | `navLabel` | the nav's name for a screen reader (default "Sections") |
 | `account` | `{ name, email, role?, avatarSrc?, accent?, menuLabel?, menu }`, or omit |
 | `signIn` | `{ href, label }` for the signed-out state |
