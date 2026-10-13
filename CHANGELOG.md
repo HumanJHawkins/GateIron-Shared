@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.14.0 — 2026-10-12
+
+- Every button is solid. `.btn-secondary` now draws as `.btn-primary`, and a bare `<button>` in
+  `main` is the solid pill, not an outline (Jeff: consistency, and solid is preferred). Markup
+  needs no change; a page that wants a quieter action uses `.btn-quiet`.
+
 ## 0.13.4 — 2026-10-09
 
 - A bar nav item may carry `title`, drawn as its link's `title` attribute (a tooltip).

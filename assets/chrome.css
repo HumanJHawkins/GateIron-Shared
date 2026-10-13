@@ -440,12 +440,10 @@
 .btn-primary { background: var(--accent); color: var(--accent-on); }
 .btn-primary:hover { background: var(--accent-hover); color: var(--accent-on); }
 
-.btn-secondary {
-  background: transparent;
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-.btn-secondary:hover { background: var(--surface-2); }
+/* Every button is solid (Jeff, 2026-10-12: consistency, and solid is preferred); .btn-secondary is
+   kept as a name so existing markup needs no change. */
+.btn-secondary { background: var(--accent); color: var(--accent-on); }
+.btn-secondary:hover { background: var(--accent-hover); color: var(--accent-on); }
 
 .btn-quiet { background: none; border-color: transparent; color: var(--text-muted); padding: 0.4em 0.6em; }
 .btn-quiet:hover { color: var(--text); background: var(--surface-2); }
@@ -458,8 +456,8 @@
 /* A button waiting on its form looks it. */
 .btn:disabled,
 .btn:disabled:hover { opacity: 0.45; cursor: not-allowed; transform: none; }
-.btn-primary:disabled:hover { background: var(--accent); }
-.btn-secondary:disabled:hover,
+.btn-primary:disabled:hover,
+.btn-secondary:disabled:hover { background: var(--accent); }
 .btn-quiet:disabled:hover { background: transparent; }
 
 /* ---------------- footer ----------------

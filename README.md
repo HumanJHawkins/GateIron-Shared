@@ -228,10 +228,11 @@ nav's second row on a narrow screen; a bar whose content wraps further is taller
 
 ## Buttons
 
-`.btn` with `.btn-primary`, `.btn-secondary` or `.btn-quiet`, and `.btn-small`, is the button
-everywhere, chrome and page; a disabled one is faded and inert. `brand.css` also makes every bare
-`<button>` inside `main` the secondary pill and a form's direct submit the primary one, at zero
-specificity, so any rule of the site's own wins; `.btn` and `.linkish` opt out. `chrome.css` alone
+`.btn` with `.btn-primary` or `.btn-quiet`, and `.btn-small`, is the button everywhere, chrome and
+page; a disabled one is faded and inert. Buttons are solid: `.btn-secondary` draws the same as
+`.btn-primary`, and no button is an outline. `brand.css` also makes every bare `<button>` inside
+`main` the solid pill, at zero specificity, so any rule of the site's own wins; `.btn` and
+`.linkish` opt out. `chrome.css` alone
 leaves bare buttons as the browser draws them.
 
 ## Tables

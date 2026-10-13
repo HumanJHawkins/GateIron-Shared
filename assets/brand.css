@@ -1,4 +1,4 @@
-@import url('chrome.css?v=0.13.4');
+@import url('chrome.css?v=0.14.0');
 
 /* GateIron house style for a whole page: chrome.css (tokens, faces, bar, account menu, buttons,
    footer) and the element rules below. A page with its own layout loads chrome.css alone.
@@ -71,9 +71,9 @@ p { margin: 0 0 0.9rem; }
   border-radius: 3px;
 }
 
-/* Bare <button> in the page body is the secondary pill, and a form's submit is that screen's primary
-   action. :where() keeps these at zero specificity, so any rule of the page's own wins. Scoped to
-   main, so the account menu's items are untouched; .btn and .linkish opt out. */
+/* Bare <button> in the page body is the solid pill, as .btn-primary. :where() keeps these at zero
+   specificity, so any rule of the page's own wins. Scoped to main, so the account menu's items are
+   untouched; .btn and .linkish opt out. */
 :where(main button:not(.btn, .linkish)) {
   display: inline-flex;
   align-items: center;
@@ -83,23 +83,15 @@ p { margin: 0 0 0.9rem; }
   font-size: 0.92rem;
   padding: 0.45em 1.1em;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--border-strong);
-  background: transparent;
-  color: var(--text);
+  border: 1.5px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-on);
   cursor: pointer;
 }
-:where(main button:not(.btn, .linkish)):hover { background: var(--surface-2); }
-
-:where(main form > button[type="submit"]:not(.btn, .linkish)) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-on);
-}
-:where(main form > button[type="submit"]:not(.btn, .linkish)):hover { background: var(--accent-hover); }
+:where(main button:not(.btn, .linkish)):hover { background: var(--accent-hover); }
 
 :where(main button:not(.btn, .linkish)):disabled { opacity: 0.45; cursor: not-allowed; }
-:where(main button:not(.btn, .linkish)):disabled:hover { background: transparent; }
-:where(main form > button[type="submit"]:not(.btn, .linkish)):disabled:hover { background: var(--accent); }
+:where(main button:not(.btn, .linkish)):disabled:hover { background: var(--accent); }
 
 /* A button that is really a link, kept for in-sentence actions. */
 .linkish {
