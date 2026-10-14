@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.15.1 — 2026-10-14
+
+- The busy spinner turns on a page that loads `chrome.css` alone; its keyframes moved there from
+  `brand.css`.
+
 ## 0.15.0 — 2026-10-14
 
 - A form marked `data-busy` shows it was sent the moment it is: the pressed submit button reads its

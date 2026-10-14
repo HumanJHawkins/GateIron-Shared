@@ -223,7 +223,9 @@ test('page() loads the menu script, and the script ships', () => {
 });
 
 function selectorsOf(file) {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  // A gi- keyframes block names its steps (to, 50%), not elements.
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/@keyframes\s+gi-[\w-]+\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
   const selectors = [];
   const re = /([^{}]+)\{/g; let m;
   while ((m = re.exec(css))) {

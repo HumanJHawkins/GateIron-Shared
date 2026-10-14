@@ -464,6 +464,7 @@
 /* Sent and waiting (forms.js data-busy): readable, with a spinner, not the faded disabled look. */
 .btn[aria-busy="true"],
 .btn[aria-busy="true"]:disabled { opacity: 0.85; cursor: progress; }
+@keyframes gi-spin { to { transform: rotate(360deg); } }
 .btn[aria-busy="true"]::before {
   content: "";
   width: 0.9em;

@@ -1,4 +1,4 @@
-@import url('chrome.css?v=0.15.0');
+@import url('chrome.css?v=0.15.1');
 
 /* GateIron house style for a whole page: chrome.css (tokens, faces, bar, account menu, buttons,
    footer) and the element rules below. A page with its own layout loads chrome.css alone.
@@ -91,9 +91,7 @@ p { margin: 0 0 0.9rem; }
 :where(main button:not(.btn, .linkish)):hover { background: var(--accent-hover); }
 :where(main button:not(.btn, .linkish)):active:not(:disabled) { transform: translateY(1px) scale(0.97); filter: brightness(0.88); }
 @media (prefers-reduced-motion: reduce) { :where(main button:not(.btn, .linkish)):active:not(:disabled) { transform: none; } }
-/* Sent and waiting (forms.js data-busy), as .btn in chrome.css: readable, with a spinner turning
-   by gi-spin, kept here for both. */
-@keyframes gi-spin { to { transform: rotate(360deg); } }
+/* Sent and waiting (forms.js data-busy), as .btn in chrome.css: readable, with chrome.css's spinner. */
 :where(main button:not(.btn, .linkish))[aria-busy="true"]:disabled { opacity: 0.85; cursor: progress; }
 :where(main button:not(.btn, .linkish))[aria-busy="true"]::before {
   content: ""; width: 0.9em; height: 0.9em; flex: none; border: 2px solid currentColor; border-right-color: transparent;
