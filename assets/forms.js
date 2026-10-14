@@ -2,7 +2,9 @@
 // gives validEmail(), the one test of an address. In a page, a form marked data-submit-gate keeps its
 // submit buttons disabled until every required field is filled and valid; an email field is checked
 // with validEmail(), and a bad address is flagged, and announced, when the field is left, in the
-// words of the form's data-msg-email. Load with defer.
+// words of the form's data-msg-email. A form marked data-busy shows the moment it is sent: its submit
+// button reads its data-busy-label (or the form's, or "Processing…") beside a spinner, and every
+// submit button is disabled so it is sent once. Load with defer.
 (function (root, api) {
   if (typeof module === 'object' && module.exports) { module.exports = api; } else { root.GateIronForms = api; }
   if (typeof document !== 'undefined') { api.start(document); }
@@ -52,10 +54,39 @@
     check();
   }
 
+  // After the page's own submit handlers: one that sent the form by script and called
+  // preventDefault() shows its own progress, so nothing changes.
+  function busy(form, later) {
+    var wait = later || setTimeout;
+    var held = [];
+    form.addEventListener('submit', function (e) {
+      wait(function () {
+        if (e.defaultPrevented) { return; }
+        var buttons = form.querySelectorAll('button[type="submit"], button:not([type])');
+        var pressed = e.submitter || buttons[0];
+        Array.prototype.forEach.call(buttons, function (b) { held.push({ b: b, disabled: b.disabled, text: b.textContent }); b.disabled = true; });
+        if (pressed) {
+          pressed.setAttribute('aria-busy', 'true');
+          pressed.textContent = pressed.getAttribute('data-busy-label') || form.getAttribute('data-busy-label') || 'Processing…';
+        }
+      }, 0);
+    });
+    // Back to a page the browser kept: as it was before it was sent.
+    return function reset() {
+      held.forEach(function (h) { h.b.disabled = h.disabled; h.b.textContent = h.text; h.b.removeAttribute('aria-busy'); });
+      held = [];
+    };
+  }
+
   function start(doc) {
-    function init() { Array.prototype.forEach.call(doc.querySelectorAll('form[data-submit-gate]'), gate); }
+    function init() {
+      Array.prototype.forEach.call(doc.querySelectorAll('form[data-submit-gate]'), gate);
+      var resets = Array.prototype.map.call(doc.querySelectorAll('form[data-busy]'), function (f) { return busy(f); });
+      var win = doc.defaultView;
+      if (win && resets.length) { win.addEventListener('pageshow', function (e) { if (e.persisted) { resets.forEach(function (r) { r(); }); } }); }
+    }
     if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
   }
 
-  return { validEmail: validEmail, gate: gate, start: start };
+  return { validEmail: validEmail, gate: gate, busy: busy, start: start };
 })());

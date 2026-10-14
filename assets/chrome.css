@@ -435,7 +435,8 @@
   transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn:active { transform: none; }
+/* Pressed: it moves down and darkens, quickly, so a click is seen even before the page answers. */
+.btn:active:not(:disabled) { transform: translateY(1px) scale(0.97); filter: brightness(0.88); transition-duration: 0.05s; }
 
 .btn-primary { background: var(--accent); color: var(--accent-on); }
 .btn-primary:hover { background: var(--accent-hover); color: var(--accent-on); }
@@ -459,6 +460,20 @@
 .btn-primary:disabled:hover,
 .btn-secondary:disabled:hover { background: var(--accent); }
 .btn-quiet:disabled:hover { background: transparent; }
+
+/* Sent and waiting (forms.js data-busy): readable, with a spinner, not the faded disabled look. */
+.btn[aria-busy="true"],
+.btn[aria-busy="true"]:disabled { opacity: 0.85; cursor: progress; }
+.btn[aria-busy="true"]::before {
+  content: "";
+  width: 0.9em;
+  height: 0.9em;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gi-spin 0.7s linear infinite;
+}
 
 /* ---------------- footer ----------------
    The company block sits at the bottom of every site, so the page ends saying
@@ -532,5 +547,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .btn { transition: none; }
-  .btn:hover { transform: none; }
+  .btn:hover, .btn:active:not(:disabled) { transform: none; }
+  .btn[aria-busy="true"]::before { animation-duration: 2.5s; }
 }

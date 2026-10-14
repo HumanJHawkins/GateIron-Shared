@@ -161,3 +161,32 @@ test('forms.js gates a form: submit waits for validity, a bad address is flagged
   assert.equal(button.disabled, false, 'a valid form enables it');
   assert.equal(placed.textContent, '', 'and clears the error');
 });
+
+test('forms.js data-busy: the pressed button says it is working, every submit is held, and back restores it', () => {
+  const { busy } = require('../assets/forms.js');
+  const make = (text) => ({ textContent: text, disabled: false, attrs: {},
+    setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }, removeAttribute(k) { delete this.attrs[k]; } });
+  const send = make('Send Invoice'); send.setAttribute('data-busy-label', 'Sending…');
+  const other = make('Pay Now');
+  let onSubmit = null;
+  const form = { attrs: {}, getAttribute() { return null; }, addEventListener(t, fn) { onSubmit = fn; }, querySelectorAll: () => [send, other] };
+  const now = (fn) => fn();
+  const reset = busy(form, now);
+  onSubmit({ defaultPrevented: false, submitter: send });
+  assert.equal(send.textContent, 'Sending…');
+  assert.equal(send.getAttribute('aria-busy'), 'true');
+  assert.ok(send.disabled && other.disabled, 'every submit button is held, so it is sent once');
+  reset();
+  assert.ok(send.textContent === 'Send Invoice' && !send.disabled && !other.disabled && send.getAttribute('aria-busy') === null, 'restored when the page comes back');
+
+  const plain = make('Save');
+  const form2 = { getAttribute() { return null; }, addEventListener(t, fn) { onSubmit = fn; }, querySelectorAll: () => [plain] };
+  busy(form2, now);
+  onSubmit({ defaultPrevented: false, submitter: null });
+  assert.equal(plain.textContent, 'Processing…', 'without a label: Processing…');
+  const scripted = make('Save');
+  const form3 = { getAttribute() { return null; }, addEventListener(t, fn) { onSubmit = fn; }, querySelectorAll: () => [scripted] };
+  busy(form3, now);
+  onSubmit({ defaultPrevented: true, submitter: scripted });
+  assert.ok(scripted.textContent === 'Save' && !scripted.disabled, 'a form sent by its own script is left alone');
+});

@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.15.0 — 2026-10-14
+
+- A form marked `data-busy` shows it was sent the moment it is: the pressed submit button reads its
+  `data-busy-label` (or the form's, or "Processing…") beside a spinner, every submit button is
+  held so it is sent once, and a page the browser brings back is restored (Jeff: a 4-second
+  Send Invoice looked like nothing was clicked). A form a page sends by its own script is left alone.
+- A pressed button moves down and darkens, quickly; with reduced motion it only darkens.
+
 ## 0.14.0 — 2026-10-12
 
 - Every button is solid. `.btn-secondary` now draws as `.btn-primary`, and a bare `<button>` in

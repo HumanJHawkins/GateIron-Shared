@@ -272,8 +272,14 @@ Every GateIron form follows these, whether or not it is a shared component.
 - A hint is `class="field-hint"`: a `<span>` inside the label ("(for age-gated content)"), or a
   `<p>` under the field.
 
+- A form that takes more than a moment to answer shows it was sent at once: its button reads what
+  it is doing beside a spinner ("Sending Invoice…"; "Processing…" by default) and no button can
+  send it twice.
+- A pressed button moves down and darkens, so a click is seen before the page answers.
+
 `assets/forms.js` does the browser half: serve it and load it with `defer`, then mark a form
-`data-submit-gate` (and `data-msg-email` for other words). The server half is the same file:
+`data-submit-gate` (and `data-msg-email` for other words), and `data-busy` (with `data-busy-label`
+on the form or a button for words other than "Processing…"). The server half is the same file:
 `require('gateiron-shared/forms').validEmail`. `brand.css` styles the marks, the hint and the error,
 which is announced to a screen reader when it appears. `contactForm()` follows these rules.
 
