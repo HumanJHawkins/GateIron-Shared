@@ -138,8 +138,8 @@ It writes the charset and viewport, links `brand.css` and `menu.js`, puts the sk
 the body in `<main id="main" tabindex="-1">`.
 
 It asks of the site: serve `assets/` at `assets.base`; a policy allowing `style-src 'self'`,
-`font-src 'self'`, `img-src 'self'` and `script-src 'self'`, plus `img-src` for the host of any
-`avatarSrc`.
+`font-src 'self'`, `img-src 'self'` and `script-src 'self'`, plus `img-src https://gateiron.com`,
+where GateIron serves every account's picture (`/avatar/<id>`).
 
 A site with its own shell writes `skipLink()` first in `<body>`, then `topBar(...)`, and gives its
 main content `id="main"`. `skipLink({ label, target })` defaults to "Skip to content" and `main`.
