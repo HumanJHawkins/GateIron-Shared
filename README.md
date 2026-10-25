@@ -283,6 +283,20 @@ on the form or a button for words other than "Processing…"). The server half i
 `require('gateiron-shared/forms').validEmail`. `brand.css` styles the marks, the hint and the error,
 which is announced to a screen reader when it appears. `contactForm()` follows these rules.
 
+## Where a sign-in returns to
+
+Every site that takes a `returnTo` (or any address to send the browser to after a sign-in) passes it
+through `safeReturnTo`, on the server and in a page, and through nothing else. It gives back a path
+on the site, re-serialised, or `'/'` (or the second argument) for anything that could reach another
+host: a backslash, a tab or newline, `/.//host`, a scheme. A site does not write its own check.
+
+```js
+const { safeReturnTo } = require('gateiron-shared/returnTo');   // or: import { safeReturnTo } from 'gateiron-shared/returnTo'
+res.redirect(safeReturnTo(req.query.returnTo));
+```
+
+In a page, serve `assets/returnTo.js` and call `GateIronReturnTo.safeReturnTo(value)`.
+
 ## Rules for a shared component
 
 Every component here meets these; the tests check escaping, the chrome's scoping, contrast and the
@@ -355,7 +369,8 @@ Not here:
   "Waiting" means.
 - **Any school-, district- or class-specific value.**
 - **Anything requiring a build step.**
-- **Business logic, database helpers, auth, date maths.** A second kind of
+- **Business logic, database helpers, auth, date maths,** except the two checks a sign-in page
+  shares with its server, `validEmail` and `safeReturnTo`. A second kind of
   shared code gets a second package, so a site can upgrade one without taking
   the others. A component's check of its own fields (`readContact`) is part of
   the component; sending, storing and throttling are not.

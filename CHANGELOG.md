@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.16.0 — 2026-10-24
+
+- `gateiron-shared/returnTo`: `safeReturnTo(value, fallback = '/')`, the one check of where a sign-in
+  sends the browser back to, for the server (`require` or `import`) and the page
+  (`assets/returnTo.js`, `GateIronReturnTo.safeReturnTo`). Four sites had four string checks, and
+  three let a different trick through (GN-1115, NH-1143, NH-1144, NUC-1145).
+
 ## 0.15.1 — 2026-10-14
 
 - The busy spinner turns on a page that loads `chrome.css` alone; its keyframes moved there from
