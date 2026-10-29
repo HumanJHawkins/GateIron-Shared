@@ -546,6 +546,11 @@
   .gi-nav a { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.55rem; font-size: 0.88rem; }
 }
 
+/* A phone: the menu spans the window under the bar, never off its left edge (WCAG 1.4.10, GN-1079). */
+@media (max-width: 30rem) {
+  .gi-account-menu { position: fixed; left: 0.5rem; right: 0.5rem; top: calc(var(--bar-h) + 0.25rem); min-width: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn { transition: none; }
   .btn:hover, .btn:active:not(:disabled) { transform: none; }

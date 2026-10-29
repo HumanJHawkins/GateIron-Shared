@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.16.1 — 2026-10-29
+
+- On a screen 30rem wide or less, the account menu spans the window under the bar instead of hanging
+  off its left edge (GN-1079, WCAG 2.1 1.4.10 Reflow).
+
 ## 0.16.0 — 2026-10-24
 
 - `gateiron-shared/returnTo`: `safeReturnTo(value, fallback = '/')`, the one check of where a sign-in
