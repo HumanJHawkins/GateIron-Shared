@@ -91,6 +91,8 @@ once when another tab of the site loads as someone else; a 401 or a different `i
 Call it on every page, signed in or not: a page that loads signed out tells the site's other tabs. A
 sign-out made at GateIron.com or in another product reaches the site as GateIron's back-channel
 logout, which must end the site's session so the next ask is the 401.
+The page's CSP must allow the ask: `connect-src 'self'` (or the origin of `meUrl`). A `default-src
+'none'` with no `connect-src` blocks it silently and the watch never fires.
 
 ## API
 

@@ -97,7 +97,7 @@
     var o = opts || {};
     var w = typeof window !== 'undefined' ? window : null;
     if (!w || w.top !== w) { return; }
-    var who = o.id || null;
+    var who = o.id == null || o.id === '' ? null : String(o.id);   // a meta tag's string and JSON's number compare alike
     var channel = w.BroadcastChannel ? new w.BroadcastChannel(o.channel || 'gateiron-account') : null;
     if (channel) { channel.postMessage({ who: who }); }
     if (!who) { return; }
@@ -107,7 +107,7 @@
       last = Date.now();
       w.fetch(o.meUrl || '/api/me', { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } })
         .then(function (r) { return r.status === 401 ? null : r.ok ? r.json() : undefined; })
-        .then(function (me) { if (me !== undefined && (me ? me.id : null) !== who) { w.location.reload(); } }, function () {});
+        .then(function (me) { if (me !== undefined && (me && me.id != null ? String(me.id) : null) !== who) { w.location.reload(); } }, function () {});
     }
     if (channel) { channel.onmessage = function (e) { if (e.data && e.data.who !== who) { check(true); } }; }
     w.document.addEventListener('visibilitychange', function () { if (w.document.visibilityState === 'visible') { check(); } });

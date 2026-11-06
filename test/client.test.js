@@ -52,6 +52,7 @@ test('watchAccount reloads a page whose account signed out in another tab, and n
   assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'a1' }) })).reloaded, 0, 'still the same account: no reload');
   assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'b2' }) })).reloaded, 1, 'another account: reload');
   assert.equal((await run('a1', { status: 503, ok: false })).reloaded, 0, 'an error proves nothing');
+  assert.equal((await run('7', { status: 200, ok: true, json: async () => ({ id: 7 }) })).reloaded, 0, 'a string id and a number id of the same account match');
   const out2 = await run(null, { status: 401, ok: false });
   assert.ok(out2.posted.length === 1 && out2.asked === 0, 'a signed-out page tells the others and asks nothing');
 });

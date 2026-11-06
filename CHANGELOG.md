@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.17.1 — 2026-11-06
+
+- `watchAccount` compares account ids as strings, so an id read from a meta tag matches the number
+  `/api/me` answers instead of reloading the page over and over. The README names the CSP
+  `connect-src` the ask needs (NUC-1658).
+
 ## 0.17.0 — 2026-11-06
 
 - `GateIronChrome.watchAccount({ id, meUrl, channel })` (`assets/account.js`): a page notices a
