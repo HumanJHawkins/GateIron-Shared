@@ -27,6 +27,35 @@ test('account.js in a page draws the chip the server draws', () => {
   assert.equal(api.fillAccount(slot, {}), null);
 });
 
+test('watchAccount reloads a page whose account signed out in another tab, and nothing else', async () => {
+  const run = async (who, answer) => {
+    const posted = []; const listeners = {}; let reloaded = 0; let asked = 0; let channel = null;
+    class BroadcastChannel { constructor() { channel = this; } postMessage(m) { posted.push(m); } }
+    const win = {
+      BroadcastChannel, setInterval: () => 0, location: { reload: () => { reloaded += 1; } },
+      document: { visibilityState: 'visible', addEventListener: (t, f) => { listeners[t] = f; } },
+      addEventListener: (t, f) => { listeners[t] = f; },
+      fetch: async () => { asked += 1; return answer; },
+    };
+    win.top = win; win.window = win; win.self = win;
+    vm.runInNewContext(source('account.js') + ';window.GateIronChrome.watchAccount({ id: ' + JSON.stringify(who) + ' });', win);
+    if (channel && channel.onmessage) { channel.onmessage({ data: { who: 'someone-else' } }); }
+    await new Promise((r) => setTimeout(r, 0));
+    if (listeners.focus) { listeners.focus(); }
+    await new Promise((r) => setTimeout(r, 0));
+    return { posted, reloaded, asked };
+  };
+  const out = await run('a1', { status: 401, ok: false });
+  assert.equal(JSON.stringify(out.posted), '[{"who":"a1"}]');
+  assert.equal(out.reloaded, 1, 'a 401 reloads');
+  assert.equal(out.asked, 1, 'the focus within 5 s of the last ask does not ask again');
+  assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'a1' }) })).reloaded, 0, 'still the same account: no reload');
+  assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'b2' }) })).reloaded, 1, 'another account: reload');
+  assert.equal((await run('a1', { status: 503, ok: false })).reloaded, 0, 'an error proves nothing');
+  const out2 = await run(null, { status: 401, ok: false });
+  assert.ok(out2.posted.length === 1 && out2.asked === 0, 'a signed-out page tells the others and asks nothing');
+});
+
 // Just enough DOM for menu.js: a tree with closest, contains, focus and the selectors it asks for.
 function fakePage() {
   const listeners = {};

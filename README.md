@@ -79,6 +79,19 @@ chip.querySelector('[data-gi-action="sign-out"]')?.addEventListener('click', sig
 `account` and `signIn` take exactly what `topBar` takes. A menu entry `{ label, button: 'sign-out' }`
 is a `<button data-gi-action="sign-out">` the site binds itself.
 
+Once the page knows who it shows, it watches for a sign-out made in another tab, of this site or of
+any GateIron product:
+
+```js
+GateIronChrome.watchAccount({ id: user ? user.id : null, meUrl: '/api/me', channel: 'mysite-account' });
+```
+
+A signed-in page asks `meUrl` again when it is shown or focused and each minute while in view, and at
+once when another tab of the site loads as someone else; a 401 or a different `id` reloads the page.
+Call it on every page, signed in or not: a page that loads signed out tells the site's other tabs. A
+sign-out made at GateIron.com or in another product reaches the site as GateIron's back-channel
+logout, which must end the site's session so the next ask is the 401.
+
 ## API
 
 Plain data in, HTML strings out.

@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.17.0 — 2026-11-06
+
+- `GateIronChrome.watchAccount({ id, meUrl, channel })` (`assets/account.js`): a page notices a
+  sign-out made in another tab, of the site or of any product, and reloads (GN-1654, from
+  NotHangman's own copy).
+
 ## 0.16.1 — 2026-10-29
 
 - On a screen 30rem wide or less, the account menu spans the window under the bar instead of hanging

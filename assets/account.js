@@ -1,6 +1,7 @@
 // The account chip's markup, one implementation for both sides. chrome.js requires this file to
 // render the bar on the server; a page that fills the bar's slot after load serves it and calls
-// window.GateIronChrome.fillAccount(slot, { account } or { signIn }).
+// window.GateIronChrome.fillAccount(slot, { account } or { signIn }), and watchAccount to notice a
+// sign-out made in another tab.
 (function (root, api) {
   if (typeof module === 'object' && module.exports) { module.exports = api; } else { root.GateIronChrome = api; }
 })(typeof self !== 'undefined' ? self : this, (function () {
@@ -83,5 +84,36 @@
     return slot.firstElementChild;
   }
 
-  return { esc: esc, initials: initials, accountHtml: accountHtml, fillAccount: fillAccount };
+  /**
+   * A SIGN-OUT IN ANOTHER TAB (GN-1654). A page shown as `id` asks `meUrl` again when it is shown or
+   * focused and each minute while in view (at most once in 5 s), and at once when a tab of this site
+   * loads as someone else; a 401, or another account, reloads it. Any other answer, or none, proves
+   * nothing. A sign-out at GateIron.com or in another product reaches a product as GateIron's
+   * back-channel notice, which ends its session, so its next ask is the 401.
+   * opts: { id: the account the page shows, or null; meUrl: default '/api/me'; channel: a name for
+   * this site's tabs, default 'gateiron-account' }. A page inside a frame does not watch.
+   */
+  function watchAccount(opts) {
+    var o = opts || {};
+    var w = typeof window !== 'undefined' ? window : null;
+    if (!w || w.top !== w) { return; }
+    var who = o.id || null;
+    var channel = w.BroadcastChannel ? new w.BroadcastChannel(o.channel || 'gateiron-account') : null;
+    if (channel) { channel.postMessage({ who: who }); }
+    if (!who) { return; }
+    var last = 0;
+    function check(now) {
+      if (!now && Date.now() - last < 5000) { return; }
+      last = Date.now();
+      w.fetch(o.meUrl || '/api/me', { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } })
+        .then(function (r) { return r.status === 401 ? null : r.ok ? r.json() : undefined; })
+        .then(function (me) { if (me !== undefined && (me ? me.id : null) !== who) { w.location.reload(); } }, function () {});
+    }
+    if (channel) { channel.onmessage = function (e) { if (e.data && e.data.who !== who) { check(true); } }; }
+    w.document.addEventListener('visibilitychange', function () { if (w.document.visibilityState === 'visible') { check(); } });
+    w.addEventListener('focus', function () { check(); });
+    w.setInterval(function () { if (w.document.visibilityState === 'visible') { check(); } }, 60000);
+  }
+
+  return { esc: esc, initials: initials, accountHtml: accountHtml, fillAccount: fillAccount, watchAccount: watchAccount };
 })());
