@@ -43,6 +43,29 @@
     return '<a href="' + esc(item.href) + '">' + esc(item.label) + '</a>';
   }
 
+  // Another account signed in on this browser: its avatar, name and address, as a link, a form or a
+  // button the page binds (data-gi-account carries the site's key for it).
+  function switchHtml(other) {
+    var inner = avatarHtml(other) + '<span><b>' + esc(other.name || other.email) + '</b>'
+      + (other.email && other.name ? '<span>' + esc(other.email) + '</span>' : '') + '</span>';
+    var key = other.key != null ? ' data-gi-account="' + esc(other.key) + '"' : '';
+    if (other.form) {
+      return '<form method="' + esc(other.form.method || 'post') + '" action="' + esc(other.form.action) + '">'
+        + (other.form.hiddenHtml || '') + '<button type="submit" class="gi-account-switch"' + key + '>' + inner + '</button></form>';
+    }
+    if (other.button) {
+      return '<button type="button" class="gi-account-switch" data-gi-action="' + esc(other.button) + '"' + key + '>' + inner + '</button>';
+    }
+    return '<a class="gi-account-switch" href="' + esc(other.href) + '"' + key + '>' + inner + '</a>';
+  }
+
+  // The other accounts, then Add another account, then a rule above the site's own items.
+  function accountsHtml(account) {
+    var others = (account.accounts || []).map(switchHtml).join('');
+    var add = account.add ? '<a href="' + esc(account.add.href) + '">' + esc(account.add.label || 'Add another account') + '</a>' : '';
+    return others || add ? others + add + '<hr class="gi-account-rule">' : '';
+  }
+
   /**
    * The chip and its menu for `account`, a sign-in button for `signIn` alone, or with neither the
    * empty slot a client script fills (none if `accountSlot` is false).
@@ -50,6 +73,11 @@
    * A menu item is { href, label }; { label, form: { action, method, hiddenHtml } } for anything
    * that changes state; or { label, button } for a <button data-gi-action="<button>"> the page
    * binds itself.
+   *
+   * `account.accounts` lists the other accounts signed in on this browser, each { name, email,
+   * avatarSrc, key } with href, form or button as a menu item has; `account.add` is { href, label }
+   * for Add another account. Both sit under the address, above `menu`. Pass no `accounts` when there
+   * are none: a person with one account sees no switching item.
    */
   function accountHtml(opts) {
     var o = opts || {};
@@ -72,6 +100,7 @@
       + '</summary>'
       + '<div class="gi-account-menu">'
       + (account.email ? '<div class="gi-account-meta">' + esc(account.email) + '</div>' : '')
+      + accountsHtml(account)
       + menu
       + '</div>'
       + '</details>';

@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.18.0 — 2026-11-06
+
+- The account menu draws the other accounts signed in on the browser: `account.accounts`, each with its
+  avatar, name and address, as a link, a form or a button, then `account.add` (Add another account)
+  and a rule, under the address and above the site's items. The `.gi-account-switch` and
+  `.gi-account-rule` styles move here from GateIron.com, so every site draws one menu (GN-1677).
+
 ## 0.17.1 — 2026-11-06
 
 - `watchAccount` compares account ids as strings, so an id read from a meta tag matches the number

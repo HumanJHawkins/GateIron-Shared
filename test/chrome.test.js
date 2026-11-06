@@ -352,6 +352,26 @@ test('menu items: a link, a form that posts, a button the page binds', () => {
   assert.ok(html.includes('<button type="button" data-gi-action="sign-out-everywhere">Everywhere</button>'));
 });
 
+test('the other accounts on the browser head the menu, each with its avatar; one account gets none', () => {
+  const html = brand.topBar({ account: { name: 'Ada', email: 'ada@x.test', menu: [{ href: '/p', label: 'Profile' }],
+    accounts: [
+      { name: 'Grace Hopper', email: 'g@x.test', avatarSrc: 'https://x.test/g.png', key: 'k1', button: 'switch' },
+      { name: '<b>', email: 'm@x.test', form: { action: '/_account', hiddenHtml: '<input type="hidden" name="key" value="k2">' } },
+      { email: 'only@x.test', href: '/?au=k3' },
+    ],
+    add: { href: '/signin?add=1' } } });
+  const menu = html.match(/<div class="gi-account-menu">([\s\S]*)<\/div>/)[1];
+  assert.ok(menu.indexOf('gi-account-switch') > menu.indexOf('ada@x.test') && menu.indexOf('gi-account-switch') < menu.indexOf('Profile'), 'under the address, above the site\'s items');
+  assert.ok(menu.includes('<button type="button" class="gi-account-switch" data-gi-action="switch" data-gi-account="k1"><span class="gi-avatar gi-avatar-img" aria-hidden="true"><img src="https://x.test/g.png"'));
+  assert.ok(menu.includes('<b>Grace Hopper</b><span>g@x.test</span>'));
+  assert.ok(menu.includes('<form method="post" action="/_account"><input type="hidden" name="key" value="k2"><button type="submit" class="gi-account-switch">'));
+  assert.ok(menu.includes('<b>&lt;b&gt;</b>'), 'names are escaped');
+  assert.ok(menu.includes('<a class="gi-account-switch" href="/?au=k3"') && menu.includes('<b>only@x.test</b></span>'), 'an address alone is the name');
+  assert.ok(/<a href="\/signin\?add=1">Add another account<\/a><hr class="gi-account-rule">/.test(menu));
+  const one = brand.topBar({ account: { name: 'Ada', menu: [] } });
+  assert.ok(!one.includes('gi-account-switch') && !one.includes('gi-account-rule'), 'one account: no switching item');
+});
+
 test('compact density keeps the page\'s own body class', () => {
   assert.ok(brand.page({ title: 't', density: 'compact', bodyClass: 'game', assets: ASSETS }).includes('<body class="gi-compact game">'));
   assert.ok(brand.page({ title: 't', bodyClass: 'game', assets: ASSETS }).includes('<body class="game">'));

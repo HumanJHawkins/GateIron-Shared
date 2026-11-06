@@ -114,7 +114,7 @@ const { page, skipLink, topBar, siteFooter, initials, assetUrl, esc } = require(
 | `context` | the smaller line beneath it — a district, a class |
 | `nav` | `[{ href, label, current?, external?, title? }]`; `title` is the link's tooltip |
 | `navLabel` | the nav's name for a screen reader (default "Sections") |
-| `account` | `{ name, email, role?, avatarSrc?, accent?, menuLabel?, menu }`, or omit |
+| `account` | `{ name, email, role?, avatarSrc?, accent?, menuLabel?, accounts?, add?, menu }`, or omit. `accounts` are the other accounts signed in on this browser, `[{ name, email, avatarSrc, key, href \| form \| button }]`, drawn under the address with their avatars; `add` is `{ href, label? }` for Add another account. A person with one account gets no `accounts` |
 | `signIn` | `{ href, label }` for the signed-out state |
 | `actionsHtml` | placed before the account chip, for the site's own buttons; on a narrow screen they take a second line only when they don't fit beside the brand and the account chip (`menu.js` measures; or the page's body has `gi-bar-inline`) |
 | `assets` | `{ base, version }` |

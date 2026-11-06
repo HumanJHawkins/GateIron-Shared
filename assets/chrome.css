@@ -416,6 +416,13 @@
 .gi-account-menu button:hover { background: var(--surface-2); }
 .gi-account-menu form { margin: 0; }
 .gi-account-menu [hidden] { display: none; }
+/* The other accounts signed in on this browser, each with its avatar (account.js). */
+.gi-account-menu .gi-account-switch { display: flex; align-items: center; gap: 0.55rem; }
+.gi-account-switch .gi-avatar { --gi-avatar-size: 2rem; font-size: 0.72rem; }
+.gi-account-switch > span:last-child { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; }
+.gi-account-switch b { display: block; font-weight: 600; }
+.gi-account-switch b + span { font-size: 0.82rem; color: var(--text-muted); }
+.gi-account-rule { border: 0; border-top: 1px solid var(--border-color); margin: 0.35rem 0; }
 
 /* ---------------- buttons ----------------
    .btn is the one button class every page uses, in the chrome and out of it. */
