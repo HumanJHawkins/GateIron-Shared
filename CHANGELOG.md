@@ -3,6 +3,10 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.18.1 — 2026-11-06
+
+- Each other account in the menu reads "Switch to <name> <address>" to a screen reader (GN-1683).
+
 ## 0.18.0 — 2026-11-06
 
 - The account menu draws the other accounts signed in on the browser: `account.accounts`, each with its

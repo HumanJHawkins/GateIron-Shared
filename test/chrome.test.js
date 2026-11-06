@@ -362,7 +362,7 @@ test('the other accounts on the browser head the menu, each with its avatar; one
     add: { href: '/signin?add=1' } } });
   const menu = html.match(/<div class="gi-account-menu">([\s\S]*)<\/div>/)[1];
   assert.ok(menu.indexOf('gi-account-switch') > menu.indexOf('ada@x.test') && menu.indexOf('gi-account-switch') < menu.indexOf('Profile'), 'under the address, above the site\'s items');
-  assert.ok(menu.includes('<button type="button" class="gi-account-switch" data-gi-action="switch" data-gi-account="k1"><span class="gi-avatar gi-avatar-img" aria-hidden="true"><img src="https://x.test/g.png"'));
+  assert.ok(menu.includes('<button type="button" class="gi-account-switch" data-gi-action="switch" data-gi-account="k1"><span class="gi-sr-only">Switch to </span><span class="gi-avatar gi-avatar-img" aria-hidden="true"><img src="https://x.test/g.png"'), 'a screen reader hears Switch to, then the name');
   assert.ok(menu.includes('<b>Grace Hopper</b><span>g@x.test</span>'));
   assert.ok(menu.includes('<form method="post" action="/_account"><input type="hidden" name="key" value="k2"><button type="submit" class="gi-account-switch">'));
   assert.ok(menu.includes('<b>&lt;b&gt;</b>'), 'names are escaped');

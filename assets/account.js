@@ -46,7 +46,7 @@
   // Another account signed in on this browser: its avatar, name and address, as a link, a form or a
   // button the page binds (data-gi-account carries the site's key for it).
   function switchHtml(other) {
-    var inner = avatarHtml(other) + '<span><b>' + esc(other.name || other.email) + '</b>'
+    var inner = '<span class="gi-sr-only">Switch to </span>' + avatarHtml(other) + '<span><b>' + esc(other.name || other.email) + '</b>'
       + (other.email && other.name ? '<span>' + esc(other.email) + '</span>' : '') + '</span>';
     var key = other.key != null ? ' data-gi-account="' + esc(other.key) + '"' : '';
     if (other.form) {
