@@ -94,6 +94,91 @@ logout, which must end the site's session so the next ask is the 401.
 The page's CSP must allow the ask: `connect-src 'self'` (or the origin of `meUrl`). A `default-src
 'none'` with no `connect-src` blocks it silently and the watch never fires.
 
+## One account per tab
+
+A browser holds several accounts and each tab acts as its own (GateIron.com
+docs/SIGN-IN-FOR-PRODUCTS.md, "Several accounts on one browser"). The site
+mints an opaque key per browser and account, keeps the list in two readable
+cookies (the keys signed in here, the default first; the keys signed out here),
+and the tab names its key on everything it sends. `assets/tabs.js` is the
+browser half; `gateiron-shared/tabs` the server half. Where the accounts are
+kept, how many (GateIron's are 5), and what a sign-in or sign-out writes stay
+the site's.
+
+The script is the first on every page, a plain script, not a module and not
+deferred: it must wrap `fetch` before any other script fetches.
+
+```html
+<meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
+<script src="/brand/tabs.js?v=0.19.0" data-gateiron-tabs data-header="X-NH-Account"
+  data-keys-cookie="nhKeys" data-gone-cookie="nhGone" data-channel="nothangman-tabs"></script>
+```
+
+Or from the site's own first script: `GateIronTabs.start({ header, keysCookie,
+goneCookie, channel, param, storageKey, meta, keyPattern, skipSelector,
+signOutSelector, observe, onSignedOut })`. `param` is `au`; `keyPattern`
+`/^[A-Za-z0-9_-]{6,16}$/`. `onSignedOut(key)` runs when this tab's account
+signs out in another tab; the default reloads.
+
+What it does: fetch and XHR to this site carry `header`; EventSource and
+sendBeacon carry `au`. While the browser holds more than one account, or another
+than this tab's, the address carries `au`, and so does each link as it is used
+(pointer, keyboard, middle-click, copy, drag), each form, `form.submit()`,
+`window.open` and every script navigation (the Navigation API). A link inside
+`[contenteditable]`, `.ProseMirror`, `[data-account]`, `[data-gi-account]` or
+`skipSelector` is left as written, and so is a URL naming another account signed
+in here. `observe: true` also marks every href as drawn (off by default: a page
+that redraws often pays for it).
+
+`window.GateIronTab`: `key()`; `adopt(key)` when the key arrives after load
+(`/api/me`, a popup sign-in's message); `forget()`; `address(url)`, a
+script-built URL as this tab goes to it; `as(url, key)`, the same URL as
+another account; `unmarked(url)`; `leaving()`, called before a sign-out made by
+`fetch` (a form matching `signOutSelector`, `form[action*="/logout"]`, does it
+itself). The tabs of that account get a `gateiron:leaving` event on `document`
+to save drafts, then read again signed out.
+
+The server:
+
+```js
+const tabs = require('gateiron-shared/tabs');
+app.use((req, res, next) => {
+  const t = tabs.readTab(req, { header: 'X-NH-Account', keys: keysHere(req), gone: goneHere(req) });
+  req.tab = t;
+  tabs.keepOnRedirect(res, () => req.tab.keep);
+  next();
+});
+```
+
+`readTab` takes `au` out of `req.url` and answers `{ asked, source, key,
+signedOut, keep, background }`. `key` is the account to serve. A request naming
+none is the default's, and so is a shared or typed link naming a key this browser
+never held. A document request with no key, sent by the site's own page, takes
+its Referer's key, never the default. Anything else naming a key not signed in
+here is signed out. A `background` request (fetch, XHR, EventSource, beacon)
+signed out is answered 401, never a redirect to sign in and never the default.
+
+The site's rules:
+
+- After a sign-in, redirect naming the new account's key (`keep` = that key), so
+  the tab that signed in becomes it. A popup sign-in's last page sends the new
+  key to its opener, which calls `adopt(key)`.
+- The gone list holds what the server ended: the site's own sign-outs, and the
+  keys its back-channel logout removed, kept server-side and written into the
+  cookie on the browser's next answer. A key the browser names that the server
+  never held is signed out, not added. `addGone(list, ...keys)` keeps the last 12.
+- Send a Referrer-Policy that gives same-origin requests the full URL:
+  `same-origin` or `strict-origin-when-cross-origin`, never `no-referrer`
+  (helmet's default), `origin` or `strict-origin`. Frames, pictures and the
+  fallback for browsers without the Navigation API read the key there.
+- Cookie helpers: `readList(req, name)` reads `name` or `__Host-name`;
+  `cookieName(name, secure)` is the one to write.
+- A site where a tab naming none can be signed out with accounts still here
+  (GateIron.com, after its current account signs out) writes the keys list with
+  a leading `.` (`.k1.k2`) and passes `default: null` to `readTab`.
+- After a sign-in, name the new key only while the browser holds more than one
+  account; with one, naming none is it.
+
 ## API
 
 Plain data in, HTML strings out.

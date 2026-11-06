@@ -3,6 +3,15 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.19.0 — 2026-11-06
+
+- One account per tab, for every site: `assets/tabs.js` (the browser half, `window.GateIronTab`) and
+  `gateiron-shared/tabs` (`readTab`, `stripParam`, `withParam`, `keepOnRedirect`, `readList`,
+  `cookieName`, `addGone`), from GateIron.com's, NotUserError's and NotHangman's own copies (GN-1677).
+  Script navigations go through the Navigation API; `form.submit()`, `window.open`, fetch of a URL
+  object, EventSource and sendBeacon carry the key; a background request naming a key not signed in
+  here is signed out, never the default.
+
 ## 0.18.1 — 2026-11-06
 
 - Each other account in the menu reads "Switch to <name> <address>" to a screen reader (GN-1683).
