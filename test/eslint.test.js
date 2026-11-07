@@ -27,7 +27,9 @@ test('relative, absolute, other-site and static addresses pass, and allow adds m
     fetch('api/me'); fetch('https://gateiron.com/x'); fetch('//cdn.example/x'); location.href = 'shop/cart';
     const css = '<link href="/css/site.css"><script src="/js/a.js"></script><img src="/image/a.png"><a href="#main">';
     res.redirect('/signin'); const p = '/u/' + key; a.href = '/oauth/auth';
+    const deep = '<link href="/typing/rooms.css"><a href="/games/ddocraft.js?v=2"><a href="/defend/art/x.webp#a">';
   `, ['/oauth/']), []);
+  assert.deepStrictEqual(lint(`fetch('/games/list.json'); fetch('/games/css'); location.href = '/shop.css/cart';`), ['/games/list.json', '/games/css', '/shop.css/cart']);
 });
 
 test('rootRelative finds them in an HTML file, with the line', () => {

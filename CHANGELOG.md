@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.7 — 2026-11-07
+
+- `watchAccount`'s `meUrl` defaults to `api/me` on a page with a `<base href>`, so on the path the ask
+  goes out as the tab; `/api/me` on a page without one (GN-1799).
+- The lint and `rootRelative` pass a file of a static type (`.css`, `.js`, images, fonts, sounds) in
+  any folder, not only the STATIC folders and `'/*.css'` entries at the root.
+- The README says `GateIronTab`'s address functions take relative addresses too.
+
 ## 0.20.6 — 2026-11-07
 
 - The account menu is as wide as its widest account row, up to 22rem, instead of the chip's width

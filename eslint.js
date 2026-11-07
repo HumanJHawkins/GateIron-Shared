@@ -11,9 +11,10 @@
 // does the same for an HTML file, for a site's test.
 //
 //   const gateiron = require('gateiron-shared/eslint');
-//   { plugins: { gateiron }, rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/', '/*.css'], calls: ['post'] }] } }
+//   { plugins: { gateiron }, rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/'], calls: ['post'] }] } }
 //
-// allow: a site's own static files and the addresses that never carry a tab (pathTab's bare). `rel` converts one.
+// allow: a site's own static folders and the addresses that never carry a tab (pathTab's bare); a file of a static type
+// (.css, .js, an image, a font, a sound) passes in any folder. `rel` converts one.
 
 const STATIC = ['/brand/', '/css/', '/js/', '/image/', '/images/', '/fonts/', '/vendor/', '/favicon'];
 // An attribute's value up to its closing quote, or to the end of a string that goes on in code ('<a href="/list/' + c).
@@ -24,7 +25,9 @@ const inBase = (s, at) => /^<base\b/i.test(s.slice(s.lastIndexOf('<', at), at));
 
 // An allow entry is a path prefix ("/oauth/"), or "/*.js" for any file of that type at the root ("/app.js").
 const allowed = (s, a) => (a.startsWith('/*.') ? new RegExp(`^/[^/?#]+\\${a.slice(2)}(?:[?#]|$)`).test(s) : s.startsWith(a));
-const rooted = (s, allow) => typeof s === 'string' && /^\/(?![/\\])/.test(s) && !allow.some((a) => allowed(s, a));
+// A file of a static type, in any folder ("/games/ddocraft.css"), keeps its slash like the STATIC folders.
+const STATIC_FILE = /^[^?#]*\.(?:css|m?js|map|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf|mp3|ogg|wav|mp4|webm)(?:[?#]|$)/i;
+const rooted = (s, allow) => typeof s === 'string' && /^\/(?![/\\])/.test(s) && !STATIC_FILE.test(s) && !allow.some((a) => allowed(s, a));
 
 /** `to` relative, for a page under <base href>: "/shop/cart" is "shop/cart", "/" is "./"; a static file stays as it is. */
 const rel = (to, allow = []) => (rooted(to, STATIC.concat(allow)) ? (to === '/' ? './' : to.slice(1)) : to);

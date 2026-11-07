@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.6
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.7
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.6">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.7">
 ```
 
 ## The account menu's script
@@ -88,8 +88,9 @@ any GateIron product:
 GateIronChrome.watchAccount({ id: user ? user.id : null, meUrl: 'api/me', channel: 'mysite-account' });
 ```
 
-`meUrl` defaults to `/api/me`; a site on the path passes it relative (`api/me`), or the ask goes out as
-the default account and the page reloads each time. A signed-in page asks `meUrl` again when it is shown or focused and each minute while in view, and at
+`meUrl` defaults to `api/me` on a page with a `<base href>` (the path) and `/api/me` on one without; a
+site on the path that passes its own passes it relative, or the ask goes out as the default account and
+the page reloads each time. A signed-in page asks `meUrl` again when it is shown or focused and each minute while in view, and at
 once when another tab of the site loads as someone else; a 401 or a different `id` reloads the page.
 Call it on every page, signed in or not: a page that loads signed out tells the site's other tabs. A
 sign-out made at GateIron.com or in another product reaches the site as GateIron's back-channel
@@ -196,7 +197,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.6" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.7" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 
@@ -217,7 +218,8 @@ base would send to the front page, stays on the page.
 
 `window.GateIronTab`: `key()`; `adopt(key)`; `forget()`; `address(url)`, an
 address under this tab's key; `as(url, key)`, under another account's;
-`unmarked(url)`, under none; `leaving()`.
+`unmarked(url)`, under none; `leaving()`. Each takes any address of this site,
+relative or not, resolved against the page's base.
 
 ### The lint
 
@@ -227,7 +229,7 @@ const gateiron = require('gateiron-shared/eslint');   // or: import gateiron fro
 { files: ['src/**/*.js'], plugins: { gateiron },
   rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/'] }] } },
 { files: ['public/**/*.js'], plugins: { gateiron },
-  rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/', '/*.css', '/*.js'], calls: ['post'] }] } },
+  rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/'], calls: ['post'] }] } },
 ```
 
 It reports a root-relative address where a browser goes or sends: `fetch`,
@@ -237,8 +239,9 @@ to `.href` or `.action`, a property named `href`, `action`, `home` or `meUrl`, a
 `href`, `action` or `formaction` attribute in any string (HTML built in code),
 following both branches of `?:`, `||` and `??`. It cannot see an address that
 starts with an expression (`` `${at}/files` ``).
-`allow`: more static paths (`'/*.js'` is any `.js` file at the root) and bare
-addresses. `calls`: the page scripts' own helpers whose first argument is an
+A file of a static type (`.css`, `.js`, an image, a font, a sound) in any
+folder keeps its slash without an entry. `allow`: more static folders and bare
+addresses (`'/*.json'` is any `.json` file at the root). `calls`: the page scripts' own helpers whose first argument is an
 address; not in server code, where `router.post('/x')` is a route. For HTML
 files, `rootRelative(html, allow)` returns `[{ attr, url, line }]` for a test;
 it skips the page's own `<base href="/">`. Run it over the HTML the site renders

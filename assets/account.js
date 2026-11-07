@@ -119,7 +119,8 @@
    * loads as someone else; a 401, or another account, reloads it. Any other answer, or none, proves
    * nothing. A sign-out at GateIron.com or in another product reaches a product as GateIron's
    * back-channel notice, which ends its session, so its next ask is the 401.
-   * opts: { id: the account the page shows, or null; meUrl: default '/api/me'; channel: a name for
+   * opts: { id: the account the page shows, or null; meUrl: default 'api/me' under a <base href> (path mode), else
+   * '/api/me'; channel: a name for
    * this site's tabs, default 'gateiron-account' }. A page inside a frame does not watch.
    */
   function watchAccount(opts) {
@@ -134,7 +135,7 @@
     function check(now) {
       if (!now && Date.now() - last < 5000) { return; }
       last = Date.now();
-      w.fetch(o.meUrl || '/api/me', { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } })
+      w.fetch(o.meUrl || (w.document.querySelector('base[href]') ? 'api/me' : '/api/me'), { credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/json' } })
         .then(function (r) { return r.status === 401 ? null : r.ok ? r.json() : undefined; })
         .then(function (me) { if (me !== undefined && (me && me.id != null ? String(me.id) : null) !== who) { w.location.reload(); } }, function () {});
     }

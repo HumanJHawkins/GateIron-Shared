@@ -28,14 +28,14 @@ test('account.js in a page draws the chip the server draws', () => {
 });
 
 test('watchAccount reloads a page whose account signed out in another tab, and nothing else', async () => {
-  const run = async (who, answer) => {
-    const posted = []; const listeners = {}; let reloaded = 0; let asked = 0; let channel = null;
+  const run = async (who, answer, base) => {
+    const posted = []; const listeners = {}; let reloaded = 0; let asked = 0; let channel = null; let url = null;
     class BroadcastChannel { constructor() { channel = this; } postMessage(m) { posted.push(m); } }
     const win = {
       BroadcastChannel, setInterval: () => 0, location: { reload: () => { reloaded += 1; } },
-      document: { visibilityState: 'visible', addEventListener: (t, f) => { listeners[t] = f; } },
+      document: { visibilityState: 'visible', addEventListener: (t, f) => { listeners[t] = f; }, querySelector: (sel) => (base && sel === 'base[href]' ? {} : null) },
       addEventListener: (t, f) => { listeners[t] = f; },
-      fetch: async () => { asked += 1; return answer; },
+      fetch: async (u) => { asked += 1; url = u; return answer; },
     };
     win.top = win; win.window = win; win.self = win;
     vm.runInNewContext(source('account.js') + ';window.GateIronChrome.watchAccount({ id: ' + JSON.stringify(who) + ' });', win);
@@ -43,12 +43,14 @@ test('watchAccount reloads a page whose account signed out in another tab, and n
     await new Promise((r) => setTimeout(r, 0));
     if (listeners.focus) { listeners.focus(); }
     await new Promise((r) => setTimeout(r, 0));
-    return { posted, reloaded, asked };
+    return { posted, reloaded, asked, url };
   };
   const out = await run('a1', { status: 401, ok: false });
   assert.equal(JSON.stringify(out.posted), '[{"who":"a1"}]');
   assert.equal(out.reloaded, 1, 'a 401 reloads');
   assert.equal(out.asked, 1, 'the focus within 5 s of the last ask does not ask again');
+  assert.equal(out.url, '/api/me', 'a page without a <base href> asks /api/me');
+  assert.equal((await run('a1', { status: 401, ok: false }, true)).url, 'api/me', 'under a <base href> (the path) it asks relative, as the tab');
   assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'a1' }) })).reloaded, 0, 'still the same account: no reload');
   assert.equal((await run('a1', { status: 200, ok: true, json: async () => ({ id: 'b2' }) })).reloaded, 1, 'another account: reload');
   assert.equal((await run('a1', { status: 503, ok: false })).reloaded, 0, 'an error proves nothing');
