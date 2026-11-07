@@ -158,7 +158,9 @@ app.use((req, res, next) => {
 The site's rules:
 
 - Write every page, form and API address relative: `shop/cart`, `api/me`,
-  `auth/logout`, the front page `./`. Static files keep their slash (`/css/site.css`,
+  `auth/logout`, the front page `./`. `location.assign` and `replace` resolve against
+  the base too, so a fallback is `./` (`x ?? './'`), the front page under the
+  tab's prefix. Static files keep their slash (`/css/site.css`,
   `/brand/brand.css`): under each account's prefix they would be fetched and
   cached again. The lint below enforces it; `rel('/x')` from
   `gateiron-shared/eslint` converts one.
