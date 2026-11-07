@@ -65,7 +65,7 @@ const relativeUrls = {
     const allow = STATIC.concat(((context.options[0] || {}).allow) || []);
     // calls: the site's own helpers whose first argument is an address (post('/api/x', body)).
     const calls = ((context.options[0] || {}).calls) || [];
-    const report = (node, url) => context.report({ node, messageId: 'rooted', data: { url, fix: url.slice(1) } });
+    const report = (node, url) => context.report({ node, messageId: 'rooted', data: { url, fix: url === '/' ? './' : url.slice(1) } });
     const check = (node) => { for (const h of heads(node)) { if (rooted(h, allow)) { report(node, h); } } };
     const text = (node, s) => { for (const m of String(s).matchAll(ATTR)) { if (rooted(m[2], allow) && !inBase(s, m.index)) { report(node, m[2]); } } };
     return {
