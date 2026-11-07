@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.5
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.6
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.5">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.6">
 ```
 
 ## The account menu's script
@@ -196,7 +196,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.5" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.6" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 

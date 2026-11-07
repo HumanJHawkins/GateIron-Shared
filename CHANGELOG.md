@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.6 — 2026-11-07
+
+- The account menu is as wide as its widest account row, up to 22rem, instead of the chip's width
+  or 13rem: a narrow bar (a zoomed window) shrinks the chip to its avatar, and each other account's
+  name and address wrapped onto three lines.
+
 ## 0.20.5 — 2026-11-06
 
 - On the path, the tab's record is the account it last had at each address, prefix or not (GN-1790
