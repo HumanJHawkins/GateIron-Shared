@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.1 — 2026-11-06
+
+- The lint reports a root-relative `meUrl` (watchAccount's), and the README's samples are relative: a
+  site on the path passes `meUrl: 'api/me'`.
+
 ## 0.20.0 — 2026-11-06
 
 - A tab's account in the path, `/u/<key>/` (GN-1785, NUE-1734). Server: `pathTab({ bare })` takes the

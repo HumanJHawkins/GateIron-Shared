@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.1
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.0">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.1">
 ```
 
 ## The account menu's script
@@ -74,7 +74,7 @@ renders the chip with:
 ```js
 const chip = GateIronChrome.fillAccount(document.querySelector('.gi-account-slot'),
   user ? { account: { name, email, role, avatarSrc, accent, menu } }
-       : { signIn: { href: '/signin?returnTo=' + here, label: 'Sign in' } });
+       : { signIn: { href: 'signin?returnTo=' + here, label: 'Sign in' } });
 chip.querySelector('[data-gi-action="sign-out"]')?.addEventListener('click', signOut);
 ```
 
@@ -85,10 +85,11 @@ Once the page knows who it shows, it watches for a sign-out made in another tab,
 any GateIron product:
 
 ```js
-GateIronChrome.watchAccount({ id: user ? user.id : null, meUrl: '/api/me', channel: 'mysite-account' });
+GateIronChrome.watchAccount({ id: user ? user.id : null, meUrl: 'api/me', channel: 'mysite-account' });
 ```
 
-A signed-in page asks `meUrl` again when it is shown or focused and each minute while in view, and at
+`meUrl` defaults to `/api/me`; a site on the path passes it relative (`api/me`), or the ask goes out as
+the default account and the page reloads each time. A signed-in page asks `meUrl` again when it is shown or focused and each minute while in view, and at
 once when another tab of the site loads as someone else; a 401 or a different `id` reloads the page.
 Call it on every page, signed in or not: a page that loads signed out tells the site's other tabs. A
 sign-out made at GateIron.com or in another product reaches the site as GateIron's back-channel
@@ -191,7 +192,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.0" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.1" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 
@@ -223,7 +224,7 @@ const gateiron = require('gateiron-shared/eslint');
 It reports a root-relative address where a browser goes or sends: `fetch`,
 XMLHttpRequest `open`, `EventSource`, `sendBeacon`, `window.open`,
 `pushState`/`replaceState`, `location` and its `assign`/`replace`, an assignment
-to `.href` or `.action`, a property named `href`, `action` or `home`, and an
+to `.href` or `.action`, a property named `href`, `action`, `home` or `meUrl`, and an
 `href`, `action` or `formaction` attribute in any string (HTML built in code).
 `allow`: more static paths (`'/*.js'` is any `.js` file at the root) and bare
 addresses. `calls`: the page scripts' own helpers whose first argument is an

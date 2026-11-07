@@ -75,8 +75,9 @@ const relativeUrls = {
         if ((callee === 'assign' || callee === 'replace') && /location$/i.test(on || '')) { check(node.arguments[0]); }
       },
       NewExpression(node) { if (name(node.callee) === 'EventSource') { check(node.arguments[0]); } },
-      // { href: '/profile' }: a link or form handed to code that draws it (the account menu's items, the bar's home).
-      Property(node) { if (['href', 'action', 'formAction', 'home'].includes(name(node.key) || (node.key.type === 'Literal' && node.key.value))) { check(node.value); } },
+      // { href: '/profile' }: a link or form handed to code that draws it or asks it (the account menu's items, the bar's
+      // home, watchAccount's meUrl).
+      Property(node) { if (['href', 'action', 'formAction', 'home', 'meUrl'].includes(name(node.key) || (node.key.type === 'Literal' && node.key.value))) { check(node.value); } },
       AssignmentExpression(node) {
         const target = name(node.left);
         if (target === 'location' || target === 'href' || target === 'action' || target === 'formAction') { check(node.right); }
