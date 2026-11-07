@@ -98,6 +98,14 @@ logout, which must end the site's session so the next ask is the 401.
 The page's CSP must allow the ask: `connect-src 'self'` (or the origin of `meUrl`). A `default-src
 'none'` with no `connect-src` blocks it silently and the watch never fires.
 
+`presenceUrl` keeps GateIron's auto sign-out ("sign me out when no tab on this computer is open as
+me") from signing out an account that still has a tab open: the page POSTs to it on load and each
+minute, hidden or not, and as it goes, when no other tab of the site shows the same account (they hear
+each other on `<channel>-tabs`), it sends a beacon to it with `gone=1`. A product passes its
+gateiron-signin presence route (`'auth/presence'` on the path); GateIron.com passes its own while the
+account has the setting on. GateIron signs the account out of the browser five minutes after the last
+ping from any site, or half a minute after a `gone=1` that no new page follows.
+
 ## One account per tab
 
 A browser holds several accounts and each tab acts as its own (GateIron.com

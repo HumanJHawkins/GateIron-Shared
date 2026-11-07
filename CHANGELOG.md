@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.0 — 2026-11-07
+
+- `watchAccount({ presenceUrl })`: each tab of the account pings it on load and each minute, hidden or
+  not, and the last tab of the account on the site sends a `gone=1` beacon as it goes, for GateIron's
+  auto sign-out (GN-1817). Tabs of one account count each other on `<channel>-tabs`.
+
 ## 0.21.0 — 2026-11-07
 
 - The account menu lists signed-out accounts too (GN-1814): an entry of `account.accounts` with

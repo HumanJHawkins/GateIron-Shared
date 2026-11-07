@@ -160,7 +160,13 @@
    * back-channel notice, which ends its session, so its next ask is the 401.
    * opts: { id: the account the page shows, or null; meUrl: default 'api/me' under a <base href> (path mode), else
    * '/api/me'; channel: a name for
-   * this site's tabs, default 'gateiron-account' }. A page inside a frame does not watch.
+   * this site's tabs, default 'gateiron-account'; presenceUrl: where to say this account still has a tab open, for
+   * GateIron's auto sign-out }. A page inside a frame does not watch.
+   *
+   * WITH presenceUrl the page POSTs to it on load and each minute, hidden or not (a background tab's timers still
+   * wake about once a minute), and as it goes, if no other tab of this site shows the same account, it sends a
+   * beacon to presenceUrl with gone=1. GateIron signs the account out of the browser five minutes after the last
+   * ping from any site, or half a minute after a gone=1 that no new page follows.
    */
   function watchAccount(opts) {
     var o = opts || {};
@@ -179,9 +185,38 @@
         .then(function (me) { if (me !== undefined && (me && me.id != null ? String(me.id) : null) !== who) { w.location.reload(); } }, function () {});
     }
     if (channel) { channel.onmessage = function (e) { if (e.data && e.data.who !== who) { check(true); } }; }
+    if (o.presenceUrl) { presence(w, o, who); }
     w.document.addEventListener('visibilitychange', function () { if (w.document.visibilityState === 'visible') { check(); } });
     w.addEventListener('focus', function () { check(); });
     w.setInterval(function () { if (w.document.visibilityState === 'visible') { check(); } }, 60000);
+  }
+
+  // The tabs of one account on this site hear each other on their own channel, so the last one can say it is going.
+  function presence(w, o, who) {
+    var url = o.presenceUrl;
+    var me = Math.random().toString(36).slice(2);
+    var others = {};
+    var tabs = w.BroadcastChannel ? new w.BroadcastChannel((o.channel || 'gateiron-account') + '-tabs') : null;
+    function ping() { w.fetch(url, { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { accept: 'application/json' } }).catch(function () {}); }
+    function hello() { if (tabs) { tabs.postMessage({ who: who, tab: me }); } }
+    if (tabs) {
+      tabs.onmessage = function (e) {
+        var d = e.data || {};
+        if (d.who !== who || !d.tab) { return; }
+        if (d.bye) { delete others[d.tab]; return; }
+        if (!others[d.tab]) { others[d.tab] = 0; hello(); }   // a new tab hears who is here at once
+        others[d.tab] = Date.now();
+      };
+    }
+    ping(); hello();
+    w.setInterval(function () { ping(); hello(); }, 60000);
+    w.addEventListener('pageshow', function (e) { if (e.persisted) { ping(); hello(); } });
+    w.addEventListener('pagehide', function () {
+      var now = Date.now();
+      var alone = !Object.keys(others).some(function (k) { return now - others[k] < 90000; });
+      if (tabs) { tabs.postMessage({ who: who, tab: me, bye: true }); }
+      if (alone && w.navigator.sendBeacon) { w.navigator.sendBeacon(url + (url.indexOf('?') < 0 ? '?' : '&') + 'gone=1'); }
+    });
   }
 
   return { esc: esc, initials: initials, accountHtml: accountHtml, fillAccount: fillAccount, watchAccount: watchAccount };
