@@ -43,27 +43,63 @@
     return '<a href="' + esc(item.href) + '">' + esc(item.label) + '</a>';
   }
 
-  // Another account signed in on this browser: its avatar, name and address, as a link, a form or a
-  // button the page binds (data-gi-account carries the site's key for it).
-  function switchHtml(other) {
-    var inner = '<span class="gi-sr-only">Switch to </span>' + avatarHtml(other) + '<span><b>' + esc(other.name || other.email) + '</b>'
-      + (other.email && other.name ? '<span>' + esc(other.email) + '</span>' : '') + '</span>';
+  // The other accounts shown before More Accounts.
+  var SHOWN = 2;
+
+  // Another account this browser has used: its avatar, name and address, as a link, a form or a
+  // button the page binds (data-gi-account carries the site's key for it). One signed out says so,
+  // and may carry a Remove. Past the first SHOWN, rows wait hidden for More Accounts.
+  function switchHtml(other, i) {
+    var off = other.signedIn === false;
+    var inner = '<span class="gi-sr-only">' + (off ? 'Sign in as ' : 'Switch to ') + '</span>' + avatarHtml(other) + '<span><b>' + esc(other.name || other.email) + '</b>'
+      + (other.email && other.name ? '<span>' + esc(other.email) + '</span>' : '')
+      + (off ? '<span class="gi-account-state">' + esc(other.stateLabel || 'Signed out') + '</span>' : '') + '</span>';
     var key = other.key != null ? ' data-gi-account="' + esc(other.key) + '"' : '';
+    var el;
     if (other.form) {
-      return '<form method="' + esc(other.form.method || 'post') + '" action="' + esc(other.form.action) + '">'
+      el = '<form method="' + esc(other.form.method || 'post') + '" action="' + esc(other.form.action) + '">'
         + (other.form.hiddenHtml || '') + '<button type="submit" class="gi-account-switch"' + key + '>' + inner + '</button></form>';
+    } else if (other.button) {
+      el = '<button type="button" class="gi-account-switch" data-gi-action="' + esc(other.button) + '"' + key + '>' + inner + '</button>';
+    } else {
+      el = '<a class="gi-account-switch" href="' + esc(other.href) + '"' + key + '>' + inner + '</a>';
     }
-    if (other.button) {
-      return '<button type="button" class="gi-account-switch" data-gi-action="' + esc(other.button) + '"' + key + '>' + inner + '</button>';
+    var r = other.remove;
+    var remove = '';
+    if (r) {
+      var label = ' aria-label="' + esc((r.label || 'Remove') + ' ' + (other.name || other.email)) + '"';
+      remove = r.form
+        ? '<form method="' + esc(r.form.method || 'post') + '" action="' + esc(r.form.action) + '">' + (r.form.hiddenHtml || '') + '<button type="submit" class="gi-account-remove"' + label + '>' + esc(r.label || 'Remove') + '</button></form>'
+        : '<button type="button" class="gi-account-remove" data-gi-action="' + esc(r.button) + '"' + key + label + '>' + esc(r.label || 'Remove') + '</button>';
     }
-    return '<a class="gi-account-switch" href="' + esc(other.href) + '"' + key + '>' + inner + '</a>';
+    return '<div class="gi-account-row' + (off ? ' gi-account-off' : '') + '"' + (i >= SHOWN ? ' data-gi-more-row hidden' : '') + '>' + el + remove + '</div>';
   }
 
-  // The other accounts, then Add another account, then a rule above the site's own items.
+  // The other accounts, More Accounts past the first SHOWN, then Add another account, then a rule
+  // above the site's own items.
   function accountsHtml(account) {
-    var others = (account.accounts || []).map(switchHtml).join('');
+    var list = account.accounts || [];
+    var more = list.length > SHOWN ? '<button type="button" class="gi-account-more" data-gi-more aria-expanded="false">' + esc(account.moreLabel || 'More Accounts') + '</button>' : '';
+    var others = list.length ? '<div class="gi-account-list">' + list.map(switchHtml).join('') + more + '</div>' : '';
     var add = account.add ? '<a href="' + esc(account.add.href) + '">' + esc(account.add.label || 'Add another account') + '</a>' : '';
     return others || add ? others + add + '<hr class="gi-account-rule">' : '';
+  }
+
+  // More Accounts shows the rest in place, the list scrolling past a set height.
+  function showMore(button) {
+    var list = button.closest('.gi-account-list');
+    var first = list.querySelector('[data-gi-more-row]');
+    Array.prototype.forEach.call(list.querySelectorAll('[data-gi-more-row]'), function (row) { row.hidden = false; });
+    list.classList.add('gi-account-all');
+    button.hidden = true;   // hidden, not removed: the menu's outside-click check still finds it inside
+    var target = first && first.querySelector('a, button');
+    if (target) { target.focus(); }
+  }
+  if (typeof document !== 'undefined' && !(typeof self !== 'undefined' && self.GateIronChrome)) {
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-gi-more]');
+      if (b) { e.preventDefault(); showMore(b); }
+    });
   }
 
   /**
@@ -74,10 +110,13 @@
    * that changes state; or { label, button } for a <button data-gi-action="<button>"> the page
    * binds itself.
    *
-   * `account.accounts` lists the other accounts signed in on this browser, each { name, email,
-   * avatarSrc, key } with href, form or button as a menu item has; `account.add` is { href, label }
-   * for Add another account. Both sit under the address, above `menu`. Pass no `accounts` when there
-   * are none: a person with one account sees no switching item.
+   * `account.accounts` lists the other accounts this browser has used, each { name, email,
+   * avatarSrc, key } with href, form or button as a menu item has; `signedIn: false` marks one
+   * signed out (`stateLabel` its words, default Signed out), whose href, form or button signs it in
+   * again, and `remove` ({ label, button } or { label, form }) gives it a Remove. The first two show;
+   * More Accounts (`account.moreLabel`) shows the rest. `account.add` is { href, label } for Add
+   * another account. Both sit under the address, above `menu`. Pass no `accounts` when there are
+   * none: a person with one account sees no switching item.
    */
   function accountHtml(opts) {
     var o = opts || {};

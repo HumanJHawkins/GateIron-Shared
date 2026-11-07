@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.21.0 — 2026-11-07
+
+- The account menu lists signed-out accounts too (GN-1814): an entry of `account.accounts` with
+  `signedIn: false` is dimmed and says Signed out (`stateLabel`), its href, form or button signing it
+  in again, and its `remove` (`{ label?, button }` or `{ label?, form }`) draws a quiet Remove beside
+  it. The first two accounts show; More Accounts (`account.moreLabel`) shows the rest in place, the
+  list scrolling past a set height. Every row is wrapped in `.gi-account-row`.
+
 ## 0.20.7 — 2026-11-07
 
 - `watchAccount`'s `meUrl` defaults to `api/me` on a page with a `<base href>`, so on the path the ask

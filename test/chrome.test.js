@@ -432,3 +432,23 @@ test('contact.css styles nothing outside .gi-contact', () => {
   assert.deepEqual(selectors.filter((s) => !/^\.gi-contact/.test(s)), []);
   assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'contact.js')));
 });
+
+test('a signed-out account says so and may be removed; past two, More Accounts shows the rest', () => {
+  const others = [
+    { name: 'One', email: '1@x.test', key: 'k1', button: 'switch' },
+    { name: 'Two', email: '2@x.test', signedIn: false, href: '/signin?account=2', remove: { button: 'remove' } },
+    { name: 'Three', email: '3@x.test', signedIn: false, href: '/signin?account=3', remove: { label: 'Forget', form: { action: '/forget', hiddenHtml: '<input type="hidden" name="id" value="3">' } } },
+    { name: 'Four', email: '4@x.test', key: 'k4', button: 'switch' },
+  ];
+  const html = brand.topBar({ account: { name: 'Ada', email: 'ada@x.test', menu: [], accounts: others, add: { href: '/signin?add=1' } } });
+  const menu = html.match(/<div class="gi-account-menu">([\s\S]*)<\/div>/)[1];
+  assert.ok(menu.includes('<div class="gi-account-row"><button type="button" class="gi-account-switch" data-gi-action="switch" data-gi-account="k1"><span class="gi-sr-only">Switch to </span>'));
+  assert.ok(menu.includes('<div class="gi-account-row gi-account-off"><a class="gi-account-switch" href="/signin?account=2"><span class="gi-sr-only">Sign in as </span>'), 'a signed-out account signs in');
+  assert.ok(menu.includes('<b>Two</b><span>2@x.test</span><span class="gi-account-state">Signed out</span>'));
+  assert.ok(menu.includes('<button type="button" class="gi-account-remove" data-gi-action="remove" aria-label="Remove Two">Remove</button></div>'), 'Remove beside it, named for a screen reader');
+  assert.ok(menu.includes('<div class="gi-account-row gi-account-off" data-gi-more-row hidden>') && menu.includes('<button type="submit" class="gi-account-remove" aria-label="Forget Three">Forget</button>'), 'the third waits, its Remove a form');
+  assert.ok(/data-gi-more-row hidden><button type="button" class="gi-account-switch" data-gi-action="switch" data-gi-account="k4">/.test(menu));
+  assert.ok(menu.includes('<button type="button" class="gi-account-more" data-gi-more aria-expanded="false">More Accounts</button></div><a href="/signin?add=1">'), 'More Accounts closes the list, above Add another account');
+  const two = brand.topBar({ account: { name: 'Ada', menu: [], accounts: others.slice(0, 2) } });
+  assert.ok(!two.includes('gi-account-more') && !two.includes('data-gi-more-row'), 'two others: no More Accounts');
+});

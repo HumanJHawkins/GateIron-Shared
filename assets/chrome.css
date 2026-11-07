@@ -426,6 +426,14 @@
 .gi-account-switch b { display: block; font-weight: 600; }
 .gi-account-switch b + span { font-size: 0.82rem; color: var(--text-muted); }
 .gi-account-rule { border: 0; border-top: 1px solid var(--border-color); margin: 0.35rem 0; }
+/* A signed-out account: dimmed, saying so, with a quiet Remove beside it. Past two, More Accounts. */
+.gi-account-row { display: flex; align-items: center; gap: 0.2rem; }
+.gi-account-row > :first-child { flex: 1 1 auto; min-width: 0; }
+.gi-account-off .gi-avatar { opacity: 0.6; }
+.gi-account-switch .gi-account-state { display: block; font-size: 0.78rem; color: var(--text-muted); }
+.gi-account-menu .gi-account-remove { flex: none; width: auto; padding: 0.3rem 0.45rem; font-size: 0.8rem; color: var(--text-muted); }
+.gi-account-menu .gi-account-more { font-size: 0.85rem; color: var(--text-muted); }
+.gi-account-list.gi-account-all { max-height: min(20rem, 55vh); overflow-y: auto; overscroll-behavior: contain; }
 
 /* ---------------- buttons ----------------
    .btn is the one button class every page uses, in the chrome and out of it. */
