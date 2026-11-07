@@ -172,6 +172,28 @@ test('a tab whose account stops being the default moves under its prefix; anothe
   assert.match(await at(one), new RegExp(`^/u/${A}/`));
 });
 
+test('Reload or Back to an entry from before the tab moved under its prefix opens as the tab\'s account', async (t) => {
+  if (!ff) { t.skip('Firefox is not installed'); return; }
+  const tab = await ff.tab();
+  await tab.go(`${base}/blank`);
+  await cookies(tab, A);
+  await tab.go(`${base}/page`);
+  await loaded(tab, '/page');
+  await click(tab, 'link');
+  await loaded(tab, '/next?x=1');
+  // B signs in elsewhere and becomes the default; this tab has not heard yet.
+  await cookies(tab, `${B}.${A}`);
+  await tab.reload();
+  await loaded(tab, `/u/${A}/next?x=1`);
+  assert.equal(await served(tab), A);
+  await tab.back();
+  await loaded(tab, `/u/${A}/page`);
+  assert.equal(await served(tab), A);
+  // The site's own history state keeps its fields.
+  await tab.eval('(document.body.appendChild(Object.assign(document.createElement("script"), { textContent: \'history.replaceState({ mine: 1 }, "", location.href)\' })), true)');
+  assert.deepEqual(JSON.parse(await tab.eval('JSON.stringify(history.state)')), { mine: 1, gateironTab: A });
+});
+
 test('an address no tab names stays bare, prefix or not', async (t) => {
   if (!ff) { t.skip('Firefox is not installed'); return; }
   const tab = await ff.tab();

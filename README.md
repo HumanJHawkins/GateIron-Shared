@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.2
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.3
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.2">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.3">
 ```
 
 ## The account menu's script
@@ -193,7 +193,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.2" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.3" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 
@@ -204,7 +204,10 @@ matching `signOutSelector`, `form[action*="logout"]`, or `leaving()` before a
 sign-out made by `fetch`): that account's tabs get a `gateiron:leaving` event on
 `document` to save drafts, then `onSignedOut(key)` (the default reloads). It
 moves a tab whose account stops being the default under its prefix (address and
-`<base>`). And a link or history entry meaning this page (`""`, `?page=2`,
+`<base>`), and each history entry's state keeps its account (`gateironTab`), so
+Back or Reload to an entry from before the move goes under that prefix too. A
+site's own `history.state` keeps its fields; a site never needs its own
+sessionStorage copy of the tab's key. And a link or history entry meaning this page (`""`, `?page=2`,
 `#main`), which the base would send to the front page, stays on the page.
 
 `window.GateIronTab`: `key()`; `adopt(key)`; `forget()`; `address(url)`, an

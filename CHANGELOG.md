@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.3 — 2026-11-06
+
+- On the path, Back or Reload to an entry from before a tab moved under its prefix opens as the tab's
+  account, signed in or out, not as the default (GN-1789). tabs.js keeps the account in each history
+  entry's state (`gateironTab`, merged into the site's own state) and replaces a bare entry stamped
+  with another account with its address under that prefix. A site that kept the tab's key in its own
+  sessionStorage for this drops that code.
+
 ## 0.20.2 — 2026-11-06
 
 - On the path, `readTab` reads no key from a page's Referer: a page with no prefix is the default's.

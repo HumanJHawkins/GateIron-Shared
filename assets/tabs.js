@@ -3,8 +3,9 @@
 //
 // mode 'path': the tab's account is in its address, /u/<key>/, and the page's <base href> (the server's pathTab) makes
 // every relative address it uses carry it, so nothing here touches a request. This half tells the other tabs of a
-// sign-out, moves a tab whose account stops being the browser's default under its prefix, and keeps links and history
-// entries that mean this page ("", "?page=2", "#main"), which the base would send to the site's front page, on it.
+// sign-out, moves a tab whose account stops being the browser's default under its prefix (and back under it on Back or
+// Reload to an entry from before the move), and keeps links and history entries that mean this page ("", "?page=2",
+// "#main"), which the base would send to the site's front page, on it.
 //
 // mode 'param', for sites not yet on the path: the tab names its account by key on everything it sends to its own
 // site: the site's header on fetch and XHR, `au` on EventSource and sendBeacon, and, while the browser holds more than
@@ -352,10 +353,15 @@
       const h = a.getAttribute('href');
       if (h != null && onPage(h)) { a.setAttribute('href', loc.pathname + (h.startsWith('?') ? h : loc.search + h)); }
     };
+    // Each history entry keeps its tab's account in its state, so Back or Reload to an address from before the tab moved
+    // under its prefix opens as that account, signed in or out, not as the default.
+    const STAMP = 'gateironTab';
+    const stamp = (s) => (s == null || (typeof s === 'object' && !Array.isArray(s)) ? Object.assign({}, s, { [STAMP]: key }) : s);
     for (const name of ['pushState', 'replaceState']) {
       const was = w.history[name].bind(w.history);
-      w.history[name] = (state, title, url) => was(state, title, typeof url === 'string' && onPage(url) ? loc.pathname + (url.startsWith('?') ? url : loc.search + url) : url);
+      w.history[name] = (state, title, url) => was(stamp(state), title, typeof url === 'string' && onPage(url) ? loc.pathname + (url.startsWith('?') ? url : loc.search + url) : url);
     }
+    const mark = () => w.history.replaceState(w.history.state, '', loc.href);
     for (const type of ['pointerdown', 'click', 'auxclick', 'contextmenu', 'focusin', 'dragstart']) {
       w.addEventListener(type, (e) => {
         const a = e.target && e.target.closest && e.target.closest('a[href], area[href]');
@@ -394,6 +400,7 @@
         if (!v || v === key) { return; }
         key = v; ended = false; listed = keys().includes(v);
         settle();
+        mark();
         if (channel) { channel.postMessage({ type: 'keys' }); }
       },
       /** The tab names no account: it is the default's. */
@@ -412,7 +419,14 @@
       leaving,
     };
     w.GateIronTab = api;
+    const how = w.performance && w.performance.getEntriesByType ? (w.performance.getEntriesByType('navigation')[0] || {}).type : null;
+    const before = valid((w.history.state || {})[STAMP]);
+    if ((how === 'reload' || how === 'back_forward') && before && before !== key && !inPath(loc.pathname)) {
+      loc.replace(under(loc.href, before));
+      return api;
+    }
     settle();
+    mark();
     return api;
   }
 
