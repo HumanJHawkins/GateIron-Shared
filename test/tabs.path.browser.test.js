@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
     }
     // A page belongs under its tab's prefix while the browser holds more than one account or another default.
     const want = tabs.pathFor(t, keys, keys[0] || null);
-    if (req.method === 'GET' && want !== req.tabPath) { res.redirect(302, tabs.withPath(req.url, want)); return; }
+    if (req.method === 'GET' && want !== req.tabPath) { tabs.keepPath(res, want); res.redirect(302, req.url); return; }
     res.setHeader('content-type', 'text/html; charset=utf-8');
     // Firefox keeps no form state for a no-store page.
     if (url.pathname !== '/form') { res.setHeader('cache-control', 'no-store'); }
@@ -198,6 +198,24 @@ test('Reload or Back to an entry from before the tab moved under its prefix open
   await tab.go(`${base}/page`);
   await loaded(tab, '/page');
   assert.equal(await tab.eval('history.state'), null);
+});
+
+test('the account a tab last had at an address is the one a Reload keeps, after the other signs out', async (t) => {
+  if (!ff) { t.skip('Firefox is not installed'); return; }
+  const tab = await ff.tab();
+  await tab.go(`${base}/blank`);
+  await cookies(tab, A);
+  await tab.go(`${base}/page`);
+  await loaded(tab, '/page');
+  assert.equal(await served(tab), A);
+  // B signs in in this tab, then A signs out elsewhere: B is the only account, and the page loses its prefix.
+  await cookies(tab, `${A}.${B}`);
+  await tab.go(`${base}/u/${B}/page`);
+  await loaded(tab, `/u/${B}/page`);
+  await cookies(tab, B);
+  await tab.reload();
+  await loaded(tab, '/page');
+  assert.equal(await served(tab), B);
 });
 
 test('a page with no prefix keeps the Firefox form state and keyboard use of its controls', async (t) => {

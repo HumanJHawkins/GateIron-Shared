@@ -353,15 +353,14 @@
       const h = a.getAttribute('href');
       if (h != null && onPage(h)) { a.setAttribute('href', loc.pathname + (h.startsWith('?') ? h : loc.search + h)); }
     };
-    // The account each address without a prefix was in this tab, so Back or Reload to one from before the tab moved
+    // The account this tab last had at each address, prefix or not, so Back or Reload to one from before the tab moved
     // under its prefix opens as that account, signed in or out, not as the default. In sessionStorage, not history
     // state, which would take a replaceState as each page loads: in Firefox that broke a select's keyboard use.
     const PATHS = `${o.storageKey}.paths`;
     const seen = () => { try { return JSON.parse(w.sessionStorage.getItem(PATHS)) || {}; } catch { return {}; } };
     const remember = () => {
-      if (inPath(loc.pathname)) { return; }
       const all = seen();
-      const at = loc.pathname + loc.search;
+      const at = bare(loc.pathname) + loc.search;
       delete all[at];
       if (key) { all[at] = key; }
       const last = Object.entries(all).slice(-100);

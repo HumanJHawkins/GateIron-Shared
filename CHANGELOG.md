@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.5 — 2026-11-06
+
+- On the path, the tab's record is the account it last had at each address, prefix or not (GN-1790
+  QA). 0.20.4 recorded only addresses without a prefix, so a tab that became B under `/u/<B>/` kept
+  an older record of A there, and once A signed out a Reload went to A's prefix, signed out.
+- The lint suggests `./` for a root-relative `/`.
+
 ## 0.20.4 — 2026-11-06
 
 - On the path, tabs.js keeps each bare address's account in sessionStorage (`<storageKey>.paths`)
