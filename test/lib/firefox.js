@@ -65,6 +65,8 @@ async function firefox() {
   };
   return {
     tab,
+    /** Any other BiDi command, e.g. send('browsingContext.setViewport', { context, viewport: { width, height } }). */
+    send,
     /** Runs a function at the start of every page from now on, ahead of the page's own scripts. */
     preload: (fn) => send('script.addPreloadScript', { functionDeclaration: fn.toString() }),
     close: async () => {
