@@ -1,7 +1,8 @@
 'use strict';
 // watchAccount's presence in headless Firefox: each tab of an account pings presenceUrl, and the last tab of that
 // account on the site says it is going with a gone=1 beacon; a tab leaving while another of its account is open
-// does not. Skipped without Firefox.
+// does not. Skipped without Firefox. A tab closed through the test driver fires no pagehide in headless Firefox, so
+// leaving is tested by navigating away.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -12,14 +13,14 @@ const { firefox } = require('./lib/firefox');
 const SCRIPT = fs.readFileSync(path.join(__dirname, '..', 'assets', 'account.js'));
 const pings = [];
 const page = (who) => `<!doctype html><html><head><meta charset="utf-8"><title>p</title><script src="/account.js"></script>
-<script>GateIronChrome.watchAccount({ id: ${JSON.stringify(who)}, meUrl: '/api/me', channel: 'p-account', presenceUrl: '/presence' });</script>
+<script>GateIronChrome.watchAccount({ id: ${JSON.stringify(who)}, meUrl: '/api/me', channel: 'p-account', presenceUrl: '/presence?as=${who}' });</script>
 </head><body>${who}</body></html>`;
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname === '/account.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); res.end(SCRIPT); return; }
   // The page a request came from names its account, as a tab's address would.
   const who = new URL(req.headers.referer || 'http://x/a').pathname.slice(1);
-  if (url.pathname === '/presence') { pings.push({ who, gone: url.searchParams.get('gone') === '1', at: Date.now() }); res.writeHead(204); res.end(); return; }
+  if (url.pathname === '/presence') { pings.push({ who: url.searchParams.get('as'), gone: url.searchParams.get('gone') === '1', at: Date.now() }); res.writeHead(204); res.end(); return; }
   if (url.pathname === '/api/me') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ id: who })); return; }
   if (url.pathname === '/blank') { res.writeHead(200, { 'content-type': 'text/html' }); res.end('<!doctype html><title>b</title>blank'); return; }
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });

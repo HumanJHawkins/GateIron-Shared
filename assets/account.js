@@ -214,8 +214,9 @@
     w.addEventListener('pagehide', function () {
       var now = Date.now();
       var alone = !Object.keys(others).some(function (k) { return now - others[k] < 90000; });
-      if (tabs) { tabs.postMessage({ who: who, tab: me, bye: true }); }
+      // The beacon first: a page being torn down may not run past the channel's post.
       if (alone && w.navigator.sendBeacon) { w.navigator.sendBeacon(url + (url.indexOf('?') < 0 ? '?' : '&') + 'gone=1'); }
+      if (tabs) { tabs.postMessage({ who: who, tab: me, bye: true }); }
     });
   }
 

@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.1 — 2026-11-07
+
+- The last tab's `gone=1` beacon goes before the tabs' channel is told, so a page torn down as it closes
+  still sends it (GN-1817).
+
 ## 0.22.0 — 2026-11-07
 
 - `watchAccount({ presenceUrl })`: each tab of the account pings it on load and each minute, hidden or
