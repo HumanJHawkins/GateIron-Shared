@@ -43,6 +43,7 @@ function pathTab(opts = {}) {
   return (req, res, next) => {
     const s = stripPath(String(req.url || ''));
     req.tabPath = bare(s.url) ? null : s.key;
+    req.tabPathMode = true;
     if (s.key) {
       req.url = s.url;
       req.originalUrl = stripPath(String(req.originalUrl || '')).url;
@@ -145,8 +146,10 @@ function readTab(req, opts) {
   if (!asked) { asked = stripped.key; source = asked ? 'param' : null; }
   if (!asked && o.header) { asked = keyIn(get(o.header), o.pattern); source = asked ? 'header' : null; }
   // A picture, a frame, or a page opened by a script where the Navigation API is missing names none itself: the page
-  // of this site that asked for it is its tab.
-  if (!asked && (fetchSite === undefined || fetchSite === 'same-origin')) {
+  // of this site that asked for it is its tab. On the path a page names its own: one with no prefix is the default's,
+  // whatever page it came from (a redirect keeps the Referer of the page before it, which may name a key since ended).
+  const dest = get('sec-fetch-dest');
+  if (!asked && !(req.tabPathMode && dest === 'document') && (fetchSite === undefined || fetchSite === 'same-origin')) {
     try {
       const page = new URL(get('referer') || '');
       const origin = o.origin || `${req.protocol}://${get('host')}`;
@@ -154,7 +157,6 @@ function readTab(req, opts) {
     } catch { /* none */ }
     source = asked ? 'referer' : null;
   }
-  const dest = get('sec-fetch-dest');
   const background = dest === 'empty' || source === 'header';
   const page = !background && req.method === 'GET' && (dest === undefined || dest === 'document');
   const linked = fetchSite === undefined || fetchSite === 'none' || fetchSite === 'cross-site';

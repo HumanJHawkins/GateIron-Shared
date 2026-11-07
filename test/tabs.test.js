@@ -96,3 +96,13 @@ test('a site with no default: naming none is signed out of nothing, and a header
   assert.equal(h.background, true);
   assert.doesNotThrow(() => tabs.readTab({ method: 'GET', headers: {} }, { keys: [] }));
 });
+
+test('on the path, a page with no prefix is the default\'s, whatever page it came from; a picture still takes its page\'s', () => {
+  const onPath = (url, headers) => Object.assign(req(url, headers), { tabPathMode: true, tabPath: tabs.stripPath(url).key });
+  const page = read(onPath('/shop', { 'sec-fetch-dest': 'document', 'sec-fetch-site': 'same-origin', referer: `https://site.test/u/${GONE}/signin` }));
+  assert.deepEqual([page.asked, page.key, page.signedOut], [null, B, false]);
+  const pic = read(onPath('/avatar/1', { 'sec-fetch-dest': 'image', 'sec-fetch-site': 'same-origin', referer: `https://site.test/u/${A}/shop` }));
+  assert.deepEqual([pic.asked, pic.source, pic.key], [A, 'referer', A]);
+  const prefixed = read(onPath(`/u/${A}/shop`, { 'sec-fetch-dest': 'document', 'sec-fetch-site': 'same-origin' }));
+  assert.deepEqual([prefixed.asked, prefixed.source, prefixed.key], [A, 'path', A]);
+});

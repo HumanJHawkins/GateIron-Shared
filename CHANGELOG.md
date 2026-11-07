@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.2 — 2026-11-06
+
+- On the path, `readTab` reads no key from a page's Referer: a page with no prefix is the default's.
+  A redirect keeps the Referer of the page before it, and after an account signed out and in again
+  that named the ended key, so a Reload showed the tab signed out (GN-1785 QA). Pictures and frames
+  still take their page's key from it.
+
 ## 0.20.1 — 2026-11-06
 
 - The lint reports a root-relative `meUrl` (watchAccount's), and the README's samples are relative: a

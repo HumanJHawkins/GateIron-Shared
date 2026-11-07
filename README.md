@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.1
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.2
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.1">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.2">
 ```
 
 ## The account menu's script
@@ -143,9 +143,10 @@ app.use((req, res, next) => {
 - `readTab(req, { keys, gone, default })` answers `{ asked, source, key,
   signedOut, keep, background }`. `key` is the account to serve. A request
   naming none is the default's, and so is a shared or typed link naming a key
-  this browser never held (`pathFor` then moves it to the address with none). A
-  document request with no key, sent by the site's own page, takes its Referer's
-  key, never the default. Anything else naming a key not signed in here is signed
+  this browser never held (`pathFor` then moves it to the address with none). On
+  the path, a page with no prefix is the default's whatever page it came from (a
+  redirect keeps an older page's Referer); a picture or frame with none takes its
+  page's key from the Referer. Anything else naming a key not signed in here is signed
   out. A `background` request (fetch, XHR, EventSource, beacon) signed out is
   answered 401, never a redirect to sign in and never the default.
 - `withPath(to, key)` is `to` under `key` (or under none); `stripPath(url)` the
@@ -192,7 +193,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.1" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.2" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 
