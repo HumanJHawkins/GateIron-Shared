@@ -1,12 +1,19 @@
 // ONE ACCOUNT PER TAB, the browser half (GateIron.com docs/SIGN-IN-FOR-PRODUCTS.md, "Several accounts on one browser";
-// the server half is gateiron-shared/tabs). The tab names its account by key on everything it sends to its own site:
-// the site's header on fetch and XHR, `au` on EventSource and sendBeacon, and, while the browser holds more than one
-// account or another than this tab's, `au` in its address and on each link, form, window and script navigation it
+// the server half is gateiron-shared/tabs).
+//
+// mode 'path': the tab's account is in its address, /u/<key>/, and the page's <base href> (the server's pathTab) makes
+// every relative address it uses carry it, so nothing here touches a request. This half tells the other tabs of a
+// sign-out, moves a tab whose account stops being the browser's default under its prefix, and keeps links and history
+// entries that mean this page ("", "?page=2", "#main"), which the base would send to the site's front page, on it.
+//
+// mode 'param', for sites not yet on the path: the tab names its account by key on everything it sends to its own
+// site: the site's header on fetch and XHR, `au` on EventSource and sendBeacon, and, while the browser holds more than
+// one account or another than this tab's, `au` in its address and on each link, form, window and script navigation it
 // follows. sessionStorage keeps the key through Reload and Back.
 //
-// A classic script, the first on the page: it must wrap fetch before any other script fetches, and replace a Reload
-// that names no account before the page draws. Started by its own tag's data-gateiron-tabs attributes, or by
-// GateIronTabs.start(options) from the site's first script.
+// A classic script, the first on the page: in 'param' mode it must wrap fetch before any other script fetches.
+// Started by its own tag's data-gateiron-tabs attributes, or by GateIronTabs.start(options) from the site's first
+// script.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) { module.exports = api; return; }
@@ -20,15 +27,16 @@
   const SKIP = '[contenteditable], .ProseMirror, [data-account], [data-gi-account]';
   const DEFAULTS = {
     param: 'au', storageKey: 'gateiron.tab', meta: 'gateiron-tab', keyPattern: /^[A-Za-z0-9_-]{6,16}$/,
-    signOutSelector: 'form[action*="/logout"]', skipSelector: '', observe: false, onSignedOut: null,
+    signOutSelector: 'form[action*="logout"]', skipSelector: '', observe: false, onSignedOut: null,
   };
   const REQUIRED = ['header', 'keysCookie', 'goneCookie', 'channel'];
+  const REQUIRED_PATH = ['keysCookie', 'channel'];
 
   /** The options a script tag's data- attributes give: data-header, data-keys-cookie, data-gone-cookie, data-channel... */
   function fromAttributes(tag) {
     const d = tag.dataset;
     return {
-      header: d.header, keysCookie: d.keysCookie, goneCookie: d.goneCookie, channel: d.channel, param: d.param,
+      mode: d.mode, header: d.header, keysCookie: d.keysCookie, goneCookie: d.goneCookie, channel: d.channel, param: d.param,
       storageKey: d.storageKey, meta: d.meta, skipSelector: d.skipSelector, signOutSelector: d.signOutSelector,
       observe: d.observe === 'true', keyPattern: d.keyPattern ? new RegExp(d.keyPattern) : undefined,
     };
@@ -38,8 +46,9 @@
     const w = win || window;
     const o = Object.assign({}, DEFAULTS);
     for (const [k, v] of Object.entries(options || {})) { if (v !== undefined && v !== '') { o[k] = v; } }
-    for (const k of REQUIRED) { if (!o[k]) { throw new Error(`gateiron-shared tabs: ${k} is required`); } }
+    for (const k of o.mode === 'path' ? REQUIRED_PATH : REQUIRED) { if (!o[k]) { throw new Error(`gateiron-shared tabs: ${k} is required`); } }
     if (w.GateIronTab) { return w.GateIronTab; }
+    if (o.mode === 'path') { return startPath(o, w); }
     const d = w.document;
     const loc = w.location;
     const P = o.param;
@@ -289,6 +298,116 @@
       },
       /** A URL without this tab's key. */
       unmarked,
+      /** Before a sign-out made by fetch: the tabs of this account fire gateiron:leaving (to keep drafts). */
+      leaving,
+    };
+    w.GateIronTab = api;
+    settle();
+    return api;
+  }
+
+  function startPath(o, w) {
+    const d = w.document;
+    const loc = w.location;
+    const PREFIX = /^\/u\/([A-Za-z0-9_-]{6,16})(?=[/?#]|$)/;
+    const valid = (k) => (typeof k === 'string' && o.keyPattern.test(k) ? k : null);
+    const raw = () => {
+      for (const c of String(d.cookie || '').split('; ')) {
+        const i = c.indexOf('=');
+        const n = c.slice(0, i);
+        if (n === o.keysCookie || n === `__Host-${o.keysCookie}`) { try { return decodeURIComponent(c.slice(i + 1)).split('.'); } catch { return []; } }
+      }
+      return [];
+    };
+    // The keys signed in here, the default first; a list starting with '.' has no default.
+    const keys = () => raw().filter((k) => o.keyPattern.test(k));
+    const byDefault = () => valid(raw()[0]);
+    const inPath = (p) => { const m = PREFIX.exec(p); return m ? m[1] : null; };
+    const metaTag = d.querySelector(`meta[name="${o.meta}"]`);
+    // The account the page was drawn as, else the one its address names (a page drawn signed out).
+    let key = valid(metaTag ? metaTag.content : null) || inPath(loc.pathname);
+    let listed = Boolean(key) && keys().includes(key);
+
+    const bare = (p) => { const m = PREFIX.exec(p); return m ? (p.slice(m[0].length) || '/') : p; };
+    const under = (url, k) => {
+      let u;
+      try { u = new URL(String(url), d.baseURI); } catch { return url; }
+      if (u.origin !== loc.origin) { return u.href; }
+      const rest = bare(u.pathname);
+      return (k ? `/u/${k}${rest.startsWith('/') ? rest : `/${rest}`}` : rest) + u.search + u.hash;
+    };
+    const baseTag = () => d.querySelector('base[href]') || d.head.appendChild(Object.assign(d.createElement('base'), { href: '/' }));
+    // The address and the base name this tab's account while another is the default here; a page drawn signed out
+    // keeps the key it names.
+    const settle = () => {
+      const named = inPath(loc.pathname);
+      const want = key && (keys().length > 1 || byDefault() !== key) ? key : named;
+      if (want === named) { return; }
+      w.history.replaceState(w.history.state, '', under(loc.href, want));
+      baseTag().setAttribute('href', want ? `/u/${want}/` : '/');
+    };
+    // A link of "", "?..." or "#..." means this page, not the base: it goes there.
+    const onPage = (h) => h === '' || h.startsWith('?') || h.startsWith('#');
+    const here = (a) => {
+      const h = a.getAttribute('href');
+      if (h != null && onPage(h)) { a.setAttribute('href', loc.pathname + (h.startsWith('?') ? h : loc.search + h)); }
+    };
+    for (const name of ['pushState', 'replaceState']) {
+      const was = w.history[name].bind(w.history);
+      w.history[name] = (state, title, url) => was(state, title, typeof url === 'string' && onPage(url) ? loc.pathname + (url.startsWith('?') ? url : loc.search + url) : url);
+    }
+    for (const type of ['pointerdown', 'click', 'auxclick', 'contextmenu', 'focusin', 'dragstart']) {
+      w.addEventListener(type, (e) => {
+        const a = e.target && e.target.closest && e.target.closest('a[href], area[href]');
+        if (a) { here(a); }
+      }, true);
+    }
+
+    const channel = w.BroadcastChannel ? new w.BroadcastChannel(o.channel) : null;
+    const leaving = () => { if (key && channel) { channel.postMessage({ type: 'leaving', key }); } };
+    w.addEventListener('submit', (e) => { if (e.target.matches && e.target.matches(o.signOutSelector)) { leaving(); } }, true);
+    let ended = false;
+    const recheck = () => {
+      settle();
+      if (key && listed && !ended && !keys().includes(key)) {
+        ended = true;
+        if (o.onSignedOut) { o.onSignedOut(key); } else { loc.reload(); }
+      }
+    };
+    if (channel) {
+      channel.addEventListener('message', (e) => {
+        const m = e.data || {};
+        if (m.type === 'leaving' && m.key === key) { d.dispatchEvent(new w.CustomEvent('gateiron:leaving', { detail: { key } })); }
+        if (m.type === 'keys') { recheck(); }
+      });
+      channel.postMessage({ type: 'keys' });
+    }
+    d.addEventListener('visibilitychange', () => { if (d.visibilityState === 'visible') { recheck(); } });
+    w.addEventListener('pageshow', (e) => { if (e.persisted) { recheck(); } });
+
+    const api = {
+      /** This tab's account key, or null. */
+      key: () => key,
+      /** The account the server says this tab is, when that arrives after load (a popup sign-in's key). */
+      adopt(k) {
+        const v = valid(k);
+        if (!v || v === key) { return; }
+        key = v; ended = false; listed = keys().includes(v);
+        settle();
+        if (channel) { channel.postMessage({ type: 'keys' }); }
+      },
+      /** The tab names no account: it is the default's. */
+      forget() {
+        key = null; listed = false;
+        w.history.replaceState(w.history.state, '', under(loc.href, null));
+        baseTag().setAttribute('href', '/');
+      },
+      /** A URL of this site as this tab goes to it. */
+      address: (url) => under(url, inPath(loc.pathname)),
+      /** The same URL as the account `k`. */
+      as: (url, k) => under(url, k),
+      /** A URL without this tab's key. */
+      unmarked: (url) => under(url, null),
       /** Before a sign-out made by fetch: the tabs of this account fire gateiron:leaving (to keep drafts). */
       leaving,
     };

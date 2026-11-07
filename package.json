@@ -1,6 +1,6 @@
 {
   "name": "gateiron-shared",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "description": "GateIron's house style: palette, faces, top bar, footer and components, shared by every GateIron site.",
   "license": "MIT",
   "author": "GateIron, LLC",
@@ -13,12 +13,14 @@
     "./contact": "./contact.js",
     "./forms": "./assets/forms.js",
     "./returnTo": "./assets/returnTo.js",
-    "./tabs": "./tabs.js"
+    "./tabs": "./tabs.js",
+    "./eslint": "./eslint.js"
   },
   "files": [
     "chrome.js",
     "contact.js",
     "tabs.js",
+    "eslint.js",
     "assets",
     "README.md",
     "CHANGELOG.md",
@@ -30,6 +32,8 @@
   "engines": {
     "node": ">=20"
   },
-  "dependencies": {},
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "eslint": "^10.11.0"
+  }
 }

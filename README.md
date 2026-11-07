@@ -2,12 +2,14 @@
 
 The presentation layer GateIron's sites share: palette, type, the gate mark,
 the top bar, the footer, and the components pages are built from — buttons,
-forms, tables, badges, notices, the account menu.
+forms, tables, badges, notices, the account menu. With it, the browser contract
+every site applies alike: one account per tab, and the lint that keeps a site's
+addresses in step with it.
 
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.13.0
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.0
 ```
 
 Install a tag, not a branch.
@@ -44,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.13.0">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.0">
 ```
 
 ## The account menu's script
@@ -97,87 +99,144 @@ The page's CSP must allow the ask: `connect-src 'self'` (or the origin of `meUrl
 ## One account per tab
 
 A browser holds several accounts and each tab acts as its own (GateIron.com
-docs/SIGN-IN-FOR-PRODUCTS.md, "Several accounts on one browser"). The site
-mints an opaque key per browser and account, keeps the list in two readable
-cookies (the keys signed in here, the default first; the keys signed out here),
-and the tab names its key on everything it sends. `assets/tabs.js` is the
-browser half; `gateiron-shared/tabs` the server half. Where the accounts are
-kept, how many (GateIron's are 5), and what a sign-in or sign-out writes stay
-the site's.
+docs/SIGN-IN-FOR-PRODUCTS.md, "Several accounts on one browser"). The site mints
+an opaque key per browser and account and keeps the list in two readable cookies
+(the keys signed in here, the default first; the keys signed out here). Where the
+accounts are kept, how many (GateIron's are 5), and what a sign-in or sign-out
+writes stay the site's. `gateiron-shared/tabs` is the server half, `assets/tabs.js`
+the browser half.
 
-The script is the first on every page, a plain script, not a module and not
-deferred: it must wrap `fetch` before any other script fetches.
+A tab's account is the start of its address: `/u/<key>/shop/cart`. The server
+takes the prefix off before any route sees it and gives every page
+`<base href="/u/<key>/">` (`"/"` with none), so every relative address the page
+uses (link, form, `fetch`, XHR, `location.href = 'next'`, `pushState`) carries the
+account with nothing wrapped. A page is under its prefix while the browser holds
+more than one account, or its account is not the default; otherwise under none.
 
-```html
-<meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.19.0" data-gateiron-tabs data-header="X-NH-Account"
-  data-keys-cookie="nhKeys" data-gone-cookie="nhGone" data-channel="nothangman-tabs"></script>
-```
-
-Or from the site's own first script: `GateIronTabs.start({ header, keysCookie,
-goneCookie, channel, param, storageKey, meta, keyPattern, skipSelector,
-signOutSelector, observe, onSignedOut })`. `param` is `au`; `keyPattern`
-`/^[A-Za-z0-9_-]{6,16}$/`. `onSignedOut(key)` runs when this tab's account
-signs out in another tab; the default reloads.
-
-What it does: fetch and XHR to this site carry `header`; EventSource and
-sendBeacon carry `au`. While the browser holds more than one account, or another
-than this tab's, the address carries `au`, and so does each link as it is used
-(pointer, keyboard, middle-click, copy, drag), each form, `form.submit()`,
-`window.open` and every script navigation (the Navigation API). A link inside
-`[contenteditable]`, `.ProseMirror`, `[data-account]`, `[data-gi-account]` or
-`skipSelector` is left as written, and so is a URL naming another account signed
-in here. `observe: true` also marks every href as drawn (off by default: a page
-that redraws often pays for it).
-
-`window.GateIronTab`: `key()`; `adopt(key)` when the key arrives after load
-(`/api/me`, a popup sign-in's message); `forget()`; `address(url)`, a
-script-built URL as this tab goes to it; `as(url, key)`, the same URL as
-another account; `unmarked(url)`; `leaving()`, called before a sign-out made by
-`fetch` (a form matching `signOutSelector`, `form[action*="/logout"]`, does it
-itself). The tabs of that account get a `gateiron:leaving` event on `document`
-to save drafts, then read again signed out.
-
-The server:
+### The server
 
 ```js
 const tabs = require('gateiron-shared/tabs');
+app.use(tabs.pathTab({ bare: ['/oauth/'] }));         // first, before any route
+// ...after the session:
 app.use((req, res, next) => {
-  const t = tabs.readTab(req, { header: 'X-NH-Account', keys: keysHere(req), gone: goneHere(req) });
-  req.tab = t;
-  tabs.keepOnRedirect(res, () => req.tab.keep);
+  const keys = keysHere(req);
+  req.tab = tabs.readTab(req, { keys, gone: goneHere(req) });
+  tabs.keepPath(res, () => req.tab.keep);             // every redirect stays under the tab's key
+  const want = tabs.pathFor(req.tab, keys, keys[0]);
+  if (req.method === 'GET' && want !== req.tabPath && !req.tab.background && req.accepts('html')) {
+    tabs.keepPath(res, want);
+    return res.redirect(302, req.originalUrl);        // the page under the right prefix, or none
+  }
   next();
 });
 ```
 
-`readTab` takes `au` out of `req.url` and answers `{ asked, source, key,
-signedOut, keep, background }`. `key` is the account to serve. A request naming
-none is the default's, and so is a shared or typed link naming a key this browser
-never held. A document request with no key, sent by the site's own page, takes
-its Referer's key, never the default. Anything else naming a key not signed in
-here is signed out. A `background` request (fetch, XHR, EventSource, beacon)
-signed out is answered 401, never a redirect to sign in and never the default.
+- `pathTab({ bare })` strips `/u/<key>` from `req.url` and `req.originalUrl`
+  (the key is `req.tabPath`), puts the tab's key on every same-origin redirect,
+  and starts every HTML page's `<head>` with its `<base href>`. `bare`: addresses
+  no tab names (prefixes or RegExps), served and redirected without one: a
+  provider's endpoints, a mail link's token page, a calendar feed, webhooks.
+  A response written outside Express's `res.send` (oidc-provider's own pages,
+  `res.sendFile`) gets no `<base>`: keep its addresses absolute.
+- `readTab(req, { keys, gone, default })` answers `{ asked, source, key,
+  signedOut, keep, background }`. `key` is the account to serve. A request
+  naming none is the default's, and so is a shared or typed link naming a key
+  this browser never held (`pathFor` then moves it to the address with none). A
+  document request with no key, sent by the site's own page, takes its Referer's
+  key, never the default. Anything else naming a key not signed in here is signed
+  out. A `background` request (fetch, XHR, EventSource, beacon) signed out is
+  answered 401, never a redirect to sign in and never the default.
+- `withPath(to, key)` is `to` under `key` (or under none); `stripPath(url)` the
+  reverse. `pathFor(tab, keys, default)` is the prefix a page belongs under.
+- While sites move, `readTab` also reads `au` and the site's `header` (pass it)
+  and the Referer's `au`; an old address naming `au` is moved under the prefix by
+  `pathFor`'s redirect.
 
 The site's rules:
 
-- After a sign-in, redirect naming the new account's key (`keep` = that key), so
-  the tab that signed in becomes it. A popup sign-in's last page sends the new
-  key to its opener, which calls `adopt(key)`.
+- Write every page, form and API address relative: `shop/cart`, `api/me`,
+  `auth/logout`, the front page `./`. Static files keep their slash (`/css/site.css`,
+  `/brand/brand.css`): under each account's prefix they would be fetched and
+  cached again. The lint below enforces it; `rel('/x')` from
+  `gateiron-shared/eslint` converts one.
+- Redirects stay root-relative (`res.redirect('/signin')`): `pathTab` puts the
+  tab's key on them.
+- An address the server sends to a page (JSON `url`, `next`) is root-relative;
+  the page uses it through `GateIronTab.address(url)`, which puts it under the
+  tab's key.
+- A page script resolving an address does it against `document.baseURI`, not
+  `location.href`. One comparing addresses strips the key first:
+  `GateIronTab.unmarked(location.pathname)`.
+- The CSP allows the tag: `base-uri 'self'` (`'none'` blocks it).
+- A site whose first path segment can be chosen by its users (an organization
+  slug) reserves `u`.
+- After a sign-in, redirect under the new account's key (`keepPath(res, key)`),
+  so the tab that signed in becomes it; with one account here, under none. A popup
+  sign-in's last page sends the new key to its opener, which calls `adopt(key)`.
 - The gone list holds what the server ended: the site's own sign-outs, and the
   keys its back-channel logout removed, kept server-side and written into the
   cookie on the browser's next answer. A key the browser names that the server
   never held is signed out, not added. `addGone(list, ...keys)` keeps the last 12.
 - Send a Referrer-Policy that gives same-origin requests the full URL:
   `same-origin` or `strict-origin-when-cross-origin`, never `no-referrer`
-  (helmet's default), `origin` or `strict-origin`. Frames, pictures and the
-  fallback for browsers without the Navigation API read the key there.
+  (helmet's default).
 - Cookie helpers: `readList(req, name)` reads `name` or `__Host-name`;
   `cookieName(name, secure)` is the one to write.
 - A site where a tab naming none can be signed out with accounts still here
   (GateIron.com, after its current account signs out) writes the keys list with
   a leading `.` (`.k1.k2`) and passes `default: null` to `readTab`.
-- After a sign-in, name the new key only while the browser holds more than one
-  account; with one, naming none is it.
+
+### The browser
+
+```html
+<meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
+<script src="/brand/tabs.js?v=0.20.0" data-gateiron-tabs data-mode="path"
+  data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
+```
+
+Or `GateIronTabs.start({ mode: 'path', keysCookie, channel, meta, keyPattern,
+signOutSelector, onSignedOut })` from the site's first script. It touches no
+request. It tells the site's other tabs when an account signs out (a form
+matching `signOutSelector`, `form[action*="logout"]`, or `leaving()` before a
+sign-out made by `fetch`): that account's tabs get a `gateiron:leaving` event on
+`document` to save drafts, then `onSignedOut(key)` (the default reloads). It
+moves a tab whose account stops being the default under its prefix (address and
+`<base>`). And a link or history entry meaning this page (`""`, `?page=2`,
+`#main`), which the base would send to the front page, stays on the page.
+
+`window.GateIronTab`: `key()`; `adopt(key)`; `forget()`; `address(url)`, an
+address under this tab's key; `as(url, key)`, under another account's;
+`unmarked(url)`, under none; `leaving()`.
+
+### The lint
+
+```js
+// eslint.config.js
+const gateiron = require('gateiron-shared/eslint');
+{ files: ['src/**/*.js'], plugins: { gateiron },
+  rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/'] }] } },
+{ files: ['public/**/*.js'], plugins: { gateiron },
+  rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/', '/*.css', '/*.js'], calls: ['post'] }] } },
+```
+
+It reports a root-relative address where a browser goes or sends: `fetch`,
+XMLHttpRequest `open`, `EventSource`, `sendBeacon`, `window.open`,
+`pushState`/`replaceState`, `location` and its `assign`/`replace`, an assignment
+to `.href` or `.action`, a property named `href`, `action` or `home`, and an
+`href`, `action` or `formaction` attribute in any string (HTML built in code).
+`allow`: more static paths (`'/*.js'` is any `.js` file at the root) and bare
+addresses. `calls`: the page scripts' own helpers whose first argument is an
+address; not in server code, where `router.post('/x')` is a route. For HTML
+files, `rootRelative(html, allow)` returns `[{ attr, url, line }]` for a test.
+
+### Sites still on `au`
+
+`mode: 'param'` (the default) is 0.19.0's: `data-header`, `data-gone-cookie` and
+`au` on the address, each link, form and script navigation, the header on fetch
+and XHR, sessionStorage through Reload and Back; on the server
+`keepOnRedirect(res, keep)` and `withParam`. It goes once every site is on the
+path.
 
 ## API
 
@@ -420,7 +479,7 @@ absence of inline script.
 ## Constraints
 
 **GateIron has no build step and uses `require()`.** Plain files, CommonJS, no
-compile. The `module.exports` object is statically analysable, so ESM consumers
+compile. `eslint` is a dev dependency for the lint's own tests; a site brings its own. The `module.exports` object is statically analysable, so ESM consumers
 get named imports.
 
 **GateIron builds its chrome by string substitution at serve time, with no
@@ -458,9 +517,10 @@ safe.
 
 ## What belongs here
 
-The presentation layer, and nothing else: colour, type, spacing, the bar, the
-footer, buttons, forms, tables, badges, notices, dialogs, and the helpers those
-need.
+The presentation layer: colour, type, spacing, the bar, the footer, buttons,
+forms, tables, badges, notices, dialogs, and the helpers those need. And what
+the bar's account menu stands on, which every site must do alike: one account
+per tab (`tabs`, both halves) and its lint (`eslint`).
 
 Not here:
 
@@ -470,7 +530,8 @@ Not here:
 - **Any school-, district- or class-specific value.**
 - **Anything requiring a build step.**
 - **Business logic, database helpers, auth, date maths,** except the two checks a sign-in page
-  shares with its server, `validEmail` and `safeReturnTo`. A second kind of
+  shares with its server, `validEmail` and `safeReturnTo`, and the tab rules above, which hold no
+  accounts and read no database: where accounts are kept stays each site's. A second kind of
   shared code gets a second package, so a site can upgrade one without taking
   the others. A component's check of its own fields (`readContact`) is part of
   the component; sending, storing and throttling are not.

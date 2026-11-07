@@ -3,6 +3,18 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.0 — 2026-11-06
+
+- A tab's account in the path, `/u/<key>/` (GN-1785, NUE-1734). Server: `pathTab({ bare })` takes the
+  prefix off before routing, keeps it on every redirect and gives every page `<base href>`;
+  `keepPath`, `pathFor`, `withPath`, `stripPath`; `readTab` reads the path first, then `au`, the
+  header and the Referer while sites move. Browser: `tabs.js` `mode: 'path'` wraps no request; it
+  carries sign-outs between tabs, moves a tab whose account stops being the default under its prefix,
+  and keeps `""`, `?…` and `#…` links and history entries on the page.
+- `gateiron-shared/eslint`: the rule `gateiron/relative-urls` (`allow`, `calls`), `rootRelative(html)`
+  for HTML files, and `rel(path)`.
+- The default sign-out form selector is `form[action*="logout"]`, which matches a relative action.
+
 ## 0.19.0 — 2026-11-06
 
 - One account per tab, for every site: `assets/tabs.js` (the browser half, `window.GateIronTab`) and
