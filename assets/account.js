@@ -192,31 +192,36 @@
   }
 
   // The tabs of one account on this site hear each other on their own channel, so the last one can say it is going.
+  // Firefox stops a closing tab's pagehide listener at its first call into page code, so the listener uses only
+  // native calls: whether another tab is open is worked out as messages arrive (newest), not as the page goes.
   function presence(w, o, who) {
     var url = o.presenceUrl;
+    var gone = url + (url.indexOf('?') < 0 ? '?' : '&') + 'gone=1';
     var me = Math.random().toString(36).slice(2);
     var others = {};
+    var newest = 0;   // when another tab of this account was last heard from
     var tabs = w.BroadcastChannel ? new w.BroadcastChannel((o.channel || 'gateiron-account') + '-tabs') : null;
+    var nav = w.navigator;
+    var bye = { who: who, tab: me, bye: true };
     function ping() { w.fetch(url, { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { accept: 'application/json' } }).catch(function () {}); }
     function hello() { if (tabs) { tabs.postMessage({ who: who, tab: me }); } }
     if (tabs) {
       tabs.onmessage = function (e) {
         var d = e.data || {};
         if (d.who !== who || !d.tab) { return; }
-        if (d.bye) { delete others[d.tab]; return; }
-        if (!others[d.tab]) { others[d.tab] = 0; hello(); }   // a new tab hears who is here at once
-        others[d.tab] = Date.now();
+        if (d.bye) { delete others[d.tab]; } else {
+          if (!others[d.tab]) { hello(); }   // a new tab hears who is here at once
+          others[d.tab] = Date.now();
+        }
+        newest = Object.keys(others).reduce(function (m, k) { return Math.max(m, others[k]); }, 0);
       };
     }
     ping(); hello();
     w.setInterval(function () { ping(); hello(); }, 60000);
     w.addEventListener('pageshow', function (e) { if (e.persisted) { ping(); hello(); } });
     w.addEventListener('pagehide', function () {
-      var now = Date.now();
-      var alone = !Object.keys(others).some(function (k) { return now - others[k] < 90000; });
-      // The beacon first: a page being torn down may not run past the channel's post.
-      if (alone && w.navigator.sendBeacon) { w.navigator.sendBeacon(url + (url.indexOf('?') < 0 ? '?' : '&') + 'gone=1'); }
-      if (tabs) { tabs.postMessage({ who: who, tab: me, bye: true }); }
+      if (Date.now() - newest >= 90000 && nav.sendBeacon) { nav.sendBeacon(gone); }
+      if (tabs) { tabs.postMessage(bye); }
     });
   }
 

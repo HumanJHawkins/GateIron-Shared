@@ -1,8 +1,7 @@
 'use strict';
 // watchAccount's presence in headless Firefox: each tab of an account pings presenceUrl, and the last tab of that
 // account on the site says it is going with a gone=1 beacon; a tab leaving while another of its account is open
-// does not. Skipped without Firefox. A tab closed through the test driver fires no pagehide in headless Firefox, so
-// leaving is tested by navigating away.
+// does not, by navigating away and by closing. Skipped without Firefox.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -58,6 +57,13 @@ test('the last tab of an account says it is going; one with company does not', a
   await settle(500);
   assert.equal(gones('a').length, 1, 'the last tab of the account goes: one gone=1 beacon');
   assert.equal(gones('b').length, 0, 'and the other account\'s tab says nothing');
+  // A tab closed through the driver: Firefox runs its pagehide only up to the first call into page code.
+  const three = await ff.tab();
+  await three.go(base + '/c');
+  await settle(300);
+  await three.close();
+  await settle(800);
+  assert.equal(gones('c').length, 1, 'the last tab of an account closes: the beacon');
   await other.close();
   await one.close();
   await two.close();

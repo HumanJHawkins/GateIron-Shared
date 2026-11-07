@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.2 — 2026-11-07
+
+- The last tab's `gone=1` beacon is sent when the tab closes, not only when it navigates: Firefox stops
+  a closing tab's pagehide listener at its first call into page code, so the listener now makes only
+  native calls, and whether another tab of the account is open is worked out as the tabs' messages
+  arrive (GN-1817).
+
 ## 0.22.1 — 2026-11-07
 
 - The last tab's `gone=1` beacon goes before the tabs' channel is told, so a page torn down as it closes
