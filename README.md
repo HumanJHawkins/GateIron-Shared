@@ -207,9 +207,11 @@ matching `signOutSelector`, `form[action*="logout"]`, or `leaving()` before a
 sign-out made by `fetch`): that account's tabs get a `gateiron:leaving` event on
 `document` to save drafts, then `onSignedOut(key)` (the default reloads). It
 moves a tab whose account stops being the default under its prefix (address and
-`<base>`); sessionStorage keeps the account of each address the tab had without
-a prefix, so Back or Reload to one from before the move goes under that prefix
-too. A site needs no copy of its own. `history.state` is the site's alone. And a
+`<base>`); sessionStorage keeps the account the tab last had at each address,
+prefix or not, so Back or Reload to one from before the move goes under that
+prefix too. All of this needs the tab's key: a page drawn without the meta's key
+(one served ahead of the session) calls `adopt(key)` once it learns it, or the
+tab stays the default's and follows whichever account becomes the default. A site needs no copy of its own. `history.state` is the site's alone. And a
 link or history entry meaning this page (`""`, `?page=2`, `#main`), which the
 base would send to the front page, stays on the page.
 
