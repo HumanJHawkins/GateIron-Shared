@@ -23,6 +23,7 @@ const page = (key) => `<!doctype html><html><head><meta charset="utf-8"><title>t
 <a id="link" href="next?x=1">next</a> <a id="frag" href="#main">skip</a> <a id="self" href="">refresh</a> <a id="query" href="?p=2">page 2</a>
 <form id="post" method="post" action="posted"><button id="postgo">go</button></form>
 <form id="out" method="post" action="logout"><button id="outgo">out</button></form>
+<form id="fields"><select id="pick"><option>one</option><option>two</option></select><textarea id="note"></textarea></form>
 <div id="main">main</div></body></html>`;
 
 const pathTab = tabs.pathTab({ bare: ['/mail/'] });
@@ -52,7 +53,8 @@ const server = http.createServer((req, res) => {
     const want = tabs.pathFor(t, keys, keys[0] || null);
     if (req.method === 'GET' && want !== req.tabPath) { res.redirect(302, tabs.withPath(req.url, want)); return; }
     res.setHeader('content-type', 'text/html; charset=utf-8');
-    res.setHeader('cache-control', 'no-store');
+    // Firefox keeps no form state for a no-store page.
+    if (url.pathname !== '/form') { res.setHeader('cache-control', 'no-store'); }
     res.send(page(t.key));
   });
 });
@@ -189,9 +191,30 @@ test('Reload or Back to an entry from before the tab moved under its prefix open
   await tab.back();
   await loaded(tab, `/u/${A}/page`);
   assert.equal(await served(tab), A);
-  // The site's own history state keeps its fields.
-  await tab.eval('(document.body.appendChild(Object.assign(document.createElement("script"), { textContent: \'history.replaceState({ mine: 1 }, "", location.href)\' })), true)');
-  assert.deepEqual(JSON.parse(await tab.eval('JSON.stringify(history.state)')), { mine: 1, gateironTab: A });
+  // History state is the site's alone, and nothing replaces the entry as a page loads.
+  assert.equal(await tab.eval('history.state'), null);
+  await tab.go(`${base}/blank`);
+  await cookies(tab, A);
+  await tab.go(`${base}/page`);
+  await loaded(tab, '/page');
+  assert.equal(await tab.eval('history.state'), null);
+});
+
+test('a page with no prefix keeps the Firefox form state and keyboard use of its controls', async (t) => {
+  if (!ff) { t.skip('Firefox is not installed'); return; }
+  const tab = await ff.tab();
+  await tab.go(`${base}/blank`);
+  await cookies(tab, A);
+  await tab.go(`${base}/form`);
+  await loaded(tab, '/form');
+  await tab.eval('(document.getElementById("pick").focus(), true)');
+  await tab.keys('');
+  assert.equal(await tab.eval('document.getElementById("pick").value'), 'two');
+  await tab.eval('(document.getElementById("note").focus(), true)');
+  await tab.keys('h', 'i');
+  await tab.reload();
+  await loaded(tab, '/form');
+  assert.deepEqual(await tab.eval('[document.getElementById("pick").value, document.getElementById("note").value]'), ['two', 'hi']);
 });
 
 test('an address no tab names stays bare, prefix or not', async (t) => {

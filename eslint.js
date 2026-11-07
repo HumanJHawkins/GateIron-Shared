@@ -19,6 +19,9 @@ const STATIC = ['/brand/', '/css/', '/js/', '/image/', '/images/', '/fonts/', '/
 // An attribute's value up to its closing quote, or to the end of a string that goes on in code ('<a href="/list/' + c).
 const ATTR = /\b(href|action|formaction)\s*=\s*["'](\/(?![/\\])[^"'\s>]*)/gi;
 
+// The page's own <base href="/">: the one address that is the root on purpose.
+const inBase = (s, at) => /^<base\b/i.test(s.slice(s.lastIndexOf('<', at), at));
+
 // An allow entry is a path prefix ("/oauth/"), or "/*.js" for any file of that type at the root ("/app.js").
 const allowed = (s, a) => (a.startsWith('/*.') ? new RegExp(`^/[^/?#]+\\${a.slice(2)}(?:[?#]|$)`).test(s) : s.startsWith(a));
 const rooted = (s, allow) => typeof s === 'string' && /^\/(?![/\\])/.test(s) && !allow.some((a) => allowed(s, a));
@@ -31,19 +34,23 @@ function rootRelative(html, allow = []) {
   const ok = STATIC.concat(allow);
   const out = [];
   for (const m of String(html).matchAll(ATTR)) {
-    if (rooted(m[2], ok)) { out.push({ attr: m[1], url: m[2], line: html.slice(0, m.index).split('\n').length }); }
+    if (rooted(m[2], ok) && !inBase(html, m.index)) { out.push({ attr: m[1], url: m[2], line: html.slice(0, m.index).split('\n').length }); }
   }
   return out;
 }
 
-// The text a string expression starts with: a literal, a template's first part, or the left of a +.
-function head(node) {
-  if (!node) { return null; }
-  if (node.type === 'Literal' && typeof node.value === 'string') { return node.value; }
-  if (node.type === 'TemplateLiteral') { return node.quasis[0].value.cooked; }
-  if (node.type === 'BinaryExpression' && node.operator === '+') { return head(node.left); }
-  return null;
+// The texts a string expression can start with: a literal, a template's first part, the left of a +, either branch
+// of a ?: or of || and ??. An address that starts with an expression (`${at}/files`) is a page sweep's to find.
+function heads(node) {
+  if (!node) { return []; }
+  if (node.type === 'Literal' && typeof node.value === 'string') { return [node.value]; }
+  if (node.type === 'TemplateLiteral') { return [node.quasis[0].value.cooked]; }
+  if (node.type === 'BinaryExpression' && node.operator === '+') { return heads(node.left); }
+  if (node.type === 'ConditionalExpression') { return heads(node.consequent).concat(heads(node.alternate)); }
+  if (node.type === 'LogicalExpression' && node.operator !== '&&') { return heads(node.left).concat(heads(node.right)); }
+  return [];
 }
+const head = (node) => heads(node)[0] || null;
 const name = (n) => (n && n.type === 'Identifier' ? n.name : n && n.type === 'MemberExpression' && !n.computed ? n.property.name : null);
 const objName = (n) => (n && n.type === 'MemberExpression' ? name(n.object) : null);
 
@@ -59,8 +66,8 @@ const relativeUrls = {
     // calls: the site's own helpers whose first argument is an address (post('/api/x', body)).
     const calls = ((context.options[0] || {}).calls) || [];
     const report = (node, url) => context.report({ node, messageId: 'rooted', data: { url, fix: url.slice(1) } });
-    const check = (node) => { const h = head(node); if (rooted(h, allow)) { report(node, h); } };
-    const text = (node, s) => { for (const m of String(s).matchAll(ATTR)) { if (rooted(m[2], allow)) { report(node, m[2]); } } };
+    const check = (node) => { for (const h of heads(node)) { if (rooted(h, allow)) { report(node, h); } } };
+    const text = (node, s) => { for (const m of String(s).matchAll(ATTR)) { if (rooted(m[2], allow) && !inBase(s, m.index)) { report(node, m[2]); } } };
     return {
       CallExpression(node) {
         const callee = name(node.callee);
@@ -88,4 +95,8 @@ const relativeUrls = {
   },
 };
 
-module.exports = { rules: { 'relative-urls': relativeUrls }, rootRelative, rel, STATIC };
+// One by one, so an ES module's named import sees each (import { rel } from 'gateiron-shared/eslint').
+exports.rules = { 'relative-urls': relativeUrls };
+exports.rootRelative = rootRelative;
+exports.rel = rel;
+exports.STATIC = STATIC;

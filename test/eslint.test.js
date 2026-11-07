@@ -34,3 +34,18 @@ test('rootRelative finds them in an HTML file, with the line', () => {
   assert.deepStrictEqual(gateiron.rootRelative('<a href="shop">\n<a href="/shop">\n<link href="/css/a.css">\n<form action=\'/x\'>'),
     [{ attr: 'href', url: '/shop', line: 2 }, { attr: 'action', url: '/x', line: 4 }]);
 });
+
+test('either branch of a ?: or a || is an address; the page\'s own <base href="/"> is not', () => {
+  assert.deepStrictEqual(lint(`
+    const m = { home: org ? \`/\${slug}\` : '/' }; location.href = next || '/shop'; fetch(ok ? 'api/a' : 'api/b');
+    const page = '<head><base href="/"><a href="/x">';
+  `), ['/', '/', '/shop', '/x']);
+  assert.deepStrictEqual(gateiron.rootRelative('<head>\n<base href="/">\n<a href="/y">'), [{ attr: 'href', url: '/y', line: 3 }]);
+});
+
+test('an ES module imports each by name', () => {
+  const out = require('node:child_process').execFileSync(process.execPath, ['--input-type=module', '-e',
+    "import { rel, rootRelative, rules, STATIC } from 'gateiron-shared/eslint'; console.log(rel('/shop/cart'), typeof rootRelative, Object.keys(rules), STATIC.length > 0);"],
+  { cwd: require('node:path').join(__dirname, '..') }).toString().trim();
+  assert.strictEqual(out, "shop/cart function [ 'relative-urls' ] true");
+});

@@ -106,3 +106,18 @@ test('on the path, a page with no prefix is the default\'s, whatever page it cam
   const prefixed = read(onPath(`/u/${A}/shop`, { 'sec-fetch-dest': 'document', 'sec-fetch-site': 'same-origin' }));
   assert.deepEqual([prefixed.asked, prefixed.source, prefixed.key], [A, 'path', A]);
 });
+
+test('pathTab starts an HTML page\'s head with the base, though Express sets the type after it looks', () => {
+  const served = (url, type, body) => {
+    const r = { url, originalUrl: url, method: 'GET', headers: {} };
+    const headers = type ? { 'content-type': type } : {};
+    let out;
+    const s = { get: (h) => headers[h.toLowerCase()], redirect: () => {}, send: (b) => { out = b; } };
+    tabs.pathTab()(r, s, () => s.send(body));
+    return out;
+  };
+  const html = '<!doctype html><html><head><title>t</title></head></html>';
+  assert.match(served(`/u/${A}/x`, null, html), new RegExp(`<head>\\n<base href="/u/${A}/">`));
+  assert.match(served('/x', 'text/html; charset=utf-8', html), /<head>\n<base href="\/">/);
+  assert.equal(served('/x', 'application/json', '{"head":"<head>"}'), '{"head":"<head>"}');
+});

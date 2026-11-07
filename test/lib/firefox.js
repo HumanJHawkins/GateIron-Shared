@@ -58,6 +58,9 @@ async function firefox() {
       reload: () => send('browsingContext.reload', { context, wait: 'complete' }),
       back: () => send('browsingContext.traverseHistory', { context, delta: -1 }),
       close: () => send('browsingContext.close', { context }),
+      /** Presses each key in turn ("\uE015" is ArrowDown). */
+      keys: (...ks) => send('input.performActions', { context, actions: [{ type: 'key', id: 'keys',
+        actions: ks.flatMap((k) => [{ type: 'keyDown', value: k }, { type: 'keyUp', value: k }]) }] }),
     };
   };
   return {

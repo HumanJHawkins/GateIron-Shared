@@ -9,7 +9,7 @@ addresses in step with it.
 ## Install
 
 ```bash
-npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.3
+npm install --allow-git=all github:HumanJHawkins/GateIron-Shared#v0.20.4
 ```
 
 Install a tag, not a branch.
@@ -46,7 +46,7 @@ account menu, `.btn`, the footer and the compact rules. Its classes all start wi
 reach the page.
 
 ```html
-<link rel="stylesheet" href="/brand/chrome.css?v=0.20.3">
+<link rel="stylesheet" href="/brand/chrome.css?v=0.20.4">
 ```
 
 ## The account menu's script
@@ -166,7 +166,8 @@ The site's rules:
   tab's key on them.
 - An address the server sends to a page (JSON `url`, `next`) is root-relative;
   the page uses it through `GateIronTab.address(url)`, which puts it under the
-  tab's key.
+  tab's key. So does one a script reads from a `data-` attribute and fetches,
+  unless the attribute is written relative.
 - A page script resolving an address does it against `document.baseURI`, not
   `location.href`. One comparing addresses strips the key first:
   `GateIronTab.unmarked(location.pathname)`.
@@ -193,7 +194,7 @@ The site's rules:
 
 ```html
 <meta name="gateiron-tab" content="<the key this page was drawn as, or empty>">
-<script src="/brand/tabs.js?v=0.20.3" data-gateiron-tabs data-mode="path"
+<script src="/brand/tabs.js?v=0.20.4" data-gateiron-tabs data-mode="path"
   data-keys-cookie="nhKeys" data-channel="nothangman-tabs"></script>
 ```
 
@@ -204,11 +205,11 @@ matching `signOutSelector`, `form[action*="logout"]`, or `leaving()` before a
 sign-out made by `fetch`): that account's tabs get a `gateiron:leaving` event on
 `document` to save drafts, then `onSignedOut(key)` (the default reloads). It
 moves a tab whose account stops being the default under its prefix (address and
-`<base>`), and each history entry's state keeps its account (`gateironTab`), so
-Back or Reload to an entry from before the move goes under that prefix too. A
-site's own `history.state` keeps its fields; a site never needs its own
-sessionStorage copy of the tab's key. And a link or history entry meaning this page (`""`, `?page=2`,
-`#main`), which the base would send to the front page, stays on the page.
+`<base>`); sessionStorage keeps the account of each address the tab had without
+a prefix, so Back or Reload to one from before the move goes under that prefix
+too. A site needs no copy of its own. `history.state` is the site's alone. And a
+link or history entry meaning this page (`""`, `?page=2`, `#main`), which the
+base would send to the front page, stays on the page.
 
 `window.GateIronTab`: `key()`; `adopt(key)`; `forget()`; `address(url)`, an
 address under this tab's key; `as(url, key)`, under another account's;
@@ -218,7 +219,7 @@ address under this tab's key; `as(url, key)`, under another account's;
 
 ```js
 // eslint.config.js
-const gateiron = require('gateiron-shared/eslint');
+const gateiron = require('gateiron-shared/eslint');   // or: import gateiron from 'gateiron-shared/eslint'
 { files: ['src/**/*.js'], plugins: { gateiron },
   rules: { 'gateiron/relative-urls': ['error', { allow: ['/oauth/'] }] } },
 { files: ['public/**/*.js'], plugins: { gateiron },
@@ -229,11 +230,16 @@ It reports a root-relative address where a browser goes or sends: `fetch`,
 XMLHttpRequest `open`, `EventSource`, `sendBeacon`, `window.open`,
 `pushState`/`replaceState`, `location` and its `assign`/`replace`, an assignment
 to `.href` or `.action`, a property named `href`, `action`, `home` or `meUrl`, and an
-`href`, `action` or `formaction` attribute in any string (HTML built in code).
+`href`, `action` or `formaction` attribute in any string (HTML built in code),
+following both branches of `?:`, `||` and `??`. It cannot see an address that
+starts with an expression (`` `${at}/files` ``).
 `allow`: more static paths (`'/*.js'` is any `.js` file at the root) and bare
 addresses. `calls`: the page scripts' own helpers whose first argument is an
 address; not in server code, where `router.post('/x')` is a route. For HTML
-files, `rootRelative(html, allow)` returns `[{ attr, url, line }]` for a test.
+files, `rootRelative(html, allow)` returns `[{ attr, url, line }]` for a test;
+it skips the page's own `<base href="/">`. Run it over the HTML the site renders
+too (each page a test signs in to), which finds what the lint cannot. `rel`,
+`rootRelative` and `STATIC` also import by name.
 
 ### Sites still on `au`
 

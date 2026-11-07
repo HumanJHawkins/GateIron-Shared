@@ -3,6 +3,17 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.20.4 — 2026-11-06
+
+- On the path, tabs.js keeps each bare address's account in sessionStorage (`<storageKey>.paths`)
+  instead of in history state, and calls no `replaceState` as a page loads. 0.20.3's load-time
+  `replaceState` broke keyboard use of a select after a navigation in Firefox, and two form-state
+  reload tests (NotUserError). Back and Reload behave as in 0.20.3; `history.state` is the site's
+  again.
+- `pathTab` puts the `<base>` on a plain `res.send(html)`: Express sets the type after it looks.
+- The lint follows both branches of `?:`, `||` and `??`; `rootRelative` and the lint skip the page's
+  own `<base href="/">`; `rel`, `rootRelative`, `rules` and `STATIC` import by name from an ES module.
+
 ## 0.20.3 — 2026-11-06
 
 - On the path, Back or Reload to an entry from before a tab moved under its prefix opens as the tab's

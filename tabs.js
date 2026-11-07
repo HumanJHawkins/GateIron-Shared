@@ -56,7 +56,9 @@ function pathTab(opts = {}) {
     };
     const send = res.send.bind(res);
     res.send = function sendWithBase(body) {
-      if (typeof body === 'string' && /html/.test(String(res.get('Content-Type') || '')) && !/<base\s/i.test(body)) {
+      // A string with no Content-Type yet is HTML: Express's send sets it so after this looks.
+      const type = res.get('Content-Type');
+      if (typeof body === 'string' && (type == null || /html/.test(String(type))) && !/<base\s/i.test(body)) {
         const base = `<base href="${req.tabPath ? `/u/${req.tabPath}/` : '/'}">`;
         body = body.replace(/<head(\s[^>]*)?>/i, (h) => `${h}\n${base}`);
       }

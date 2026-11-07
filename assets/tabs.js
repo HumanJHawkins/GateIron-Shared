@@ -353,15 +353,27 @@
       const h = a.getAttribute('href');
       if (h != null && onPage(h)) { a.setAttribute('href', loc.pathname + (h.startsWith('?') ? h : loc.search + h)); }
     };
-    // Each history entry keeps its tab's account in its state, so Back or Reload to an address from before the tab moved
-    // under its prefix opens as that account, signed in or out, not as the default.
-    const STAMP = 'gateironTab';
-    const stamp = (s) => (s == null || (typeof s === 'object' && !Array.isArray(s)) ? Object.assign({}, s, { [STAMP]: key }) : s);
+    // The account each address without a prefix was in this tab, so Back or Reload to one from before the tab moved
+    // under its prefix opens as that account, signed in or out, not as the default. In sessionStorage, not history
+    // state, which would take a replaceState as each page loads: in Firefox that broke a select's keyboard use.
+    const PATHS = `${o.storageKey}.paths`;
+    const seen = () => { try { return JSON.parse(w.sessionStorage.getItem(PATHS)) || {}; } catch { return {}; } };
+    const remember = () => {
+      if (inPath(loc.pathname)) { return; }
+      const all = seen();
+      const at = loc.pathname + loc.search;
+      delete all[at];
+      if (key) { all[at] = key; }
+      const last = Object.entries(all).slice(-100);
+      try { w.sessionStorage.setItem(PATHS, JSON.stringify(Object.fromEntries(last))); } catch { /* blocked */ }
+    };
     for (const name of ['pushState', 'replaceState']) {
       const was = w.history[name].bind(w.history);
-      w.history[name] = (state, title, url) => was(stamp(state), title, typeof url === 'string' && onPage(url) ? loc.pathname + (url.startsWith('?') ? url : loc.search + url) : url);
+      w.history[name] = (state, title, url) => {
+        was(state, title, typeof url === 'string' && onPage(url) ? loc.pathname + (url.startsWith('?') ? url : loc.search + url) : url);
+        remember();
+      };
     }
-    const mark = () => w.history.replaceState(w.history.state, '', loc.href);
     for (const type of ['pointerdown', 'click', 'auxclick', 'contextmenu', 'focusin', 'dragstart']) {
       w.addEventListener(type, (e) => {
         const a = e.target && e.target.closest && e.target.closest('a[href], area[href]');
@@ -400,7 +412,7 @@
         if (!v || v === key) { return; }
         key = v; ended = false; listed = keys().includes(v);
         settle();
-        mark();
+        remember();
         if (channel) { channel.postMessage({ type: 'keys' }); }
       },
       /** The tab names no account: it is the default's. */
@@ -420,13 +432,13 @@
     };
     w.GateIronTab = api;
     const how = w.performance && w.performance.getEntriesByType ? (w.performance.getEntriesByType('navigation')[0] || {}).type : null;
-    const before = valid((w.history.state || {})[STAMP]);
+    const before = valid(seen()[loc.pathname + loc.search]);
     if ((how === 'reload' || how === 'back_forward') && before && before !== key && !inPath(loc.pathname)) {
       loc.replace(under(loc.href, before));
       return api;
     }
     settle();
-    mark();
+    remember();
     return api;
   }
 
