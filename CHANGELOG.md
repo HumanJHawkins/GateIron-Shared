@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.4 — 2026-11-09
+
+- `brand.css` imports `chrome.css?v=0.22.4`; 0.22.3 still named 0.22.2, so a browser holding that cached copy kept
+  the 22rem menu.
+
 ## 0.22.3 — 2026-11-09
 
 - The account menu widens to 28rem, so a signed-out row with its Remove keeps a long address on one line
