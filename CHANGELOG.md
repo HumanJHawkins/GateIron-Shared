@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.3 — 2026-11-09
+
+- The account menu widens to 28rem, so a signed-out row with its Remove keeps a long address on one line
+  (GN-1930).
+
 ## 0.22.2 — 2026-11-07
 
 - The last tab's `gone=1` beacon is sent when the tab closes, not only when it navigates: Firefox stops

@@ -384,7 +384,7 @@
   /* As wide as its widest account row, not the chip, which shrinks to the avatar on a narrow bar. */
   width: max-content;
   min-width: 13rem;
-  max-width: min(22rem, calc(100vw - 1rem));
+  max-width: min(28rem, calc(100vw - 1rem));
   background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
