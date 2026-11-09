@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.22.5 — 2026-11-09
+
+- Path mode: `GateIronTab.adopt(key)` on a tab whose address names an ended key, once that account is the only
+  one and the default, drops the old prefix instead of keeping the tab signed out at it (GN-1933).
+
 ## 0.22.4 — 2026-11-09
 
 - `brand.css` imports `chrome.css?v=0.22.4`; 0.22.3 still named 0.22.2, so a browser holding that cached copy kept

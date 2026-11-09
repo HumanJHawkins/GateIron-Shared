@@ -339,10 +339,11 @@
     };
     const baseTag = () => d.querySelector('base[href]') || d.head.appendChild(Object.assign(d.createElement('base'), { href: '/' }));
     // The address and the base name this tab's account while another is the default here; a page drawn signed out
-    // keeps the key it names.
+    // keeps the key it names, until the tab's account is signed in here under another key (GN-1933).
     const settle = () => {
       const named = inPath(loc.pathname);
-      const want = key && (keys().length > 1 || byDefault() !== key) ? key : named;
+      const mine = key && keys().includes(key) && named !== key ? null : named;
+      const want = key && (keys().length > 1 || byDefault() !== key) ? key : mine;
       if (want === named) { return; }
       w.history.replaceState(w.history.state, '', under(loc.href, want));
       baseTag().setAttribute('href', want ? `/u/${want}/` : '/');

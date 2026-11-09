@@ -244,3 +244,19 @@ test('an address no tab names stays bare, prefix or not', async (t) => {
   await loaded(tab, `/u/${A}/next?from=mail`);
   assert.equal(await served(tab), A);
 });
+
+test('a tab at an ended key that signs in again under a new key moves to that account\'s address (GN-1933)', async (t) => {
+  if (!ff) { t.skip('Firefox is not installed'); return; }
+  const B2 = 'bbbb3333';
+  const tab = await ff.tab();
+  await tab.go(`${base}/blank`);
+  await cookies(tab, '', B);
+  await tab.go(`${base}/u/${B}/page`);
+  await loaded(tab, `/u/${B}/page`);
+  assert.equal(await served(tab), 'none');
+  // A popup signs B in again; it comes back as B2, the only account and the default.
+  await cookies(tab, B2, B);
+  await tab.eval(`(GateIronTab.adopt('${B2}'), true)`);
+  assert.equal(await at(tab), '/page');
+  assert.equal(await tab.eval('document.querySelector("base").getAttribute("href")'), '/');
+});
