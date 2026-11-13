@@ -147,6 +147,11 @@ app.use((req, res, next) => {
   and starts every HTML page's `<head>` with its `<base href>`. `bare`: addresses
   no tab names (prefixes or RegExps), served and redirected without one: a
   provider's endpoints, a mail link's token page, a calendar feed, webhooks.
+  `bare` is tested against the path with its query. gateiron-signin's
+  `POST /auth/presence` is the tab's, never bare: a bare `'/auth/'` strips the
+  prefix off it, and it pings as the default account. Use
+  `/^\/auth\/(?!presence(?:[?#]|$))/`, or list `/auth/callback` and
+  `/auth/backchannel-logout` one by one.
   A response written outside Express's `res.send` (oidc-provider's own pages,
   `res.sendFile`) gets no `<base>`: keep its addresses absolute.
 - `readTab(req, { keys, gone, default })` answers `{ asked, source, key,
@@ -288,6 +293,11 @@ const { page, skipLink, topBar, siteFooter, initials, assetUrl, esc } = require(
 | `signIn` | `{ href, label }` for the signed-out state |
 | `actionsHtml` | placed before the account chip, for the site's own buttons; on a narrow screen they take a second line only when they don't fit beside the brand and the account chip (`menu.js` measures; or the page's body has `gi-bar-inline`) |
 | `assets` | `{ base, version }` |
+
+The other accounts are one `.gi-account-list` block (0.21.0). A page that redraws them after load
+replaces that block whole, inserting it after `.gi-account-meta` when new and removing it when gone;
+replacing `.gi-account-switch` rows one by one duplicates or loses them. Redraw when the keys cookie
+changes, and on `visibilitychange` while more than one account is held or a list is drawn.
 
 A menu entry is `{ href, label }`; `{ label, form: { action, method, hiddenHtml } }` for anything
 that changes state — sign-out is a POST, not a link a prefetcher can follow; or
