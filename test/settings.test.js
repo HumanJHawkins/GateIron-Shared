@@ -74,6 +74,7 @@ test('a row names its type; a range shows its value; an action is a button or a 
     { id: 'off', label: 'Off', type: 'action', actionLabel: 'Go', href: '/x', locked: 'Not here' },
     { id: 'own', label: 'Own', controlHtml: '<input type="checkbox" role="switch">' }] }] });
   assert.ok(html.includes('data-gi-start="a"'));
+  assert.ok(settingsHtml({ query: 'a"b', categories: [] }).includes('autocomplete="off" value="a&quot;b" data-gi-settings-search'));
   assert.ok(/class="gi-settings-row gi-settings-row-switch" data-gi-row="m"/.test(html));
   assert.ok(/class="gi-settings-row" data-gi-row="own"/.test(html), 'a controlHtml row names no type');
   assert.ok(/class="gi-settings-row gi-settings-row-range gi-settings-is-modified" data-gi-row="vol" data-kind="number" data-default="70"/.test(html));

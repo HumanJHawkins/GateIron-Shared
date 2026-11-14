@@ -216,6 +216,30 @@ test('start: the category opens with the address untouched; a # wins; Back leave
   await tab.close();
 });
 
+test('start: its search stays out of the address; query carries a search into a redraw', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/?start=sound&q=level');
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), '', 'the page\'s own ?q= is not the panel\'s');
+  await tab.eval(`(() => { const s = document.querySelector('[data-gi-settings-search]'); s.value = 'mus'; s.dispatchEvent(new Event('input')); })()`);
+  assert.equal(await tab.eval('location.search'), '?start=sound&q=level', 'the address untouched');
+  await tab.eval(`(() => {
+    const old = document.querySelector('[data-gi-settings]');
+    old.insertAdjacentHTML('afterend', GateIronSettings.settingsHtml({ start: GateIronSettings.openCategory(old),
+      query: old.querySelector('[data-gi-settings-search]').value,
+      categories: [{ id: 'sound', label: 'Sound', rows: [
+        { id: 'music', label: 'Music', type: 'switch', value: true, default: true },
+        { id: 'teacher', label: 'Teacher mode', type: 'switch', value: false, default: false }] }] }));
+    old.remove();
+    GateIronSettings.wire(document.querySelector('[data-gi-settings]'));
+  })()`);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), 'mus');
+  assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-row')].filter((r) => !r.hidden).map((r) => r.dataset.giRow)`), ['music']);
+  assert.equal(await tab.eval('location.search'), '?start=sound&q=level');
+  await tab.close();
+});
+
 test('range: its value shows as it moves and is sent once let go; an action fires with action: true; say() announces', async (t) => {
   if (!ff) { return t.skip('no Firefox'); }
   const tab = await ff.tab();

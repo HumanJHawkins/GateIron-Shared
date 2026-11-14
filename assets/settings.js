@@ -110,7 +110,7 @@
       + '<div class="gi-settings-side">'
       + '<h1 class="gi-settings-title">' + esc(w.title) + '</h1>'
       + '<label class="gi-settings-search"><span class="gi-sr-only">' + esc(w.searchLabel) + '</span>'
-      + '<input type="search" placeholder="' + esc(w.searchLabel) + '" autocomplete="off" data-gi-settings-search></label>'
+      + '<input type="search" placeholder="' + esc(w.searchLabel) + '" autocomplete="off"' + (o.query ? ' value="' + esc(o.query) + '"' : '') + ' data-gi-settings-search></label>'
       + '<nav class="gi-settings-nav" aria-label="' + esc(w.navLabel) + '"><ul>' + cats.map(function (c) {
         return '<li><a href="#' + esc(c.id) + '" data-gi-cat="' + esc(c.id) + '">' + esc(c.label) + '</a></li>';
       }).join('') + '</ul></nav>'
@@ -256,13 +256,16 @@
         if (open && a.getAttribute('data-gi-cat') === open.getAttribute('data-gi-cat') && !q) { a.setAttribute('aria-current', 'true'); } else { a.removeAttribute('aria-current'); }
       });
     }
+    // A page opened with start (a panel over another page) leaves that page's address alone.
+    var panel = rootEl.hasAttribute('data-gi-start');
     function address() {
+      if (panel) { return; }
       var u = new URL(window.location.href);
       if (search.value.trim()) { u.searchParams.set('q', search.value.trim()); } else { u.searchParams.delete('q'); }
       window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
     }
 
-    search.value = new URL(window.location.href).searchParams.get('q') || '';
+    if (!panel) { search.value = new URL(window.location.href).searchParams.get('q') || ''; }
     search.addEventListener('input', function () { address(); show(); });
     // A page redrawn by the site (a new settingsHtml in its place, wired again) keeps its category
     // and search, which live in the address; the old one's window listeners go with it.

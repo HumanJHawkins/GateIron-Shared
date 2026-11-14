@@ -110,6 +110,8 @@
   --border-color: rgba(42, 37, 32, 0.14);
   --border-strong: rgba(42, 37, 32, 0.28);
   --field-border: var(--text-muted);
+  /* How much of --bg covers a backdrop image behind text: none in light, where a site picks the image. */
+  --image-scrim: 0;
   --shadow: 0 1px 2px rgba(42, 37, 32, 0.06), 0 12px 30px -12px rgba(42, 37, 32, 0.18);
   --focus: var(--clay-dark);
 
@@ -169,6 +171,7 @@
   --bar-bg: rgba(33, 29, 23, 0.82);
   --border-color: rgba(236, 229, 216, 0.14);
   --border-strong: rgba(236, 229, 216, 0.3);
+  --image-scrim: 0.9;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -14px rgba(0, 0, 0, 0.75);
   --focus: var(--clay-lighter);
 

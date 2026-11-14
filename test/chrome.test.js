@@ -434,6 +434,15 @@ test('readContact: spam, incomplete, too long, or clean fields', () => {
     { fields: { name: 'Ada', email: 'a@b.co', subject: 'Hi there', message: 'Hello' } });
 });
 
+test('contact.css draws in role tokens only, so it follows the theme', () => {
+  const chromeCss = fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const roles = new Set([...chromeCss.match(/:root\.gi-dark,[^{]*\{([^}]*)\}/)[1].matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]).concat('--field-border'));
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'contact.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const off = [...css.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1]).filter((t) => !t.startsWith('--gi-contact-') && !roles.has(t));
+  assert.deepEqual(off, []);
+  assert.deepEqual(css.match(/#[0-9a-f]{3,8}\b|rgba?\((?!0, 0, 0, )[^)]*\)/gi) || [], [], 'no fixed colour but the fade mask\'s black');
+});
+
 test('contact.css styles nothing outside .gi-contact', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'contact.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const selectors = [];

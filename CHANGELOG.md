@@ -3,6 +3,18 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.25.0 — 2026-11-14
+
+- Contact (GN-2055): `contact.css` draws in role tokens only, so it follows Dark. Text meets 4.5:1 and
+  field edges 3:1 (`--field-border`) in both schemes. The fade over the backdrop is the page's `--bg`
+  through a mask, and in Dark it never drops below `--image-scrim` (new token: 0 in light, 0.9 in
+  Dark), so light text reads over any photo. **Breaking:** `--gi-contact-overlay` (a gradient of fixed
+  colours) is gone; `--gi-contact-fade` is the mask in its place. Field labels default to `--text`
+  with no shadow; a site whose photo is dark behind them sets `--gi-contact-field-label` and
+  `--gi-contact-field-shadow`.
+- Settings page (GN-2056): a page opened with `start` keeps its search out of `?q=` and ignores the
+  page's own `?q=`; `query` carries a search into a redraw.
+
 ## 0.24.1 — 2026-11-14
 
 - Settings page (GN-2054 QA): an action row's button and link are solid (`btn-secondary`); Back from a

@@ -64,6 +64,7 @@ const PAIRS = [
   ['notice error', 'var(--text)', 'var(--urgent-bg)', 'var(--bg)', 4.5],
   ['focus ring', 'var(--focus)', 'var(--bg)', null, 3],
   ['field edge', 'var(--field-border)', 'var(--bg)', null, 3],
+  ['field edge on a card', 'var(--field-border)', 'var(--surface)', null, 3],
 ];
 
 for (const [scheme, tokens] of [['light', light], ['dark', dark]]) {

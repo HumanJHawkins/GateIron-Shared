@@ -441,11 +441,12 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
   save puts the control back.
 - Search filters rows in every category as it is typed, by label, description and `keywords`, marking
   each match. The query is in the address (`?q=`) and the open category is its hash (`#words`).
-- `start: 'words'` opens that category without touching the address (a panel over a game); a `#`
-  naming a category still wins, and Back leaves it for the overview.
+- `start: 'words'` opens that category without touching the address (a panel over a game): its
+  search stays out of `?q=`, a `#` naming a category still wins, and Back leaves it for the overview.
 - To show different rows after a save (a mode that adds settings), the site draws the page again with
   `settingsHtml`, puts it in place of the old one and wires it; the category and search carry over.
-  A page opened with `start` passes `start: GateIronSettings.openCategory(old)` to the new one.
+  A page opened with `start` passes `start: GateIronSettings.openCategory(old)` and
+  `query: old.querySelector('[data-gi-settings-search]').value` to the new one.
 - `accountHref` adds "Manage your GateIron account": GateIron.com's profile, as the tab's account
   (`?as=<sub>`), for everything about the account itself. A site's page holds only its own settings.
 - The words are options, with these defaults: `title` Preferences, `searchLabel` Search preferences,
