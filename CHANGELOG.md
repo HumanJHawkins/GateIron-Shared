@@ -3,6 +3,16 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.24.0 — 2026-11-14
+
+- Settings page (GN-2052): each row carries `gi-settings-row-<type>`, and the phone's switch layout keys
+  on `gi-settings-row-switch`, so a `controlHtml` row holding a switch keeps the stacked layout.
+- Settings page (GN-2053): `GateIronSettings.say(el, ok)` announces Saved or Could not save for a
+  `controlHtml` row's own save.
+- Settings page (GN-2054): `start` opens a category without the address; `openCategory(el)` names the
+  open one for a redraw; `range` rows (a slider with its value) and `action` rows (a button firing
+  `gi-settings-change` with `action: true`, or a link with `href`).
+
 ## 0.23.2 — 2026-11-14
 
 - Settings page (GN-2045 QA): a `#` naming no category, such as the skip link's `#main` or a site's own

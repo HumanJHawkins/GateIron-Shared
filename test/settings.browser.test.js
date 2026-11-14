@@ -17,15 +17,21 @@ const CATS = [
   { id: 'sound', label: 'Sound', rows: [
     { id: 'music', label: 'Music', type: 'switch', value: true, default: true },
     { id: 'volume', label: 'Volume', type: 'number', value: 5, default: 5, min: 1, max: 10 },
+    { id: 'loud', label: 'Loudness', type: 'range', value: 50, default: 50, min: 0, max: 100, step: 10 },
+    { id: 'again', label: 'Hints', type: 'action', actionLabel: 'Show Again' },
+    { id: 'filter', label: 'Filter', controlHtml: '<select id="step"><option>1</option></select> <input type="checkbox" role="switch" id="adv">' },
     { id: 'theme', label: 'Theme', type: 'radio', value: 'system', default: 'system',
       options: [{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }] }];
 // The page answers each save as window.answer says, and keeps what it was told.
-const PAGE = (attr) => `<!doctype html><html lang="en"${attr || ''}><head><meta charset="utf-8"><title>s</title>
+const PAGE = (attr, start) => `<!doctype html><html lang="en"${attr || ''}><head><meta charset="utf-8"><title>s</title>
 <link rel="stylesheet" href="/chrome.css"><link rel="stylesheet" href="/settings.css">
 <script src="/theme.js"></script><script src="/settings.js" defer></script><script src="/page.js" defer></script></head>
-<body><main id="main">${settingsHtml({ categories: CATS, accountHref: '/profile' })}</main></body></html>`;
+<body><main id="main">${settingsHtml({ categories: CATS, accountHref: '/profile', start: start || undefined })}</main></body></html>`;
 const PAGE_JS = `window.answer = true; window.told = [];
-document.addEventListener('gi-settings-change', function (e) { window.told.push({ id: e.detail.id, value: e.detail.value, reset: e.detail.reset }); e.detail.done(window.answer); });`;
+document.addEventListener('gi-settings-change', function (e) {
+  window.told.push(e.detail.action ? { id: e.detail.id, action: true } : { id: e.detail.id, value: e.detail.value, reset: e.detail.reset });
+  e.detail.done(window.answer);
+});`;
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -34,7 +40,7 @@ const server = http.createServer((req, res) => {
   if (files[url.pathname]) { res.writeHead(200, { 'content-type': files[url.pathname][0] }); res.end(ASSET(files[url.pathname][1])); return; }
   if (url.pathname === '/page.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); res.end(PAGE_JS); return; }
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
-  res.end(PAGE(url.pathname === '/dark' ? ' data-gi-theme="dark"' : ''));
+  res.end(PAGE(url.pathname === '/dark' ? ' data-gi-theme="dark"' : '', url.searchParams.get('start')));
 });
 
 let ff;
@@ -178,6 +184,60 @@ test('a page redrawn in place and wired again keeps its category and search', as
   assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-row')].filter((r) => !r.hidden).map((r) => r.dataset.giRow)`), ['music']);
   await tab.eval(`document.getElementById('gi-set-music').click()`);
   assert.deepEqual((await tab.eval('window.told')).at(-1), { id: 'music', value: false, reset: false }, 'the new rows are wired');
+  await tab.close();
+});
+
+test('start: the category opens with the address untouched; a # wins; Back leaves it', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 390, height: 800 } });
+  await tab.go(base + '/?start=sound');
+  assert.deepEqual(await shown(tab), ['sound']);
+  assert.equal(await visible(tab, '.gi-settings-back'), true, 'on a phone, inside the category');
+  assert.equal(await tab.eval('location.hash'), '');
+  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.getElementById('gi-set-music'))`), 'sound');
+  const entries = await tab.eval('history.length');
+  await tab.eval(`document.querySelector('.gi-settings-back').click()`);
+  await settle(100);
+  assert.equal(await visible(tab, '.gi-settings-pane'), false, 'Back: the overview');
+  assert.equal(await tab.eval('history.length'), entries, 'and no history entry');
+  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), null);
+  await tab.go(base + '/?start=sound#words');
+  assert.deepEqual(await shown(tab), ['words'], 'the address wins');
+  await tab.close();
+});
+
+test('range: its value shows as it moves and is sent once let go; an action fires with action: true; say() announces', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/#sound');
+  const status = () => tab.eval(`document.querySelector('[data-gi-settings-status]').textContent`);
+  await tab.eval(`(() => { const r = document.getElementById('gi-set-loud'); r.value = '80'; r.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-row=loud] .gi-settings-range-value').textContent`), '80');
+  assert.deepEqual(await tab.eval('window.told'), [], 'nothing sent while it moves');
+  await tab.eval(`document.getElementById('gi-set-loud').dispatchEvent(new Event('change', { bubbles: true }))`);
+  assert.deepEqual(await tab.eval('window.told'), [{ id: 'loud', value: 80, reset: false }]);
+  await tab.eval(`document.querySelector('[data-gi-row=loud] .gi-settings-reset').click()`);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-row=loud] .gi-settings-range-value').textContent`), '50', 'Reset moves the value shown');
+  await tab.eval(`document.getElementById('gi-set-again').click()`);
+  assert.deepEqual((await tab.eval('window.told')).at(-1), { id: 'again', action: true });
+  await settle(120);
+  assert.equal(await status(), 'Saved');
+  await tab.eval(`GateIronSettings.say(document.getElementById('adv'), false)`);
+  await settle(120);
+  assert.equal(await status(), 'Could not save');
+  await tab.close();
+});
+
+test('phone: a controlHtml row holding a switch keeps the stacked layout; a switch row does not', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 390, height: 800 } });
+  await tab.go(base + '/#sound');
+  const areas = (id) => tab.eval(`getComputedStyle(document.querySelector('[data-gi-row=${id}]')).gridTemplateAreas`);
+  assert.equal(await areas('filter'), '"text" "control" "state"');
+  assert.equal(await areas('music'), '"text control" "state state"');
   await tab.close();
 });
 

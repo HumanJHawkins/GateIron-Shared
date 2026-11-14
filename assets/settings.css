@@ -63,6 +63,9 @@
 .gi-settings-control select, .gi-settings-control input[type="number"] { min-height: 2.25rem; max-width: 100%; }
 .gi-settings-choices { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 1rem; }
 .gi-settings-choice { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 24px; }
+.gi-settings-range { display: inline-flex; align-items: center; gap: 0.6rem; }
+.gi-settings-range input[type="range"] { width: min(14rem, 60vw); min-height: 24px; margin: 0; }
+.gi-settings-range-value { min-width: 2.5ch; text-align: end; font-variant-numeric: tabular-nums; }
 .gi-settings-is-locked .gi-settings-control { opacity: 0.6; }
 
 @media (max-width: 48rem) {
@@ -80,6 +83,6 @@
   .gi-settings-row { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "control" "state"; }
   .gi-settings-control { justify-self: start; }
   .gi-settings-choices { justify-content: flex-start; }
-  .gi-settings-row:has(input[role="switch"]) { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text control" "state state"; }
-  .gi-settings-row:has(input[role="switch"]) .gi-settings-control { justify-self: end; }
+  .gi-settings-row-switch { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text control" "state state"; }
+  .gi-settings-row-switch .gi-settings-control { justify-self: end; }
 }

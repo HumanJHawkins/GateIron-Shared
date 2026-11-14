@@ -4,7 +4,7 @@
 // sidebar, search, the phone's drill-down, each row's modified mark and Reset, and the announcements.
 // It holds no settings and saves nothing. A change fires 'gi-settings-change' on the root with
 // detail { id, value, reset, done }; the site saves and calls done(true) or done(false), and a
-// failed save puts the control back.
+// failed save puts the control back. An action row's button fires it with { id, action: true, done }.
 (function (root, api) {
   if (typeof module === 'object' && module.exports) { module.exports = api; } else { root.GateIronSettings = api; }
   if (typeof document !== 'undefined' && typeof module === 'undefined') {
@@ -28,22 +28,33 @@
     failedText: 'Could not save',
     accountLabel: 'Manage your GateIron account'
   };
-  var TYPES = ['switch', 'radio', 'select', 'number'];
+  var TYPES = ['switch', 'radio', 'select', 'number', 'range', 'action'];
 
   // A value as the DOM holds it, and back: switches are booleans, numbers numbers, and a radio or
   // select whose options are all numbers gives numbers.
   function str(v) { return v === true ? 'true' : v === false ? 'false' : String(v == null ? '' : v); }
 
-  function control(row, fid, labelId, described) {
+  function control(row, fid, labelId, describedBy) {
+    var described = describedBy ? ' aria-describedby="' + describedBy + '"' : '';
     var dis = (row.locked ? ' disabled' : '') + described;
     var v = str(row.value);
     if (row.type === 'switch') {
       return '<input type="checkbox" role="switch" id="' + fid + '"' + (row.value === true ? ' checked' : '') + dis + '>';
     }
-    if (row.type === 'number') {
-      return '<input type="number" id="' + fid + '" value="' + esc(v) + '"'
+    if (row.type === 'action') {
+      // The button's name is its own words; the row's label and description say what it acts on.
+      var about = ' aria-describedby="' + [labelId].concat(describedBy ? [describedBy] : []).join(' ') + '"';
+      return row.href && !row.locked
+        ? '<a class="btn btn-small gi-settings-action" id="' + fid + '" href="' + esc(row.href) + '"' + about + '>' + esc(row.actionLabel) + '</a>'
+        : '<button type="button" class="btn btn-small gi-settings-action" id="' + fid + '"' + (row.locked ? ' disabled' : '') + about + '>' + esc(row.actionLabel) + '</button>';
+    }
+    if (row.type === 'number' || row.type === 'range') {
+      var input = '<input type="' + row.type + '" id="' + fid + '" value="' + esc(v) + '"'
         + (row.min != null ? ' min="' + esc(row.min) + '"' : '') + (row.max != null ? ' max="' + esc(row.max) + '"' : '')
         + (row.step != null ? ' step="' + esc(row.step) + '"' : '') + dis + '>';
+      // A slider shows its value beside it; a screen reader hears it from the slider itself.
+      return row.type === 'number' ? input
+        : '<span class="gi-settings-range">' + input + '<output class="gi-settings-range-value" for="' + fid + '" aria-hidden="true">' + esc(v) + '</output></span>';
     }
     var opts = row.options || [];
     if (row.type === 'select') {
@@ -57,28 +68,29 @@
     }).join('') + '</div>';
   }
 
-  function rowHtml(row, w, prefix) {
+  function rowHtml(row, w, prefix, modified) {
     var fid = prefix + '-' + esc(row.id);
     var labelId = fid + '-label';
     var own = row.controlHtml != null;
     if (!own && TYPES.indexOf(row.type) < 0) { throw new Error('gateiron-shared settings: row ' + row.id + ' has type ' + row.type + '; one of ' + TYPES.join(', ') + ', or controlHtml'); }
     var numeric = (row.type === 'radio' || row.type === 'select') && (row.options || []).length
       && (row.options || []).every(function (o) { return typeof o.value === 'number'; });
-    var kind = own ? 'own' : row.type === 'switch' ? 'boolean' : row.type === 'number' || numeric ? 'number' : 'string';
-    var labelTag = own || row.type === 'radio' ? 'span' : 'label';
+    var action = !own && row.type === 'action';
+    var kind = own ? 'own' : action ? 'action' : row.type === 'switch' ? 'boolean' : row.type === 'number' || row.type === 'range' || numeric ? 'number' : 'string';
+    var labelTag = own || action || row.type === 'radio' ? 'span' : 'label';
     // The description and a locked row's reason are read with the control.
     var describedBy = [row.description ? fid + '-desc' : '', row.locked ? fid + '-lock' : ''].filter(Boolean).join(' ');
-    var described = describedBy ? ' aria-describedby="' + describedBy + '"' : '';
-    return '<div class="gi-settings-row' + (row.locked ? ' gi-settings-is-locked' : '') + '" data-gi-row="' + esc(row.id) + '" data-kind="' + kind + '"'
-      + (own ? '' : ' data-default="' + esc(str(row.default)) + '"')
+    var valued = !own && !action;
+    return '<div class="gi-settings-row' + (own ? '' : ' gi-settings-row-' + row.type) + (modified ? ' gi-settings-is-modified' : '') + (row.locked ? ' gi-settings-is-locked' : '') + '" data-gi-row="' + esc(row.id) + '" data-kind="' + kind + '"'
+      + (valued ? ' data-default="' + esc(str(row.default)) + '"' : '')
       + (row.keywords && row.keywords.length ? ' data-keywords="' + esc(row.keywords.join(' ')) + '"' : '') + '>'
       + '<div class="gi-settings-text">'
       + '<' + labelTag + ' class="gi-settings-label" id="' + labelId + '"' + (labelTag === 'label' ? ' for="' + fid + '"' : '') + '>' + esc(row.label) + '</' + labelTag + '>'
       + (row.description ? '<p class="gi-settings-desc" id="' + fid + '-desc">' + esc(row.description) + '</p>' : '')
       + (row.locked ? '<p class="gi-settings-lock" id="' + fid + '-lock">' + esc(row.locked) + '</p>' : '')
       + '</div>'
-      + '<div class="gi-settings-control">' + (own ? String(row.controlHtml) : control(row, fid, labelId, described)) + '</div>'
-      + (own || row.locked ? '' : '<div class="gi-settings-state"><span class="gi-settings-modified">' + esc(w.modifiedLabel) + '</span>'
+      + '<div class="gi-settings-control">' + (own ? String(row.controlHtml) : control(row, fid, labelId, describedBy)) + '</div>'
+      + (!valued || row.locked ? '' : '<div class="gi-settings-state"><span class="gi-settings-modified">' + esc(w.modifiedLabel) + '</span>'
         + '<button type="button" class="btn btn-quiet btn-small gi-settings-reset" aria-label="' + esc(w.resetLabel + ' ' + row.label) + '">' + esc(w.resetLabel) + '</button></div>')
       + '</div>';
   }
@@ -91,8 +103,9 @@
     var back = o.backLabel != null ? o.backLabel : w.title;
     var prefix = 'gi-set';
     var cats = o.categories || [];
-    var modified = function (r) { return r.controlHtml == null && !r.locked && str(r.value) !== str(r.default); };
-    return '<div class="gi-settings" data-gi-settings data-saved="' + esc(w.savedText) + '" data-failed="' + esc(w.failedText) + '">'
+    var modified = function (r) { return r.controlHtml == null && r.type !== 'action' && !r.locked && str(r.value) !== str(r.default); };
+    return '<div class="gi-settings" data-gi-settings data-saved="' + esc(w.savedText) + '" data-failed="' + esc(w.failedText) + '"'
+      + (o.start != null ? ' data-gi-start="' + esc(o.start) + '"' : '') + '>'
       + '<div class="gi-settings-side">'
       + '<h1 class="gi-settings-title">' + esc(w.title) + '</h1>'
       + '<label class="gi-settings-search"><span class="gi-sr-only">' + esc(w.searchLabel) + '</span>'
@@ -109,7 +122,7 @@
         return '<section class="gi-settings-cat" id="' + esc(c.id) + '" data-gi-cat="' + esc(c.id) + '" aria-labelledby="' + prefix + '-h-' + esc(c.id) + '">'
           + '<h2 id="' + prefix + '-h-' + esc(c.id) + '" tabindex="-1">' + esc(c.label) + '</h2>'
           + (c.rows || []).map(function (r) {
-            return rowHtml(r, w, prefix).replace('class="gi-settings-row', 'class="gi-settings-row' + (modified(r) ? ' gi-settings-is-modified' : ''));
+            return rowHtml(r, w, prefix, modified(r));
           }).join('')
           + '</section>';
       }).join('')
@@ -134,6 +147,12 @@
     Array.prototype.forEach.call(row.querySelectorAll('.gi-settings-control input, .gi-settings-control select'), function (el) {
       if (el.type === 'checkbox') { el.checked = s === 'true'; } else if (el.type === 'radio') { el.checked = el.value === s; } else { el.value = s; }
     });
+    shows(row);
+  }
+  // A slider's value beside it.
+  function shows(row) {
+    var out = row.querySelector('.gi-settings-range-value');
+    if (out) { out.textContent = row.querySelector('.gi-settings-control input[type=range]').value; }
   }
   function fromDefault(row) {
     var d = row.getAttribute('data-default');
@@ -165,16 +184,32 @@
     el.appendChild(document.createTextNode(text.slice(at)));
   }
 
+  function announce(rootEl, text) {
+    var status = rootEl.querySelector('[data-gi-settings-status]');
+    status.textContent = '';
+    window.setTimeout(function () { status.textContent = text; }, 50);
+  }
+
+  /** Saved, or Could not save, announced for a save the site made itself (a controlHtml row). */
+  function say(el, ok) {
+    var rootEl = el.closest('[data-gi-settings]');
+    announce(rootEl, rootEl.getAttribute(ok ? 'data-saved' : 'data-failed'));
+  }
+
+  /** The category open by choice (a # or start), or null: a redrawn page passes it as start. */
+  function openCategory(el) {
+    return el.closest('[data-gi-settings]').getAttribute('data-gi-open') || null;
+  }
+
   function wire(rootEl) {
     if (!rootEl || rootEl.getAttribute('data-gi-wired')) { return; }
     rootEl.setAttribute('data-gi-wired', '1');
-    var status = rootEl.querySelector('[data-gi-settings-status]');
     var search = rootEl.querySelector('[data-gi-settings-search]');
     var empty = rootEl.querySelector('.gi-settings-empty');
     var cats = Array.prototype.slice.call(rootEl.querySelectorAll('section.gi-settings-cat'));
     var links = Array.prototype.slice.call(rootEl.querySelectorAll('.gi-settings-nav a'));
     var phone = window.matchMedia ? window.matchMedia(PHONE) : { matches: false };
-    var say = function (text) { status.textContent = ''; window.setTimeout(function () { status.textContent = text; }, 50); };
+    var say = function (text) { announce(rootEl, text); };
 
     // The category the address's # names, if any.
     function named() {
@@ -182,12 +217,14 @@
       try { id = decodeURIComponent(id); } catch (e) { /* as written */ }
       return cats.filter(function (c) { return c.getAttribute('data-gi-cat') === id; })[0] || null;
     }
-    // A # naming no category (the skip link's #main, a site's own anchor) keeps the open one.
+    // A # naming no category (the skip link's #main, a site's own anchor) keeps the open one. With
+    // no #, the start category, until Back leaves it.
+    var start = cats.filter(function (c) { return c.getAttribute('data-gi-cat') === rootEl.getAttribute('data-gi-start'); })[0] || null;
     var last = null;
     function current() {
       var c = named();
-      if (c) { last = c; }
-      return c || (window.location.hash.length > 1 ? last : null);
+      if (c) { last = c; return c; }
+      return window.location.hash.length > 1 ? last || start : start;
     }
     function show() {
       var q = search.value.trim().toLowerCase();
@@ -195,6 +232,7 @@
       var open = picked || (phone.matches ? null : cats[0]);
       rootEl.classList.toggle('gi-settings-searching', !!q);
       rootEl.classList.toggle('gi-settings-in-cat', !!picked);
+      rootEl.setAttribute('data-gi-open', picked ? picked.getAttribute('data-gi-cat') : '');
       var found = 0;
       cats.forEach(function (c) {
         var any = 0;
@@ -242,7 +280,9 @@
     if (phone.addEventListener) { phone.addEventListener('change', onPhone); }
     rootEl.querySelector('[data-gi-settings-back]').addEventListener('click', function (e) {
       e.preventDefault();
-      window.history.pushState(window.history.state, '', window.location.pathname + window.location.search);
+      start = null;
+      last = null;
+      if (window.location.hash) { window.history.pushState(window.history.state, '', window.location.pathname + window.location.search); }
       show();
       search.focus();
     });
@@ -271,10 +311,23 @@
         }
       } }));
     }
+    function act(row) {
+      rootEl.dispatchEvent(new CustomEvent('gi-settings-change', { bubbles: true, detail: {
+        id: row.getAttribute('data-gi-row'), action: true,
+        done: function (ok) { say(rootEl.getAttribute(ok ? 'data-saved' : 'data-failed')); }
+      } }));
+    }
     Array.prototype.forEach.call(rootEl.querySelectorAll('.gi-settings-row'), function (row) {
-      if (row.getAttribute('data-kind') === 'own') { return; }
+      var kind = row.getAttribute('data-kind');
+      if (kind === 'own') { return; }
+      if (kind === 'action') {
+        var button = row.querySelector('button.gi-settings-action');
+        if (button) { button.addEventListener('click', function () { act(row); }); }
+        return;
+      }
       row.setAttribute('data-saved-value', str(read(row)));
       row.querySelector('.gi-settings-control').addEventListener('change', function () { change(row, false); });
+      row.querySelector('.gi-settings-control').addEventListener('input', function () { shows(row); });
       var reset = row.querySelector('.gi-settings-reset');
       if (reset) {
         reset.addEventListener('click', function () {
@@ -288,5 +341,5 @@
     show();
   }
 
-  return { settingsHtml: settingsHtml, wire: wire, esc: esc };
+  return { settingsHtml: settingsHtml, wire: wire, say: say, openCategory: openCategory, esc: esc };
 })());

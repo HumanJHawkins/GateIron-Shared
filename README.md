@@ -423,11 +423,17 @@ settingsHtml({
 Serve `settings.js` and `settings.css`, load the script with `defer`; it wires every `[data-gi-settings]`
 on load, and `GateIronSettings.wire(el)` wires one added later.
 
-- A row's `type` is `switch` (a boolean that takes effect at once), `radio`, `select` or `number`
-  (`min`, `max`, `step`; an empty or out-of-range number is not sent, and the saved one comes back). Radio
+- A row's `type` is `switch` (a boolean that takes effect at once), `radio`, `select`, `number`
+  (`min`, `max`, `step`; an empty or out-of-range number is not sent, and the saved one comes back) or
+  `range` (a slider with its value beside it, `min`, `max`, `step`, sent when it is let go). Radio
   and select values come back as numbers when every option's value is one. A row's description and
   lock reason describe its control to a screen reader.
-  `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark.
+- An `action` row is a button, `actionLabel`, that does something rather than holding a value; it
+  fires `gi-settings-change` with `detail: { id, action: true, done }`. With `href` it is a link instead
+  and fires nothing.
+- `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark, and
+  `GateIronSettings.say(el, ok)` announces Saved or Could not save for a save the site made from it
+  (`el` is the control or anything else inside the page).
 - A row whose value differs from its `default` shows Modified and a Reset. A `locked` row shows its
   control disabled with the reason on the row, never hidden, and no Reset.
 - A change fires `gi-settings-change` on the page's root, `detail: { id, value, reset, done }`. The site
@@ -435,8 +441,11 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
   save puts the control back.
 - Search filters rows in every category as it is typed, by label, description and `keywords`, marking
   each match. The query is in the address (`?q=`) and the open category is its hash (`#words`).
+- `start: 'words'` opens that category without touching the address (a panel over a game); a `#`
+  naming a category still wins, and Back leaves it for the overview.
 - To show different rows after a save (a mode that adds settings), the site draws the page again with
   `settingsHtml`, puts it in place of the old one and wires it; the category and search carry over.
+  A page opened with `start` passes `start: GateIronSettings.openCategory(old)` to the new one.
 - `accountHref` adds "Manage your GateIron account": GateIron.com's profile, as the tab's account
   (`?as=<sub>`), for everything about the account itself. A site's page holds only its own settings.
 - The words are options, with these defaults: `title` Preferences, `searchLabel` Search preferences,
