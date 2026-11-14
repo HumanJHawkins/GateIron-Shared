@@ -389,7 +389,7 @@ System, Light or Dark, chosen on each site and kept by it. Light unless the site
 
 ```html
 <html lang="en" data-gi-theme="dark">
-<script src="/brand/theme.js?v=0.23.1"></script>
+<script src="/brand/theme.js?v=0.23.2"></script>
 ```
 
 - `data-gi-theme` (`system`, `light` or `dark`) is the site's stored choice, written by the server. Without

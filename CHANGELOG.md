@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.23.2 — 2026-11-14
+
+- Settings page (GN-2045 QA): a `#` naming no category, such as the skip link's `#main` or a site's own
+  anchor, leaves the open category and the focus alone; it switched to the first category, or to the
+  overview on a phone.
+
 ## 0.23.1 — 2026-11-14
 
 - Settings page (GN-2045 QA): a row's id is escaped in every attribute it reaches; the description and

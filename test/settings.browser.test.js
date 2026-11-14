@@ -60,6 +60,9 @@ test('desktop: the first category, then the one named in the address, marked in 
   await tab.go(base + '/#sound');
   assert.deepEqual(await shown(tab), ['sound']);
   assert.equal(await visible(tab, '.gi-settings-back'), false, 'no back link beside a sidebar');
+  await tab.eval(`location.hash = 'main'`);
+  await settle(100);
+  assert.deepEqual(await shown(tab), ['sound'], 'a # naming no category (the skip link) leaves the open one');
   await tab.close();
 });
 
@@ -141,6 +144,11 @@ test('phone: the overview, a category with its back link, back to the overview',
   assert.equal(await visible(tab, '.gi-settings-side'), false);
   assert.equal(await visible(tab, '.gi-settings-back'), true);
   assert.equal(await tab.eval('document.activeElement.textContent'), 'Sound', 'focus on the category\'s title');
+  await tab.eval(`location.hash = 'main'`);
+  await settle(100);
+  assert.equal(await visible(tab, '.gi-settings-back'), true, 'and on a phone it stays in the category');
+  await tab.eval(`location.hash = 'sound'`);
+  await settle(100);
   await tab.eval(`document.querySelector('.gi-settings-back').click()`);
   await settle(100);
   assert.equal(await visible(tab, '.gi-settings-nav'), true);

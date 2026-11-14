@@ -176,10 +176,18 @@
     var phone = window.matchMedia ? window.matchMedia(PHONE) : { matches: false };
     var say = function (text) { status.textContent = ''; window.setTimeout(function () { status.textContent = text; }, 50); };
 
-    function current() {
+    // The category the address's # names, if any.
+    function named() {
       var id = window.location.hash.slice(1);
       try { id = decodeURIComponent(id); } catch (e) { /* as written */ }
       return cats.filter(function (c) { return c.getAttribute('data-gi-cat') === id; })[0] || null;
+    }
+    // A # naming no category (the skip link's #main, a site's own anchor) keeps the open one.
+    var last = null;
+    function current() {
+      var c = named();
+      if (c) { last = c; }
+      return c || (window.location.hash.length > 1 ? last : null);
     }
     function show() {
       var q = search.value.trim().toLowerCase();
@@ -221,6 +229,7 @@
     // and search, which live in the address; the old one's window listeners go with it.
     var onHash = function () {
       if (!rootEl.isConnected) { window.removeEventListener('hashchange', onHash); return; }
+      if (window.location.hash.length > 1 && !named()) { return; }
       show();
       var c = current();
       if (c) { c.querySelector('h2').focus(); } else if (!search.contains(document.activeElement)) { search.focus(); }
