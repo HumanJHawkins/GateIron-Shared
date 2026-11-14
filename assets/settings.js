@@ -197,9 +197,11 @@
     announce(rootEl, rootEl.getAttribute(ok ? 'data-saved' : 'data-failed'));
   }
 
-  /** The category open by choice (a # or start), or null: a redrawn page passes it as start. */
+  /** The category open by choice (a # or start): a redrawn page passes it as start. A panel (opened
+      with start) with none open gives '', which redraws a panel at its overview; a page gives null. */
   function openCategory(el) {
-    return el.closest('[data-gi-settings]').getAttribute('data-gi-open') || null;
+    var rootEl = el.closest('[data-gi-settings]');
+    return rootEl.getAttribute('data-gi-open') || (rootEl.hasAttribute('data-gi-start') ? '' : null);
   }
 
   function wire(rootEl) {

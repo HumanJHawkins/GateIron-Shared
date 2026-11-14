@@ -445,7 +445,8 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
   search stays out of `?q=`, a `#` naming a category still wins, and Back leaves it for the overview.
 - To show different rows after a save (a mode that adds settings), the site draws the page again with
   `settingsHtml`, puts it in place of the old one and wires it; the category and search carry over.
-  A page opened with `start` passes `start: GateIronSettings.openCategory(old)` and
+  A page opened with `start` passes `start: GateIronSettings.openCategory(old)` (`''` once Back has
+  left the category, which keeps it a panel at its overview) and
   `query: old.querySelector('[data-gi-settings-search]').value` to the new one.
 - `accountHref` adds "Manage your GateIron account": GateIron.com's profile, as the tab's account
   (`?as=<sub>`), for everything about the account itself. A site's page holds only its own settings.

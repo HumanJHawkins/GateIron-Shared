@@ -201,7 +201,7 @@ test('start: the category opens with the address untouched; a # wins; Back leave
   await settle(100);
   assert.equal(await visible(tab, '.gi-settings-pane'), false, 'Back: the overview');
   assert.equal(await tab.eval('history.length'), entries, 'and no history entry');
-  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), null);
+  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), '', 'a panel at its overview');
   await tab.go(base + '/?start=sound#words');
   assert.deepEqual(await shown(tab), ['words'], 'the address wins');
   await tab.go(base + '/?start=sound&own=1#main');
@@ -237,6 +237,20 @@ test('start: its search stays out of the address; query carries a search into a 
   assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), 'mus');
   assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-row')].filter((r) => !r.hidden).map((r) => r.dataset.giRow)`), ['music']);
   assert.equal(await tab.eval('location.search'), '?start=sound&q=level');
+  // Back to the overview, then a redraw: still a panel, still its own search.
+  await tab.eval(`document.querySelector('.gi-settings-back').click()`);
+  await tab.eval(`(() => {
+    const old = document.querySelector('[data-gi-settings]');
+    old.insertAdjacentHTML('afterend', GateIronSettings.settingsHtml({ start: GateIronSettings.openCategory(old),
+      query: old.querySelector('[data-gi-settings-search]').value,
+      categories: [{ id: 'sound', label: 'Sound', rows: [{ id: 'music', label: 'Music', type: 'switch', value: true, default: true }] }] }));
+    old.remove();
+    GateIronSettings.wire(document.querySelector('[data-gi-settings]'));
+  })()`);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), 'mus', 'its own search, not the page\'s ?q=');
+  await tab.eval(`(() => { const s = document.querySelector('[data-gi-settings-search]'); s.value = 'lev'; s.dispatchEvent(new Event('input')); })()`);
+  assert.equal(await tab.eval('location.search'), '?start=sound&q=level', 'a panel after Back and a redraw');
+  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), '');
   await tab.close();
 });
 

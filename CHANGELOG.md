@@ -3,6 +3,11 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.25.1 — 2026-11-14
+
+- Settings page (GN-2056 QA): `openCategory()` of a panel with no category open is `''`, not `null`,
+  so a redraw after Back stays a panel and keeps its search out of the address.
+
 ## 0.25.0 — 2026-11-14
 
 - Contact (GN-2055): `contact.css` draws in role tokens only, so it follows Dark. Text meets 4.5:1 and
