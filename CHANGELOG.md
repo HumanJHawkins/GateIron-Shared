@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.24.1 — 2026-11-14
+
+- Settings page (GN-2054 QA): an action row's button and link are solid (`btn-secondary`); Back from a
+  `start` category keeps a site's own `#` and adds no history entry; an action row without an
+  `actionLabel` is refused.
+
 ## 0.24.0 — 2026-11-14
 
 - Settings page (GN-2052): each row carries `gi-settings-row-<type>`, and the phone's switch layout keys

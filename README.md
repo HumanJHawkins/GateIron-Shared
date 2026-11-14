@@ -428,7 +428,7 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
   `range` (a slider with its value beside it, `min`, `max`, `step`, sent when it is let go). Radio
   and select values come back as numbers when every option's value is one. A row's description and
   lock reason describe its control to a screen reader.
-- An `action` row is a button, `actionLabel`, that does something rather than holding a value; it
+- An `action` row is a solid button, `actionLabel` (required), that does something rather than holding a value; it
   fires `gi-settings-change` with `detail: { id, action: true, done }`. With `href` it is a link instead
   and fires nothing.
 - `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark, and

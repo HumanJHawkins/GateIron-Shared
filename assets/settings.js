@@ -45,8 +45,8 @@
       // The button's name is its own words; the row's label and description say what it acts on.
       var about = ' aria-describedby="' + [labelId].concat(describedBy ? [describedBy] : []).join(' ') + '"';
       return row.href && !row.locked
-        ? '<a class="btn btn-small gi-settings-action" id="' + fid + '" href="' + esc(row.href) + '"' + about + '>' + esc(row.actionLabel) + '</a>'
-        : '<button type="button" class="btn btn-small gi-settings-action" id="' + fid + '"' + (row.locked ? ' disabled' : '') + about + '>' + esc(row.actionLabel) + '</button>';
+        ? '<a class="btn btn-secondary btn-small gi-settings-action" id="' + fid + '" href="' + esc(row.href) + '"' + about + '>' + esc(row.actionLabel) + '</a>'
+        : '<button type="button" class="btn btn-secondary btn-small gi-settings-action" id="' + fid + '"' + (row.locked ? ' disabled' : '') + about + '>' + esc(row.actionLabel) + '</button>';
     }
     if (row.type === 'number' || row.type === 'range') {
       var input = '<input type="' + row.type + '" id="' + fid + '" value="' + esc(v) + '"'
@@ -73,6 +73,7 @@
     var labelId = fid + '-label';
     var own = row.controlHtml != null;
     if (!own && TYPES.indexOf(row.type) < 0) { throw new Error('gateiron-shared settings: row ' + row.id + ' has type ' + row.type + '; one of ' + TYPES.join(', ') + ', or controlHtml'); }
+    if (row.type === 'action' && !row.actionLabel) { throw new Error('gateiron-shared settings: action row ' + row.id + ' needs an actionLabel'); }
     var numeric = (row.type === 'radio' || row.type === 'select') && (row.options || []).length
       && (row.options || []).every(function (o) { return typeof o.value === 'number'; });
     var action = !own && row.type === 'action';
@@ -282,7 +283,7 @@
       e.preventDefault();
       start = null;
       last = null;
-      if (window.location.hash) { window.history.pushState(window.history.state, '', window.location.pathname + window.location.search); }
+      if (named()) { window.history.pushState(window.history.state, '', window.location.pathname + window.location.search); }
       show();
       search.focus();
     });

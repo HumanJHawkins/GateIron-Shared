@@ -204,6 +204,15 @@ test('start: the category opens with the address untouched; a # wins; Back leave
   assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), null);
   await tab.go(base + '/?start=sound#words');
   assert.deepEqual(await shown(tab), ['words'], 'the address wins');
+  await tab.go(base + '/?start=sound&own=1#main');
+  assert.deepEqual(await shown(tab), ['sound'], 'a site\'s own # leaves start alone');
+  const before = await tab.eval('history.length');
+  await tab.eval(`document.querySelector('.gi-settings-back').click()`);
+  await settle(100);
+  assert.equal(await visible(tab, '.gi-settings-pane'), false);
+  assert.equal(await tab.eval('location.hash'), '#main', 'Back keeps the site\'s own #');
+  assert.equal(await tab.eval('history.length'), before);
+  assert.equal(await tab.eval(`(() => { const b = document.getElementById('gi-set-again'); return getComputedStyle(b).backgroundColor !== getComputedStyle(document.body).backgroundColor && b.classList.contains('btn-secondary'); })()`), true, 'an action button is solid');
   await tab.close();
 });
 

@@ -81,14 +81,15 @@ test('a row names its type; a range shows its value; an action is a button or a 
   assert.ok(html.includes('<output class="gi-settings-range-value" for="gi-set-vol" aria-hidden="true">40</output>'));
   const again = html.slice(html.indexOf('data-gi-row="again"'), html.indexOf('data-gi-row="acct"'));
   assert.ok(again.includes('data-kind="action"') && !again.includes('data-default') && !again.includes('gi-settings-reset'));
-  assert.ok(again.includes('<button type="button" class="btn btn-small gi-settings-action" id="gi-set-again" aria-describedby="gi-set-again-label gi-set-again-desc">Show Again</button>'));
-  assert.ok(html.includes('<a class="btn btn-small gi-settings-action" id="gi-set-acct" href="/p?a=1&amp;b=2" aria-describedby="gi-set-acct-label">Open</a>'));
+  assert.ok(again.includes('<button type="button" class="btn btn-secondary btn-small gi-settings-action" id="gi-set-again" aria-describedby="gi-set-again-label gi-set-again-desc">Show Again</button>'));
+  assert.ok(html.includes('<a class="btn btn-secondary btn-small gi-settings-action" id="gi-set-acct" href="/p?a=1&amp;b=2" aria-describedby="gi-set-acct-label">Open</a>'));
   const off = html.slice(html.indexOf('data-gi-row="off"'), html.indexOf('data-gi-row="own"'));
   assert.ok(off.includes('<button type="button"') && off.includes(' disabled ') && !off.includes('href='), 'a locked link is a disabled button');
 });
 
 test('an unknown control is refused', () => {
   assert.throws(() => settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [{ id: 'x', label: 'X', type: 'slider' }] }] }), /type slider/);
+  assert.throws(() => settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [{ id: 'x', label: 'X', type: 'action' }] }] }), /needs an actionLabel/);
 });
 
 test('settings.css styles nothing but its own gi-settings classes', () => {
