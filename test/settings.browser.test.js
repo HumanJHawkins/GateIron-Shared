@@ -20,6 +20,7 @@ const CATS = [
     { id: 'loud', label: 'Loudness', type: 'range', value: 50, default: 50, min: 0, max: 100, step: 10 },
     { id: 'again', label: 'Hints', type: 'action', actionLabel: 'Show Again' },
     { id: 'filter', label: 'Filter', controlHtml: '<select id="step"><option>1</option></select> <input type="checkbox" role="switch" id="adv">' },
+    { id: 'blend', label: 'Blend', controlHtml: '<input type="range" id="blendy" value="3">', resettable: true, modified: true },
     { id: 'theme', label: 'Theme', type: 'radio', value: 'system', default: 'system',
       options: [{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }] }];
 // The page answers each save as window.answer says, and keeps what it was told.
@@ -285,6 +286,28 @@ test('range: its value shows as it moves and is sent once let go; an action fire
   await tab.eval(`GateIronSettings.say(document.getElementById('adv'), false)`);
   await settle(120);
   assert.equal(await status(), 'Could not save');
+  await tab.close();
+});
+
+test('a resettable controlHtml row: Reset sends { id, reset: true }, done(true) clears the mark, markModified sets it', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/?blend=1#sound');
+  const marked = () => tab.eval(`document.querySelector('[data-gi-row=blend]').classList.contains('gi-settings-is-modified')`);
+  assert.equal(await marked(), true);
+  assert.equal(await visible(tab, '[data-gi-row=blend] .gi-settings-state'), true);
+  await tab.eval(`(() => { window.answer = false; document.querySelector('[data-gi-row=blend] .gi-settings-reset').click(); })()`);
+  assert.deepEqual(await tab.eval('window.told'), [{ id: 'blend', reset: true }]);
+  assert.equal(await marked(), true, 'a failed reset keeps the mark');
+  assert.equal(await tab.eval('document.activeElement.id'), 'blendy', 'the focus goes to the row\'s control');
+  await tab.eval(`(() => { window.answer = true; document.querySelector('[data-gi-row=blend] .gi-settings-reset').click(); })()`);
+  assert.equal(await marked(), false);
+  assert.equal(await visible(tab, '[data-gi-row=blend] .gi-settings-state'), false);
+  await settle(120);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-status]').textContent`), 'Saved');
+  await tab.eval(`GateIronSettings.markModified(document.getElementById('blendy'), true)`);
+  assert.equal(await marked(), true);
   await tab.close();
 });
 

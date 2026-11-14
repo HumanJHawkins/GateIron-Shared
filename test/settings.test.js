@@ -88,6 +88,20 @@ test('a row names its type; a range shows its value; an action is a button or a 
   assert.ok(off.includes('<button type="button"') && off.includes(' disabled ') && !off.includes('href='), 'a locked link is a disabled button');
 });
 
+test('a controlHtml row gets Modified and Reset only when resettable', () => {
+  const html = settingsHtml({ categories: [{ id: 'c', label: 'C', rows: [
+    { id: 'mine', label: 'Mine', controlHtml: '<input id="x">', resettable: true, modified: true },
+    { id: 'same', label: 'Same', controlHtml: '<input id="y">', resettable: true },
+    { id: 'plain', label: 'Plain', controlHtml: '<input id="z">', modified: true },
+    { id: 'shut', label: 'Shut', controlHtml: '<input id="w">', resettable: true, modified: true, locked: 'Not here' }] }] });
+  const row = (id) => html.slice(html.indexOf('data-gi-row="' + id + '"') - 60, html.indexOf('</div></div>', html.indexOf('data-gi-row="' + id + '"')));
+  assert.ok(/class="gi-settings-row gi-settings-is-modified" data-gi-row="mine" data-kind="own">/.test(html));
+  assert.ok(row('mine').includes('aria-label="Reset Mine"'));
+  assert.ok(/class="gi-settings-row" data-gi-row="same" data-kind="own">/.test(html) && html.includes('aria-label="Reset Same"'), 'drawn unmarked, Reset ready');
+  assert.ok(/class="gi-settings-row" data-gi-row="plain"/.test(html) && !html.includes('Reset Plain'));
+  assert.ok(!html.includes('Reset Shut') && !/is-modified[^>]*data-gi-row="shut"/.test(html), 'a locked row has no Reset');
+});
+
 test('an unknown control is refused', () => {
   assert.throws(() => settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [{ id: 'x', label: 'X', type: 'slider' }] }] }), /type slider/);
   assert.throws(() => settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [{ id: 'x', label: 'X', type: 'action' }] }] }), /needs an actionLabel/);

@@ -431,9 +431,13 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
 - An `action` row is a solid button, `actionLabel` (required), that does something rather than holding a value; it
   fires `gi-settings-change` with `detail: { id, action: true, done }`. With `href` it is a link instead
   and fires nothing.
-- `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark, and
+- `controlHtml` puts the site's own control in the row instead, and
   `GateIronSettings.say(el, ok)` announces Saved or Could not save for a save the site made from it
-  (`el` is the control or anything else inside the page).
+  (`el` is the control or anything else inside the page). Such a row gets Modified and a Reset only
+  with `resettable: true`: `modified: true` draws it marked, `GateIronSettings.markModified(el, on)`
+  sets the mark after the site's control changes, and Reset fires `gi-settings-change` with
+  `detail: { id, reset: true, done }`. The site puts its control back to its default and calls
+  `done(true)`, which clears the mark, or `done(false)`.
 - A row whose value differs from its `default` shows Modified and a Reset. A `locked` row shows its
   control disabled with the reason on the row, never hidden, and no Reset.
 - A change fires `gi-settings-change` on the page's root, `detail: { id, value, reset, done }`. The site

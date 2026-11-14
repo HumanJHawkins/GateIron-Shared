@@ -4,7 +4,8 @@
 // sidebar, search, the phone's drill-down, each row's modified mark and Reset, and the announcements.
 // It holds no settings and saves nothing. A change fires 'gi-settings-change' on the root with
 // detail { id, value, reset, done }; the site saves and calls done(true) or done(false), and a
-// failed save puts the control back. An action row's button fires it with { id, action: true, done }.
+// failed save puts the control back. An action row's button fires it with { id, action: true, done },
+// and a resettable controlHtml row's Reset with { id, reset: true, done }.
 (function (root, api) {
   if (typeof module === 'object' && module.exports) { module.exports = api; } else { root.GateIronSettings = api; }
   if (typeof document !== 'undefined' && typeof module === 'undefined') {
@@ -82,6 +83,7 @@
     // The description and a locked row's reason are read with the control.
     var describedBy = [row.description ? fid + '-desc' : '', row.locked ? fid + '-lock' : ''].filter(Boolean).join(' ');
     var valued = !own && !action;
+    var resettable = valued || (own && row.resettable);
     return '<div class="gi-settings-row' + (own ? '' : ' gi-settings-row-' + row.type) + (modified ? ' gi-settings-is-modified' : '') + (row.locked ? ' gi-settings-is-locked' : '') + '" data-gi-row="' + esc(row.id) + '" data-kind="' + kind + '"'
       + (valued ? ' data-default="' + esc(str(row.default)) + '"' : '')
       + (row.keywords && row.keywords.length ? ' data-keywords="' + esc(row.keywords.join(' ')) + '"' : '') + '>'
@@ -91,7 +93,7 @@
       + (row.locked ? '<p class="gi-settings-lock" id="' + fid + '-lock">' + esc(row.locked) + '</p>' : '')
       + '</div>'
       + '<div class="gi-settings-control">' + (own ? String(row.controlHtml) : control(row, fid, labelId, describedBy)) + '</div>'
-      + (!valued || row.locked ? '' : '<div class="gi-settings-state"><span class="gi-settings-modified">' + esc(w.modifiedLabel) + '</span>'
+      + (!resettable || row.locked ? '' : '<div class="gi-settings-state"><span class="gi-settings-modified">' + esc(w.modifiedLabel) + '</span>'
         + '<button type="button" class="btn btn-quiet btn-small gi-settings-reset" aria-label="' + esc(w.resetLabel + ' ' + row.label) + '">' + esc(w.resetLabel) + '</button></div>')
       + '</div>';
   }
@@ -104,7 +106,10 @@
     var back = o.backLabel != null ? o.backLabel : w.title;
     var prefix = 'gi-set';
     var cats = o.categories || [];
-    var modified = function (r) { return r.controlHtml == null && r.type !== 'action' && !r.locked && str(r.value) !== str(r.default); };
+    var modified = function (r) {
+      if (r.locked) { return false; }
+      return r.controlHtml != null ? !!(r.resettable && r.modified) : r.type !== 'action' && str(r.value) !== str(r.default);
+    };
     return '<div class="gi-settings" data-gi-settings data-saved="' + esc(w.savedText) + '" data-failed="' + esc(w.failedText) + '"'
       + (o.start != null ? ' data-gi-start="' + esc(o.start) + '"' : '') + '>'
       + '<div class="gi-settings-side">'
@@ -195,6 +200,11 @@
   function say(el, ok) {
     var rootEl = el.closest('[data-gi-settings]');
     announce(rootEl, rootEl.getAttribute(ok ? 'data-saved' : 'data-failed'));
+  }
+
+  /** Shows or clears a controlHtml row's Modified mark and Reset, after the site's own control changed it. */
+  function markModified(el, on) {
+    el.closest('.gi-settings-row').classList.toggle('gi-settings-is-modified', !!on);
   }
 
   /** The category open by choice (a # or start): a redrawn page passes it as start. A panel (opened
@@ -335,9 +345,32 @@
         done: function (ok) { say(rootEl.getAttribute(ok ? 'data-saved' : 'data-failed')); }
       } }));
     }
+    // The site puts its own control back to its default, then calls done; the mark clears on done(true).
+    function resetOwn(row) {
+      var answered = false;
+      rootEl.dispatchEvent(new CustomEvent('gi-settings-change', { bubbles: true, detail: {
+        id: row.getAttribute('data-gi-row'), reset: true,
+        done: function (ok) {
+          if (answered) { return; }
+          answered = true;
+          if (ok) { markModified(row, false); }
+          say(rootEl.getAttribute(ok ? 'data-saved' : 'data-failed'));
+        }
+      } }));
+    }
     Array.prototype.forEach.call(rootEl.querySelectorAll('.gi-settings-row'), function (row) {
       var kind = row.getAttribute('data-kind');
-      if (kind === 'own') { return; }
+      if (kind === 'own') {
+        var resetOwnButton = row.querySelector('.gi-settings-reset');
+        if (resetOwnButton) {
+          resetOwnButton.addEventListener('click', function () {
+            var first = row.querySelector('.gi-settings-control').querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])');
+            resetOwn(row);
+            if (first) { first.focus(); }
+          });
+        }
+        return;
+      }
       if (kind === 'action') {
         var button = row.querySelector('button.gi-settings-action');
         if (button) { button.addEventListener('click', function () { act(row); }); }
@@ -359,5 +392,5 @@
     show();
   }
 
-  return { settingsHtml: settingsHtml, wire: wire, say: say, openCategory: openCategory, esc: esc };
+  return { settingsHtml: settingsHtml, wire: wire, say: say, markModified: markModified, openCategory: openCategory, esc: esc };
 })());

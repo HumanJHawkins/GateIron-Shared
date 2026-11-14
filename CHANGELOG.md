@@ -3,6 +3,13 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.26.0 — 2026-11-14
+
+- Settings page (GN-2066): a `controlHtml` row with `resettable: true` gets Modified and Reset.
+  `modified: true` draws it marked, `markModified(el, on)` sets the mark after the site's control
+  changes, and Reset fires `gi-settings-change` with `{ id, reset: true, done }`; `done(true)` clears
+  the mark.
+
 ## 0.25.2 — 2026-11-14
 
 - Settings page (GN-2059): a panel (opened with `start`) moves between categories in the panel, with
