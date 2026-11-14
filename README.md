@@ -389,13 +389,14 @@ System, Light or Dark, chosen on each site and kept by it. Light unless the site
 
 ```html
 <html lang="en" data-gi-theme="dark">
-<script src="/brand/theme.js?v=0.23.0"></script>
+<script src="/brand/theme.js?v=0.23.1"></script>
 ```
 
 - `data-gi-theme` (`system`, `light` or `dark`) is the site's stored choice, written by the server. Without
   it, the choice this browser last made on the site (System until one is made).
 - Dark, or System on a computer set to dark, puts `.gi-dark` on `<html>`; System follows the computer as
-  it changes. `chrome.css`'s dark tokens are on `:root.gi-dark`, and the bar's gate turns light with it.
+  it changes. `chrome.css`'s dark tokens are on `:root.gi-dark` and on a stored `dark` (so it shows
+  without the script), and the bar's gate turns light with it.
 - When the person changes it, the site saves the choice where it keeps its settings and calls
   `GateIronTheme.set('dark')`; `GateIronTheme.get()` reads it.
 - `page({ theme: true })` loads the script; `page({ theme: 'dark' })` also writes the stored choice.
@@ -423,7 +424,9 @@ Serve `settings.js` and `settings.css`, load the script with `defer`; it wires e
 on load, and `GateIronSettings.wire(el)` wires one added later.
 
 - A row's `type` is `switch` (a boolean that takes effect at once), `radio`, `select` or `number`
-  (`min`, `max`, `step`). Radio and select values come back as numbers when every option's value is one.
+  (`min`, `max`, `step`; an empty or out-of-range number is not sent, and the saved one comes back). Radio
+  and select values come back as numbers when every option's value is one. A row's description and
+  lock reason describe its control to a screen reader.
   `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark.
 - A row whose value differs from its `default` shows Modified and a Reset. A `locked` row shows its
   control disabled with the reason on the row, never hidden, and no Reset.

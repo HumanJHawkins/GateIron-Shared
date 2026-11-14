@@ -3,6 +3,14 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.23.1 — 2026-11-14
+
+- Settings page (GN-2045 QA): a row's id is escaped in every attribute it reaches; the description and
+  a locked row's reason are the control's `aria-describedby`; a number left empty or outside its
+  `min`, `max` or `step` is not sent, and the saved value comes back with Could not save; the browser's
+  Back to the overview puts focus in the search box.
+- A stored `data-gi-theme="dark"` shows dark without theme.js too.
+
 ## 0.23.0 — 2026-11-14
 
 - Theme (GN-2045): `assets/theme.js` gives a site System, Light or Dark, kept per site: the stored choice

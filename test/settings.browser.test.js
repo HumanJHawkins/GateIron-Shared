@@ -16,6 +16,7 @@ const CATS = [
       options: [{ value: 6, label: 'Grade 6' }, { value: 8, label: 'Grade 8' }], keywords: ['difficulty'] }] },
   { id: 'sound', label: 'Sound', rows: [
     { id: 'music', label: 'Music', type: 'switch', value: true, default: true },
+    { id: 'volume', label: 'Volume', type: 'number', value: 5, default: 5, min: 1, max: 10 },
     { id: 'theme', label: 'Theme', type: 'radio', value: 'system', default: 'system',
       options: [{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }] }];
 // The page answers each save as window.answer says, and keeps what it was told.
@@ -69,8 +70,8 @@ test('search: rows filtered across categories, matches marked, keywords count, t
   await tab.go(base + '/');
   const type = (q) => tab.eval(`(() => { const s = document.querySelector('[data-gi-settings-search]'); s.value = ${JSON.stringify(q)}; s.dispatchEvent(new Event('input')); })()`);
   await type('m');
-  assert.deepEqual(await shown(tab), ['sound'], 'Music and Theme match, Reading level does not');
-  assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-hit')].map((m) => m.textContent)`), ['M', 'm']);
+  assert.deepEqual(await shown(tab), ['sound'], 'Music, Volume and Theme match, Reading level does not');
+  assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-hit')].map((m) => m.textContent)`), ['M', 'm', 'm']);
   await type('difficulty');
   assert.deepEqual(await shown(tab), ['words'], 'a keyword finds its row');
   assert.equal(await tab.eval('location.search'), '?q=difficulty');
@@ -110,6 +111,24 @@ test('a save: Saved announced and the mark follows; a failed one puts the contro
   await tab.close();
 });
 
+test('a number left empty or out of range is not sent: the saved one comes back', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await tab.go(base + '/#sound');
+  const enter = (v) => tab.eval(`(() => { const n = document.getElementById('gi-set-volume'); n.value = '${v}'; n.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  for (const v of ['', '999', '0']) {
+    await enter(v);
+    await settle(120);
+    assert.equal(await tab.eval(`document.getElementById('gi-set-volume').value`), '5', JSON.stringify(v) + ' put back');
+  }
+  assert.deepEqual(await tab.eval('window.told'), [], 'nothing sent');
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-row=volume]').classList.contains('gi-settings-is-modified')`), false);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-status]').textContent`), 'Could not save');
+  await enter('7');
+  assert.deepEqual(await tab.eval('window.told'), [{ id: 'volume', value: 7, reset: false }]);
+  await tab.close();
+});
+
 test('phone: the overview, a category with its back link, back to the overview', async (t) => {
   if (!ff) { return t.skip('no Firefox'); }
   const tab = await ff.tab();
@@ -126,6 +145,11 @@ test('phone: the overview, a category with its back link, back to the overview',
   await settle(100);
   assert.equal(await visible(tab, '.gi-settings-nav'), true);
   assert.equal(await tab.eval('location.hash'), '');
+  await tab.eval(`document.querySelector('.gi-settings-nav a[data-gi-cat=words]').click()`);
+  await settle(100);
+  await tab.back();
+  await settle(200);
+  assert.equal(await tab.eval(`document.activeElement.matches('[data-gi-settings-search]')`), true, 'the browser\'s Back: focus to the search box');
   await tab.close();
 });
 

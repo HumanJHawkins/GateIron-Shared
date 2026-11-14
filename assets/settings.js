@@ -34,8 +34,8 @@
   // select whose options are all numbers gives numbers.
   function str(v) { return v === true ? 'true' : v === false ? 'false' : String(v == null ? '' : v); }
 
-  function control(row, fid, labelId) {
-    var dis = row.locked ? ' disabled' : '';
+  function control(row, fid, labelId, described) {
+    var dis = (row.locked ? ' disabled' : '') + described;
     var v = str(row.value);
     if (row.type === 'switch') {
       return '<input type="checkbox" role="switch" id="' + fid + '"' + (row.value === true ? ' checked' : '') + dis + '>';
@@ -51,14 +51,14 @@
         return '<option value="' + esc(str(o.value)) + '"' + (str(o.value) === v ? ' selected' : '') + '>' + esc(o.label) + '</option>';
       }).join('') + '</select>';
     }
-    return '<div class="gi-settings-choices" role="radiogroup" aria-labelledby="' + labelId + '">' + opts.map(function (o, i) {
+    return '<div class="gi-settings-choices" role="radiogroup" aria-labelledby="' + labelId + '"' + described + '>' + opts.map(function (o, i) {
       return '<label class="gi-settings-choice"><input type="radio" name="' + fid + '" id="' + fid + '-' + i + '" value="' + esc(str(o.value)) + '"'
-        + (str(o.value) === v ? ' checked' : '') + dis + '> <span>' + esc(o.label) + '</span></label>';
+        + (str(o.value) === v ? ' checked' : '') + (row.locked ? ' disabled' : '') + '> <span>' + esc(o.label) + '</span></label>';
     }).join('') + '</div>';
   }
 
   function rowHtml(row, w, prefix) {
-    var fid = prefix + '-' + row.id;
+    var fid = prefix + '-' + esc(row.id);
     var labelId = fid + '-label';
     var own = row.controlHtml != null;
     if (!own && TYPES.indexOf(row.type) < 0) { throw new Error('gateiron-shared settings: row ' + row.id + ' has type ' + row.type + '; one of ' + TYPES.join(', ') + ', or controlHtml'); }
@@ -66,15 +66,18 @@
       && (row.options || []).every(function (o) { return typeof o.value === 'number'; });
     var kind = own ? 'own' : row.type === 'switch' ? 'boolean' : row.type === 'number' || numeric ? 'number' : 'string';
     var labelTag = own || row.type === 'radio' ? 'span' : 'label';
+    // The description and a locked row's reason are read with the control.
+    var describedBy = [row.description ? fid + '-desc' : '', row.locked ? fid + '-lock' : ''].filter(Boolean).join(' ');
+    var described = describedBy ? ' aria-describedby="' + describedBy + '"' : '';
     return '<div class="gi-settings-row' + (row.locked ? ' gi-settings-is-locked' : '') + '" data-gi-row="' + esc(row.id) + '" data-kind="' + kind + '"'
       + (own ? '' : ' data-default="' + esc(str(row.default)) + '"')
       + (row.keywords && row.keywords.length ? ' data-keywords="' + esc(row.keywords.join(' ')) + '"' : '') + '>'
       + '<div class="gi-settings-text">'
       + '<' + labelTag + ' class="gi-settings-label" id="' + labelId + '"' + (labelTag === 'label' ? ' for="' + fid + '"' : '') + '>' + esc(row.label) + '</' + labelTag + '>'
       + (row.description ? '<p class="gi-settings-desc" id="' + fid + '-desc">' + esc(row.description) + '</p>' : '')
-      + (row.locked ? '<p class="gi-settings-lock">' + esc(row.locked) + '</p>' : '')
+      + (row.locked ? '<p class="gi-settings-lock" id="' + fid + '-lock">' + esc(row.locked) + '</p>' : '')
       + '</div>'
-      + '<div class="gi-settings-control">' + (own ? String(row.controlHtml) : control(row, fid, labelId)) + '</div>'
+      + '<div class="gi-settings-control">' + (own ? String(row.controlHtml) : control(row, fid, labelId, described)) + '</div>'
       + (own || row.locked ? '' : '<div class="gi-settings-state"><span class="gi-settings-modified">' + esc(w.modifiedLabel) + '</span>'
         + '<button type="button" class="btn btn-quiet btn-small gi-settings-reset" aria-label="' + esc(w.resetLabel + ' ' + row.label) + '">' + esc(w.resetLabel) + '</button></div>')
       + '</div>';
@@ -220,7 +223,7 @@
       if (!rootEl.isConnected) { window.removeEventListener('hashchange', onHash); return; }
       show();
       var c = current();
-      if (c) { c.querySelector('h2').focus(); }
+      if (c) { c.querySelector('h2').focus(); } else if (!search.contains(document.activeElement)) { search.focus(); }
     };
     var onPhone = function () {
       if (!rootEl.isConnected) { phone.removeEventListener('change', onPhone); return; }
@@ -237,6 +240,14 @@
 
     function change(row, reset) {
       var before = row.getAttribute('data-saved-value');
+      // An empty number, or one outside its min, max or step, is not sent: the saved one comes back.
+      var num = row.querySelector('.gi-settings-control input[type=number]');
+      if (num && (num.value === '' || !num.validity.valid)) {
+        put(row, before);
+        mark(row);
+        say(rootEl.getAttribute('data-failed'));
+        return;
+      }
       var value = read(row);
       var answered = false;
       mark(row);

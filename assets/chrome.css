@@ -154,8 +154,9 @@
 
 /* Warm charcoals rather than neutral greys, so clay and pine keep their
    temperature. Accents move a rung lighter; the dark rungs go muddy here. */
-/* theme.js puts .gi-dark on <html> for Dark, and for System on a computer set to dark. */
-:root.gi-dark {
+/* theme.js puts .gi-dark on <html> for Dark, and for System on a computer set to dark; a stored
+   Dark shows without the script too. */
+:root.gi-dark, :root[data-gi-theme="dark"] {
   color-scheme: dark;
   --bg: #17140f;
   --surface: #211d17;
@@ -280,8 +281,9 @@
 .gi-brand img { width: auto; display: block; }
 .gi-bar .gi-brand { min-height: var(--gi-bar-size); }
 .gi-bar .gi-brand img { height: calc(var(--gi-bar-size) * 0.6); }
-.gi-bar .gi-brand .gi-gate-on-dark, :root.gi-dark .gi-bar .gi-brand .gi-gate-on-light { display: none; }
-:root.gi-dark .gi-bar .gi-brand .gi-gate-on-dark { display: block; }
+.gi-bar .gi-brand .gi-gate-on-dark, :root.gi-dark .gi-bar .gi-brand .gi-gate-on-light,
+:root[data-gi-theme="dark"] .gi-bar .gi-brand .gi-gate-on-light { display: none; }
+:root.gi-dark .gi-bar .gi-brand .gi-gate-on-dark, :root[data-gi-theme="dark"] .gi-bar .gi-brand .gi-gate-on-dark { display: block; }
 .gi-wordmark {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;

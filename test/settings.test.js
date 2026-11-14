@@ -53,6 +53,18 @@ test('rows: each control labelled, a changed one marked, a locked one disabled w
   assert.ok(own.includes('<input type="color" id="mine">') && !own.includes('gi-settings-reset') && own.includes('data-kind="own"'));
 });
 
+test('a row id is escaped wherever it lands; the description and lock reason describe the control', () => {
+  const html = settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [
+    { id: 'x" onfocus="alert(1)', label: 'X', type: 'number', value: 1, default: 1 },
+    { id: 'lv', label: 'Level', description: 'Grade', type: 'select', value: 1, default: 1, options: [{ value: 1, label: 'One' }], locked: 'Set by your class' },
+    { id: 'pick', label: 'Pick', description: 'One of two', type: 'radio', value: 'a', default: 'a', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] }] }] });
+  assert.ok(!html.includes('" onfocus="'), 'no attribute breaks out');
+  assert.ok(html.includes('id="gi-set-x&quot; onfocus=&quot;alert(1)"'));
+  assert.ok(html.includes('<select id="gi-set-lv" disabled aria-describedby="gi-set-lv-desc gi-set-lv-lock">'));
+  assert.ok(html.includes('<p class="gi-settings-lock" id="gi-set-lv-lock">Set by your class</p>'));
+  assert.ok(html.includes('role="radiogroup" aria-labelledby="gi-set-pick-label" aria-describedby="gi-set-pick-desc"'));
+});
+
 test('an unknown control is refused', () => {
   assert.throws(() => settingsHtml({ categories: [{ id: 'a', label: 'A', rows: [{ id: 'x', label: 'X', type: 'slider' }] }] }), /type slider/);
 });
