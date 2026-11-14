@@ -441,8 +441,9 @@ on load, and `GateIronSettings.wire(el)` wires one added later.
   save puts the control back.
 - Search filters rows in every category as it is typed, by label, description and `keywords`, marking
   each match. The query is in the address (`?q=`) and the open category is its hash (`#words`).
-- `start: 'words'` opens that category without touching the address (a panel over a game): its
-  search stays out of `?q=`, a `#` naming a category still wins, and Back leaves it for the overview.
+- `start: 'words'` makes the page a panel over another page (a game) and opens that category. A
+  panel's category links, Back and search stay in the panel: they never change the address or add a
+  history entry, and the page's own `#` and `?q=` are not read.
 - To show different rows after a save (a mode that adds settings), the site draws the page again with
   `settingsHtml`, puts it in place of the old one and wires it; the category and search carry over.
   A page opened with `start` passes `start: GateIronSettings.openCategory(old)` (`''` once Back has

@@ -187,7 +187,7 @@ test('a page redrawn in place and wired again keeps its category and search', as
   await tab.close();
 });
 
-test('start: the category opens with the address untouched; a # wins; Back leaves it', async (t) => {
+test('start: a panel opens its category, moves between categories and goes Back without touching the address or history', async (t) => {
   if (!ff) { return t.skip('no Firefox'); }
   const tab = await ff.tab();
   await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 390, height: 800 } });
@@ -202,10 +202,21 @@ test('start: the category opens with the address untouched; a # wins; Back leave
   assert.equal(await visible(tab, '.gi-settings-pane'), false, 'Back: the overview');
   assert.equal(await tab.eval('history.length'), entries, 'and no history entry');
   assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), '', 'a panel at its overview');
-  await tab.go(base + '/?start=sound#words');
-  assert.deepEqual(await shown(tab), ['words'], 'the address wins');
+  await tab.eval(`(() => { window.popped = 0; addEventListener('popstate', () => popped++); addEventListener('hashchange', () => popped++); })()`);
+  await tab.eval(`document.querySelector('.gi-settings-nav a[data-gi-cat=words]').click()`);
+  await settle(100);
+  assert.deepEqual(await shown(tab), ['words'], 'a category link opens it in the panel');
+  assert.equal(await tab.eval('document.activeElement.textContent'), 'Words', 'focus on its title');
+  assert.equal(await tab.eval('location.hash'), '');
+  assert.equal(await tab.eval('history.length'), entries);
+  assert.equal(await tab.eval(`GateIronSettings.openCategory(document.querySelector('[data-gi-settings]'))`), 'words');
+  await tab.eval(`document.querySelector('.gi-settings-back').click()`);
+  await settle(100);
+  assert.equal(await tab.eval('window.popped'), 0, 'nothing the page routes on fires');
+  await tab.go(base + '/?start=sound&x=2#words');
+  assert.deepEqual(await shown(tab), ['sound'], 'the page\'s own # is not the panel\'s');
   await tab.go(base + '/?start=sound&own=1#main');
-  assert.deepEqual(await shown(tab), ['sound'], 'a site\'s own # leaves start alone');
+  assert.deepEqual(await shown(tab), ['sound']);
   const before = await tab.eval('history.length');
   await tab.eval(`document.querySelector('.gi-settings-back').click()`);
   await settle(100);

@@ -220,14 +220,17 @@
       try { id = decodeURIComponent(id); } catch (e) { /* as written */ }
       return cats.filter(function (c) { return c.getAttribute('data-gi-cat') === id; })[0] || null;
     }
-    // A # naming no category (the skip link's #main, a site's own anchor) keeps the open one. With
-    // no #, the start category, until Back leaves it.
-    var start = cats.filter(function (c) { return c.getAttribute('data-gi-cat') === rootEl.getAttribute('data-gi-start'); })[0] || null;
+    // A page opened with start is a panel over another page: its category and search live in the
+    // panel, never in that page's address or history. A page's live in its # and ?q=.
+    var panel = rootEl.hasAttribute('data-gi-start');
+    var chosen = cats.filter(function (c) { return c.getAttribute('data-gi-cat') === rootEl.getAttribute('data-gi-start'); })[0] || null;
+    // A # naming no category (the skip link's #main, a site's own anchor) keeps the open one.
     var last = null;
     function current() {
+      if (panel) { return chosen; }
       var c = named();
       if (c) { last = c; return c; }
-      return window.location.hash.length > 1 ? last || start : start;
+      return window.location.hash.length > 1 ? last : null;
     }
     function show() {
       var q = search.value.trim().toLowerCase();
@@ -258,8 +261,6 @@
         if (open && a.getAttribute('data-gi-cat') === open.getAttribute('data-gi-cat') && !q) { a.setAttribute('aria-current', 'true'); } else { a.removeAttribute('aria-current'); }
       });
     }
-    // A page opened with start (a panel over another page) leaves that page's address alone.
-    var panel = rootEl.hasAttribute('data-gi-start');
     function address() {
       if (panel) { return; }
       var u = new URL(window.location.href);
@@ -282,13 +283,24 @@
       if (!rootEl.isConnected) { phone.removeEventListener('change', onPhone); return; }
       show();
     };
-    window.addEventListener('hashchange', onHash);
+    if (panel) {
+      links.forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          chosen = cats.filter(function (c) { return c.getAttribute('data-gi-cat') === a.getAttribute('data-gi-cat'); })[0] || null;
+          show();
+          if (chosen) { chosen.querySelector('h2').focus(); }
+        });
+      });
+    } else {
+      window.addEventListener('hashchange', onHash);
+    }
     if (phone.addEventListener) { phone.addEventListener('change', onPhone); }
     rootEl.querySelector('[data-gi-settings-back]').addEventListener('click', function (e) {
       e.preventDefault();
-      start = null;
+      chosen = null;
       last = null;
-      if (named()) { window.history.pushState(window.history.state, '', window.location.pathname + window.location.search); }
+      if (!panel && named()) { window.history.pushState(window.history.state, '', window.location.pathname + window.location.search); }
       show();
       search.focus();
     });

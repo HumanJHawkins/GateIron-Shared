@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.25.2 — 2026-11-14
+
+- Settings page (GN-2059): a panel (opened with `start`) moves between categories in the panel, with
+  no `#` written and no history entry, so a page that routes on `popstate` or `hashchange` is left
+  alone; it no longer reads the page's `#`. A page without `start` keeps `#category`.
+
 ## 0.25.1 — 2026-11-14
 
 - Settings page (GN-2056 QA): `openCategory()` of a panel with no category open is `''`, not `null`,
