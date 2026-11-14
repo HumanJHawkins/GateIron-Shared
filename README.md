@@ -328,7 +328,7 @@ reading; the links are yours to pass.
 
 A whole document, for sites without their own shell: `title`, `bodyHtml`, `headHtml` (after the
 stylesheet, so the site's own CSS wins), `lang` (default `en`), `density: 'compact'`, `bodyClass`,
-`darkMode: 'auto'`, `skipLabel`, `footer` (`siteFooter`'s options), plus everything `topBar` takes.
+`theme` (Theme, below), `skipLabel`, `footer` (`siteFooter`'s options), plus everything `topBar` takes.
 It writes the charset and viewport, links `brand.css` and `menu.js`, puts the skip link first and
 the body in `<main id="main" tabindex="-1">`.
 
@@ -381,6 +381,66 @@ if (!await verifyTurnstile(secret, req.body['cf-turnstile-response'], req.ip)) .
 The options are listed above `contactForm` in `contact.js`; the look is reskinned through the
 custom properties listed at the top of `assets/contact.css`. `backdrop` is set as an inline style;
 a site whose policy forbids inline styles sets `--gi-contact-backdrop` in its own CSS instead.
+
+## Theme
+
+System, Light or Dark, chosen on each site and kept by it. Light unless the site asks.
+`assets/theme.js` goes in `<head>` without `defer`, so the first paint is in the chosen theme:
+
+```html
+<html lang="en" data-gi-theme="dark">
+<script src="/brand/theme.js?v=0.23.0"></script>
+```
+
+- `data-gi-theme` (`system`, `light` or `dark`) is the site's stored choice, written by the server. Without
+  it, the choice this browser last made on the site (System until one is made).
+- Dark, or System on a computer set to dark, puts `.gi-dark` on `<html>`; System follows the computer as
+  it changes. `chrome.css`'s dark tokens are on `:root.gi-dark`, and the bar's gate turns light with it.
+- When the person changes it, the site saves the choice where it keeps its settings and calls
+  `GateIronTheme.set('dark')`; `GateIronTheme.get()` reads it.
+- `page({ theme: true })` loads the script; `page({ theme: 'dark' })` also writes the stored choice.
+
+## Settings page
+
+Every GateIron site's preferences look and work alike: a sidebar of categories with a search box, one
+category beside it, and below 48rem the categories as a list that opens one at a time with a back link.
+`assets/settings.js` draws it and runs it; it holds no settings and saves nothing.
+
+```js
+const { settingsHtml } = require('gateiron-shared/settings');   // in a page: GateIronSettings.settingsHtml
+settingsHtml({
+  accountHref: 'https://GateIron.com/profile?as=' + encodeURIComponent(sub),
+  categories: [{ id: 'words', label: 'Words', rows: [
+    { id: 'level', label: 'Reading level', description: 'Grade of the words served', type: 'select',
+      value: 6, default: 8, options: [{ value: 6, label: 'Grade 6' }, { value: 8, label: 'Grade 8' }],
+      keywords: ['difficulty'] },
+    { id: 'filter', label: 'Filter', type: 'radio', value: 'strict', default: 'strict', options: [...],
+      locked: 'Set by your class: Word Processing' }] }],
+});
+```
+
+Serve `settings.js` and `settings.css`, load the script with `defer`; it wires every `[data-gi-settings]`
+on load, and `GateIronSettings.wire(el)` wires one added later.
+
+- A row's `type` is `switch` (a boolean that takes effect at once), `radio`, `select` or `number`
+  (`min`, `max`, `step`). Radio and select values come back as numbers when every option's value is one.
+  `controlHtml` puts the site's own control in the row instead; such a row gets no Reset or mark.
+- A row whose value differs from its `default` shows Modified and a Reset. A `locked` row shows its
+  control disabled with the reason on the row, never hidden, and no Reset.
+- A change fires `gi-settings-change` on the page's root, `detail: { id, value, reset, done }`. The site
+  saves it and calls `done(true)` or `done(false)`: Saved or Could not save is announced, and a failed
+  save puts the control back.
+- Search filters rows in every category as it is typed, by label, description and `keywords`, marking
+  each match. The query is in the address (`?q=`) and the open category is its hash (`#words`).
+- To show different rows after a save (a mode that adds settings), the site draws the page again with
+  `settingsHtml`, puts it in place of the old one and wires it; the category and search carry over.
+- `accountHref` adds "Manage your GateIron account": GateIron.com's profile, as the tab's account
+  (`?as=<sub>`), for everything about the account itself. A site's page holds only its own settings.
+- The words are options, with these defaults: `title` Preferences, `searchLabel` Search preferences,
+  `navLabel` Categories, `emptyText` No preferences match, `resetLabel` Reset, `modifiedLabel` Modified,
+  `savedText` Saved, `failedText` Could not save, `accountLabel` Manage your GateIron account,
+  `backLabel` the title.
+- `settings.css` lists its custom properties at its top.
 
 ## Reskinning
 

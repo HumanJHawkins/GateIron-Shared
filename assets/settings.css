@@ -1,0 +1,85 @@
+/* The settings page (settings.js: settingsHtml()). Scoped to .gi-settings; needs chrome.css for the
+   tokens, .btn and .gi-sr-only. A site reskins it by setting these on .gi-settings:
+
+     --gi-settings-side-width    the sidebar                            default: 16rem
+     --gi-settings-gap           between sidebar and pane               default: 2.5rem
+     --gi-settings-rule          the line between rows                  default: --border-color
+     --gi-settings-current-bg    the open category in the sidebar       default: --surface-2
+     --gi-settings-current-text  its text                               default: --text
+     --gi-settings-hit-bg        a search match                         default: --warn-bg
+     --gi-settings-modified      the modified mark                      default: --accent
+     --gi-settings-lock          a locked row's reason                  default: --text-muted
+
+   Below 48rem the sidebar is the overview: a category opens on its own, with the back link. */
+
+.gi-settings {
+  display: grid;
+  grid-template-columns: var(--gi-settings-side-width, 16rem) minmax(0, 1fr);
+  gap: var(--gi-settings-gap, 2.5rem);
+  align-items: start;
+}
+.gi-settings-side { position: sticky; top: calc(var(--bar-h, 0px) + 1rem); display: grid; gap: 1rem; }
+.gi-settings-title { margin: 0; font-size: 1.6rem; }
+.gi-settings-search input { width: 100%; min-height: 2.5rem; }
+.gi-settings-nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.gi-settings-nav a {
+  display: block; min-height: 24px; padding: 0.45rem 0.75rem; border-radius: var(--radius, 0.5rem);
+  color: var(--text); text-decoration: none;
+}
+.gi-settings-nav a:hover { background: var(--surface-2); }
+.gi-settings-nav a[aria-current] {
+  background: var(--gi-settings-current-bg, var(--surface-2));
+  color: var(--gi-settings-current-text, var(--text)); font-weight: 600;
+}
+.gi-settings-account { display: inline-block; padding: 0.25rem 0.75rem; min-height: 24px; }
+
+.gi-settings-pane { min-width: 0; }
+.gi-settings-back { display: none; }
+.gi-settings-empty { color: var(--text-muted); }
+.gi-settings-cat h2 { margin: 0 0 0.5rem; font-size: 1.3rem; }
+.gi-settings-searching .gi-settings-cat + .gi-settings-cat { margin-top: 1.75rem; }
+
+.gi-settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "text control" "state state";
+  gap: 0.25rem 1.5rem;
+  align-items: center;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--gi-settings-rule, var(--border-color));
+}
+.gi-settings-text { grid-area: text; min-width: 0; }
+.gi-settings-control { grid-area: control; justify-self: end; max-width: 100%; }
+.gi-settings-state { grid-area: state; display: none; align-items: center; gap: 0.75rem; }
+.gi-settings-is-modified .gi-settings-state { display: flex; }
+.gi-settings-label { display: block; font-weight: 600; }
+.gi-settings-desc, .gi-settings-lock { margin: 0.15rem 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.gi-settings-lock { color: var(--gi-settings-lock, var(--text-muted)); font-style: italic; }
+.gi-settings-modified { color: var(--gi-settings-modified, var(--accent)); font-size: 0.85rem; font-weight: 600; }
+.gi-settings-modified::before { content: "\25CF\00a0"; }
+.gi-settings-hit { background: var(--gi-settings-hit-bg, var(--warn-bg)); color: inherit; border-radius: 2px; }
+
+.gi-settings-control input[type="checkbox"], .gi-settings-control input[type="radio"] { width: 24px; height: 24px; margin: 0; }
+.gi-settings-control select, .gi-settings-control input[type="number"] { min-height: 2.25rem; max-width: 100%; }
+.gi-settings-choices { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 1rem; }
+.gi-settings-choice { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 24px; }
+.gi-settings-is-locked .gi-settings-control { opacity: 0.6; }
+
+@media (max-width: 48rem) {
+  .gi-settings { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .gi-settings-side { position: static; }
+  .gi-settings-nav a { padding: 0.75rem; border-bottom: 1px solid var(--gi-settings-rule, var(--border-color)); border-radius: 0; }
+  .gi-settings-nav a::after { content: "\203A"; float: right; color: var(--text-muted); }
+  .gi-settings-nav a[aria-current] { background: none; font-weight: inherit; }
+  /* The overview, a category, or search results across them; without the script, everything. */
+  .gi-settings[data-gi-wired]:not(.gi-settings-in-cat):not(.gi-settings-searching) .gi-settings-pane { display: none; }
+  .gi-settings-in-cat:not(.gi-settings-searching) .gi-settings-side { display: none; }
+  .gi-settings-in-cat:not(.gi-settings-searching) .gi-settings-back { display: inline-flex; align-items: center; min-height: 24px; margin-bottom: 0.75rem; }
+  .gi-settings-back::before { content: "\2039\00a0"; }
+  .gi-settings-searching .gi-settings-nav, .gi-settings-searching .gi-settings-account { display: none; }
+  .gi-settings-row { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "control" "state"; }
+  .gi-settings-control { justify-self: start; }
+  .gi-settings-choices { justify-content: flex-start; }
+  .gi-settings-row:has(input[role="switch"]) { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text control" "state state"; }
+  .gi-settings-row:has(input[role="switch"]) .gi-settings-control { justify-self: end; }
+}

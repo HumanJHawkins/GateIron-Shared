@@ -15,7 +15,7 @@ function declarations(block) {
   return out;
 }
 const light = declarations(css.match(/:root\s*\{([^}]*)\}/)[1]);
-const dark = Object.assign({}, light, declarations(css.match(/:root\.gi-dark-auto\s*\{([^}]*)\}/)[1]));
+const dark = Object.assign({}, light, declarations(css.match(/:root\.gi-dark\s*\{([^}]*)\}/)[1]));
 
 // A value as [r, g, b, a], with var() resolved against the scheme and a fallback honoured.
 function color(value, tokens) {

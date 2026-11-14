@@ -3,6 +3,17 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.23.0 — 2026-11-14
+
+- Theme (GN-2045): `assets/theme.js` gives a site System, Light or Dark, kept per site: the stored choice
+  as `<html data-gi-theme>`, else the browser's last choice there; `GateIronTheme.set()` and `get()`.
+  **Breaking:** the dark tokens moved from `:root.gi-dark-auto` under `prefers-color-scheme` to
+  `:root.gi-dark`, which theme.js sets, and `page({ darkMode })` throws, naming `theme`. The bar's gate
+  turns light on a dark bar.
+- Settings page (GN-2045): `assets/settings.js` (`gateiron-shared/settings`) and `settings.css`. The
+  category sidebar and search, the phone's drill-down, each row's Modified and Reset, locked rows, and
+  Saved or Could not save announced; the site keeps and saves the settings.
+
 ## 0.22.5 — 2026-11-09
 
 - Path mode: `GateIronTab.adopt(key)` on a tab whose address names an ended key, once that account is the only

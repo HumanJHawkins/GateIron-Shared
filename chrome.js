@@ -25,12 +25,14 @@ function refuseRenamed(o, where, names) {
 }
 
 /**
- * The GateIron gate, in the tone that shows on the given ground.
+ * The GateIron gate, in the tone that shows on the given ground: 'light' for a dark ground, 'dark'
+ * for a light one, 'bar' for the bar, whose ground follows the theme (both, one hidden by CSS).
  * `alt` is empty - the wordmark beside it already names the company.
  */
 function gateMark(assets, tone) {
-  const file = tone === 'light' ? 'gate-light.png' : 'gate-dark.png';
-  return '<img src="' + esc(assetUrl(assets, file)) + '" alt="" width="148" height="96">';
+  const img = (file, cls) => '<img' + (cls ? ' class="' + cls + '"' : '') + ' src="' + esc(assetUrl(assets, file)) + '" alt="" width="148" height="96">';
+  if (tone === 'bar') { return img('gate-dark.png', 'gi-gate-on-light') + img('gate-light.png', 'gi-gate-on-dark'); }
+  return img(tone === 'light' ? 'gate-light.png' : 'gate-dark.png');
 }
 
 /**
@@ -73,7 +75,7 @@ function topBar(opts) {
   const o = opts || {};
   refuseRenamed(o, 'topBar', { actions: 'actionsHtml' });
   const context = o.context ? '<small>' + esc(o.context) + '</small>' : '';
-  const mark = productMark(o, o.assets, 'dark');
+  const mark = productMark(o, o.assets, 'bar');
   const wordmark = o.product ? '<span class="gi-wordmark">' + esc(o.product) + context + '</span>' : '';
   const label = wordmark ? '' : ' aria-label="' + esc(o.homeLabel || 'Home') + '"';
   return '<header class="gi-bar">'
@@ -122,20 +124,27 @@ function siteFooter(opts) {
     + '</footer>';
 }
 
+const THEMES = ['system', 'light', 'dark'];
+
 /** A whole document. Sites with their own shell use skipLink, topBar and siteFooter. */
 function page(opts) {
   const o = opts || {};
   refuseRenamed(o, 'page', { body: 'bodyHtml', head: 'headHtml', actions: 'actionsHtml' });
   const classes = [o.density === 'compact' ? 'gi-compact' : '', o.bodyClass || ''].filter(Boolean).join(' ');
+  if (o.darkMode !== undefined) { throw new Error('gateiron-shared: page takes theme since 0.23.0, not darkMode (\'auto\' is theme: true)'); }
   // Light unless the page asks. A product whose users arrive worried - a help
   // desk, a classroom - reads better bright, and GateIron has only ever had
-  // paper, so honouring the system preference is opt-in.
-  const rootClass = o.darkMode === 'auto' ? ' class="gi-dark-auto"' : '';
-  return '<!doctype html>\n<html lang="' + esc(o.lang || 'en') + '"' + rootClass + '>\n<head>\n'
+  // paper, so a theme is opt-in. theme: true is this browser's last choice on
+  // the site (System until one is made); 'system', 'light' or 'dark' is the
+  // site's stored one.
+  const stored = THEMES.includes(o.theme) ? o.theme : '';
+  const themed = stored || o.theme === true;
+  return '<!doctype html>\n<html lang="' + esc(o.lang || 'en') + '"' + (stored ? ' data-gi-theme="' + stored + '"' : '') + '>\n<head>\n'
     + '<meta charset="utf-8">\n'
     + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
     + '<title>' + esc(o.title) + '</title>\n'
     + '<link rel="stylesheet" href="' + esc(assetUrl(o.assets, 'brand.css')) + '">\n'
+    + (themed ? '<script src="' + esc(assetUrl(o.assets, 'theme.js')) + '"></script>\n' : '')
     + '<script src="' + esc(assetUrl(o.assets, 'menu.js')) + '" defer></script>\n'
     + (o.headHtml || '')
     + '</head>\n<body' + (classes ? ' class="' + esc(classes) + '"' : '') + '>\n'

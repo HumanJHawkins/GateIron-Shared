@@ -1,0 +1,168 @@
+'use strict';
+// settings.js and theme.js in headless Firefox: the category shown, search, a save answered both
+// ways, Reset, the phone's drill-down, a redrawn page, and the theme's choice. Skipped without Firefox.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+const { firefox } = require('./lib/firefox');
+const { settingsHtml } = require('../assets/settings.js');
+
+const ASSET = (f) => fs.readFileSync(path.join(__dirname, '..', 'assets', f));
+const CATS = [
+  { id: 'words', label: 'Words', rows: [
+    { id: 'level', label: 'Reading level', description: 'Grade of the words served', type: 'select', value: 8, default: 8,
+      options: [{ value: 6, label: 'Grade 6' }, { value: 8, label: 'Grade 8' }], keywords: ['difficulty'] }] },
+  { id: 'sound', label: 'Sound', rows: [
+    { id: 'music', label: 'Music', type: 'switch', value: true, default: true },
+    { id: 'theme', label: 'Theme', type: 'radio', value: 'system', default: 'system',
+      options: [{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }] }];
+// The page answers each save as window.answer says, and keeps what it was told.
+const PAGE = (attr) => `<!doctype html><html lang="en"${attr || ''}><head><meta charset="utf-8"><title>s</title>
+<link rel="stylesheet" href="/chrome.css"><link rel="stylesheet" href="/settings.css">
+<script src="/theme.js"></script><script src="/settings.js" defer></script><script src="/page.js" defer></script></head>
+<body><main id="main">${settingsHtml({ categories: CATS, accountHref: '/profile' })}</main></body></html>`;
+const PAGE_JS = `window.answer = true; window.told = [];
+document.addEventListener('gi-settings-change', function (e) { window.told.push({ id: e.detail.id, value: e.detail.value, reset: e.detail.reset }); e.detail.done(window.answer); });`;
+
+const server = http.createServer((req, res) => {
+  const url = new URL(req.url, 'http://x');
+  const files = { '/chrome.css': ['text/css', 'chrome.css'], '/settings.css': ['text/css', 'settings.css'],
+    '/theme.js': ['text/javascript', 'theme.js'], '/settings.js': ['text/javascript', 'settings.js'] };
+  if (files[url.pathname]) { res.writeHead(200, { 'content-type': files[url.pathname][0] }); res.end(ASSET(files[url.pathname][1])); return; }
+  if (url.pathname === '/page.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); res.end(PAGE_JS); return; }
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+  res.end(PAGE(url.pathname === '/dark' ? ' data-gi-theme="dark"' : ''));
+});
+
+let ff;
+let base;
+test.before(async () => {
+  ff = await firefox();
+  if (!ff) { return; }
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  base = `http://127.0.0.1:${server.address().port}`;
+});
+test.after(async () => { if (ff) { await ff.close(); } server.close(); });
+const settle = (ms) => new Promise((r) => setTimeout(r, ms));
+const shown = (t) => t.eval(`[...document.querySelectorAll('section.gi-settings-cat')].filter((c) => !c.hidden).map((c) => c.id)`);
+const visible = (t, sel) => t.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); return !!e && getComputedStyle(e).display !== 'none' && !e.closest('[hidden]'); })()`);
+
+test('desktop: the first category, then the one named in the address, marked in the sidebar', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/');
+  assert.deepEqual(await shown(tab), ['words']);
+  assert.equal(await tab.eval(`document.querySelector('.gi-settings-nav a[aria-current]').textContent`), 'Words');
+  await tab.go(base + '/#sound');
+  assert.deepEqual(await shown(tab), ['sound']);
+  assert.equal(await visible(tab, '.gi-settings-back'), false, 'no back link beside a sidebar');
+  await tab.close();
+});
+
+test('search: rows filtered across categories, matches marked, keywords count, the query in the address', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/');
+  const type = (q) => tab.eval(`(() => { const s = document.querySelector('[data-gi-settings-search]'); s.value = ${JSON.stringify(q)}; s.dispatchEvent(new Event('input')); })()`);
+  await type('m');
+  assert.deepEqual(await shown(tab), ['sound'], 'Music and Theme match, Reading level does not');
+  assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-hit')].map((m) => m.textContent)`), ['M', 'm']);
+  await type('difficulty');
+  assert.deepEqual(await shown(tab), ['words'], 'a keyword finds its row');
+  assert.equal(await tab.eval('location.search'), '?q=difficulty');
+  await type('zebra');
+  assert.deepEqual(await shown(tab), []);
+  assert.equal(await tab.eval(`document.querySelector('.gi-settings-empty').hidden`), false);
+  await tab.reload();
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), 'zebra', 'the query survives a reload');
+  await type('');
+  assert.equal(await tab.eval(`document.querySelectorAll('.gi-settings-hit').length`), 0);
+  assert.equal(await tab.eval('location.search'), '');
+  await tab.close();
+});
+
+test('a save: Saved announced and the mark follows; a failed one puts the control back; Reset says reset', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await tab.go(base + '/#words');
+  const pick = (v) => tab.eval(`(() => { const s = document.getElementById('gi-set-level'); s.value = '${v}'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  const modified = () => tab.eval(`document.querySelector('[data-gi-row=level]').classList.contains('gi-settings-is-modified')`);
+  await pick(6);
+  await settle(120);
+  assert.deepEqual(await tab.eval('window.told'), [{ id: 'level', value: 6, reset: false }], 'a number, as its options are');
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-status]').textContent`), 'Saved');
+  assert.equal(await modified(), true);
+  assert.equal(await visible(tab, '[data-gi-row=level] .gi-settings-reset'), true);
+  await tab.eval('window.answer = false');
+  await pick(8);
+  await settle(120);
+  assert.equal(await tab.eval(`document.getElementById('gi-set-level').value`), '6', 'refused: back to the saved value');
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-status]').textContent`), 'Could not save');
+  await tab.eval('window.answer = true');
+  await tab.eval(`document.querySelector('[data-gi-row=level] .gi-settings-reset').click()`);
+  assert.deepEqual((await tab.eval('window.told')).at(-1), { id: 'level', value: 8, reset: true });
+  assert.equal(await modified(), false);
+  assert.equal(await tab.eval(`document.activeElement.id`), 'gi-set-level', 'focus goes to the control Reset changed');
+  await tab.close();
+});
+
+test('phone: the overview, a category with its back link, back to the overview', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 390, height: 800 } });
+  await tab.go(base + '/');
+  assert.equal(await visible(tab, '.gi-settings-nav'), true);
+  assert.equal(await visible(tab, '.gi-settings-pane'), false, 'the overview: categories only');
+  await tab.eval(`document.querySelector('.gi-settings-nav a[data-gi-cat=sound]').click()`);
+  await settle(100);
+  assert.equal(await visible(tab, '.gi-settings-side'), false);
+  assert.equal(await visible(tab, '.gi-settings-back'), true);
+  assert.equal(await tab.eval('document.activeElement.textContent'), 'Sound', 'focus on the category\'s title');
+  await tab.eval(`document.querySelector('.gi-settings-back').click()`);
+  await settle(100);
+  assert.equal(await visible(tab, '.gi-settings-nav'), true);
+  assert.equal(await tab.eval('location.hash'), '');
+  await tab.close();
+});
+
+test('a page redrawn in place and wired again keeps its category and search', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await ff.send('browsingContext.setViewport', { context: tab.context, viewport: { width: 1200, height: 800 } });
+  await tab.go(base + '/?q=mus#sound');
+  await tab.eval(`(() => {
+    const old = document.querySelector('[data-gi-settings]');
+    old.insertAdjacentHTML('afterend', GateIronSettings.settingsHtml({ categories: [{ id: 'sound', label: 'Sound', rows: [
+      { id: 'music', label: 'Music', type: 'switch', value: true, default: true },
+      { id: 'teacher', label: 'Teacher mode', type: 'switch', value: false, default: false }] }] }));
+    old.remove();
+    GateIronSettings.wire(document.querySelector('[data-gi-settings]'));
+  })()`);
+  assert.equal(await tab.eval(`document.querySelector('[data-gi-settings-search]').value`), 'mus');
+  assert.deepEqual(await tab.eval(`[...document.querySelectorAll('.gi-settings-row')].filter((r) => !r.hidden).map((r) => r.dataset.giRow)`), ['music']);
+  await tab.eval(`document.getElementById('gi-set-music').click()`);
+  assert.deepEqual((await tab.eval('window.told')).at(-1), { id: 'music', value: false, reset: false }, 'the new rows are wired');
+  await tab.close();
+});
+
+test('theme: the stored choice wins, set() changes and remembers it, System follows nothing forced', async (t) => {
+  if (!ff) { return t.skip('no Firefox'); }
+  const tab = await ff.tab();
+  await tab.go(base + '/dark');
+  assert.equal(await tab.eval(`document.documentElement.classList.contains('gi-dark')`), true);
+  assert.equal(await tab.eval(`getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()`), '#17140f');
+  await tab.eval(`GateIronTheme.set('light')`);
+  assert.equal(await tab.eval(`document.documentElement.classList.contains('gi-dark')`), false);
+  await tab.go(base + '/');
+  assert.equal(await tab.eval('GateIronTheme.get()'), 'light', 'with no stored choice, the browser\'s last one on the site');
+  await tab.eval(`GateIronTheme.set('dark')`);
+  await tab.go(base + '/');
+  assert.equal(await tab.eval(`document.documentElement.classList.contains('gi-dark')`), true);
+  await tab.eval(`GateIronTheme.set('nonsense')`);
+  assert.equal(await tab.eval('GateIronTheme.get()'), 'system');
+  await tab.close();
+});

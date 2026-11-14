@@ -154,32 +154,31 @@
 
 /* Warm charcoals rather than neutral greys, so clay and pine keep their
    temperature. Accents move a rung lighter; the dark rungs go muddy here. */
-/* Opt-in: page() adds .gi-dark-auto to <html> for darkMode: 'auto'. */
-@media (prefers-color-scheme: dark) {
-  :root.gi-dark-auto {
-    --bg: #17140f;
-    --surface: #211d17;
-    --surface-2: #2b2620;
-    --text: #ece5d8;
-    --text-muted: #a89d8c;
-    --accent: var(--clay-light);
-    --accent-hover: var(--clay-lighter);
-    --accent-on: #1a1611;
-    --bar-bg: rgba(33, 29, 23, 0.82);
-    --border-color: rgba(236, 229, 216, 0.14);
-    --border-strong: rgba(236, 229, 216, 0.3);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -14px rgba(0, 0, 0, 0.75);
-    --focus: var(--clay-lighter);
+/* theme.js puts .gi-dark on <html> for Dark, and for System on a computer set to dark. */
+:root.gi-dark {
+  color-scheme: dark;
+  --bg: #17140f;
+  --surface: #211d17;
+  --surface-2: #2b2620;
+  --text: #ece5d8;
+  --text-muted: #a89d8c;
+  --accent: var(--clay-light);
+  --accent-hover: var(--clay-lighter);
+  --accent-on: #1a1611;
+  --bar-bg: rgba(33, 29, 23, 0.82);
+  --border-color: rgba(236, 229, 216, 0.14);
+  --border-strong: rgba(236, 229, 216, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -14px rgba(0, 0, 0, 0.75);
+  --focus: var(--clay-lighter);
 
-    --ok: #9db08f;
-    --ok-bg: rgba(157, 176, 143, 0.16);
-    --warn: var(--ochre-light);
-    --warn-bg: rgba(230, 201, 138, 0.14);
-    --urgent: var(--clay-light);
-    --urgent-bg: rgba(207, 140, 109, 0.16);
-    --quiet: var(--ink-lightest);
-    --quiet-bg: rgba(236, 229, 216, 0.08);
-  }
+  --ok: #9db08f;
+  --ok-bg: rgba(157, 176, 143, 0.16);
+  --warn: var(--ochre-light);
+  --warn-bg: rgba(230, 201, 138, 0.14);
+  --urgent: var(--clay-light);
+  --urgent-bg: rgba(207, 140, 109, 0.16);
+  --quiet: var(--ink-lightest);
+  --quiet-bg: rgba(236, 229, 216, 0.08);
 }
 
 /* ---------------- the scale ----------------
@@ -281,6 +280,8 @@
 .gi-brand img { width: auto; display: block; }
 .gi-bar .gi-brand { min-height: var(--gi-bar-size); }
 .gi-bar .gi-brand img { height: calc(var(--gi-bar-size) * 0.6); }
+.gi-bar .gi-brand .gi-gate-on-dark, :root.gi-dark .gi-bar .gi-brand .gi-gate-on-light { display: none; }
+:root.gi-dark .gi-bar .gi-brand .gi-gate-on-dark { display: block; }
 .gi-wordmark {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 600;

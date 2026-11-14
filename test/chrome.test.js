@@ -133,7 +133,7 @@ test('the fonts carry their licences', () => {
 });
 
 test('no stylesheet fetches from a third party', () => {
-  for (const file of ['brand.css', 'chrome.css', 'contact.css']) {
+  for (const file of ['brand.css', 'chrome.css', 'contact.css', 'settings.css']) {
     const css = fs.readFileSync(path.resolve(__dirname, '..', 'assets', file), 'utf8');
     const urls = [...css.matchAll(/(?:url\(|@import\s+)\s*['"]?([^'")\s]+)/g)].map((m) => m[1]);
     for (const u of urls) {
@@ -201,10 +201,20 @@ test('another company\'s footer wears its own mark, not the gate', () => {
   assert.ok(!f.includes('gate-light.png') && !f.includes('<small>'));
 });
 
-test('dark is opt-in', () => {
-  assert.ok(!brand.page({ title: 't', assets: ASSETS }).includes('gi-dark-auto'));
-  assert.ok(brand.page({ title: 't', assets: ASSETS, darkMode: 'auto' })
-    .includes('<html lang="en" class="gi-dark-auto">'));
+test('a theme is opt-in: theme.js only when asked, the stored choice on <html>', () => {
+  const plain = brand.page({ title: 't', assets: ASSETS });
+  assert.ok(!plain.includes('theme.js') && !plain.includes('data-gi-theme'));
+  const browser = brand.page({ title: 't', assets: ASSETS, theme: true });
+  assert.ok(browser.includes('theme.js?v=7"></script>') && browser.includes('<html lang="en">'), 'true: the script, no stored choice');
+  assert.ok(brand.page({ title: 't', assets: ASSETS, theme: 'dark' }).includes('<html lang="en" data-gi-theme="dark">'));
+  assert.ok(!brand.page({ title: 't', assets: ASSETS, theme: 'purple' }).includes('theme.js'), 'an unknown theme is none');
+  assert.ok(browser.indexOf('theme.js') < browser.indexOf('menu.js'), 'before the deferred scripts');
+  assert.throws(() => brand.page({ title: 't', assets: ASSETS, darkMode: 'auto' }), /theme since 0\.23\.0/);
+});
+
+test('the bar carries both gates, the theme showing one; the footer only the light', () => {
+  const bar = brand.topBar({ product: 'GateIron, LLC', mark: 'gate', assets: ASSETS });
+  assert.ok(bar.includes('class="gi-gate-on-light" src="/brand/gate-dark.png?v=7"') && bar.includes('class="gi-gate-on-dark" src="/brand/gate-light.png?v=7"'));
 });
 
 test('a footer with nothing to show is no footer, and one with only fine print has no empty grid', () => {

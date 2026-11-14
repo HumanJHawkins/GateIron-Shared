@@ -1,6 +1,6 @@
 {
   "name": "gateiron-shared",
-  "version": "0.22.5",
+  "version": "0.23.0",
   "description": "GateIron's house style: palette, faces, top bar, footer and components, shared by every GateIron site.",
   "license": "MIT",
   "author": "GateIron, LLC",
@@ -11,6 +11,7 @@
     "./assets/*": "./assets/*",
     "./package.json": "./package.json",
     "./contact": "./contact.js",
+    "./settings": "./assets/settings.js",
     "./forms": "./assets/forms.js",
     "./returnTo": "./assets/returnTo.js",
     "./tabs": "./tabs.js",
