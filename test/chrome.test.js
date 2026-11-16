@@ -97,6 +97,13 @@ test('the classroom footer is a variant, and its links are passed in', () => {
   assert.ok(!/etsy|shop/i.test(f));
 });
 
+test('a footer link for adults only is marked, for chrome.css to hide from an account under 13', () => {
+  const f = brand.siteFooter({ links: [{ href: '/privacy', label: 'Privacy' }, { href: 'https://shop.example/', label: 'Shop', external: true, adults: true }] });
+  assert.ok(f.includes('<a href="/privacy">Privacy</a>'));
+  assert.ok(f.includes('rel="noopener" data-gi-adults>Shop</a>'));
+  assert.ok(/\[data-gi-under13\] \[data-gi-adults\] \{ display: none !important; \}/.test(fs.readFileSync(path.join(__dirname, '..', 'assets', 'chrome.css'), 'utf8')));
+});
+
 test('the skip link comes before the bar in the DOM', () => {
   const html = brand.page({ title: 't', bodyHtml: '', assets: ASSETS });
   assert.ok(html.indexOf('class="gi-skip-link"') < html.indexOf('<header class="gi-bar"'));
@@ -247,9 +254,9 @@ function selectorsOf(file) {
 }
 
 // A site's own .brand or .avatar must not reach into the bar, and the bar's must not reach out.
-test('chrome.css styles nothing but its own gi- classes and .btn', () => {
+test('chrome.css styles nothing but its own gi- classes and data-gi- attributes, and .btn', () => {
   const selectors = selectorsOf('chrome.css');
-  const foreign = selectors.filter((s) => !/^:root/.test(s) && !/\.gi-|^\.btn/.test(s));
+  const foreign = selectors.filter((s) => !/^:root/.test(s) && !/\.gi-|^\.btn|\[data-gi-/.test(s));
   assert.deepEqual(foreign, []);
   assert.ok(selectors.length > 50);
 });

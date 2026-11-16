@@ -470,6 +470,9 @@
 .btn-secondary { background: var(--accent); color: var(--accent-on); }
 .btn-secondary:hover { background: var(--accent-hover); color: var(--accent-on); }
 
+/* What an account under 13 never sees: a shop, a price, a sale (fillAccount's under13). */
+[data-gi-under13] [data-gi-adults] { display: none !important; }
+
 .btn-quiet { background: none; border-color: transparent; color: var(--text-muted); padding: 0.4em 0.6em; }
 .btn-quiet:hover { color: var(--text); background: var(--surface-2); }
 

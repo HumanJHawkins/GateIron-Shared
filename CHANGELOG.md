@@ -3,6 +3,12 @@
 Semver. Changing a token's value is a minor. Removing a token, renaming a
 class, or changing what a function returns is a major.
 
+## 0.27.0 — 2026-11-16
+
+- Under 13 (GN-2092): `fillAccount` with `account.under13: true` sets `<html data-gi-under13>`, and
+  `chrome.css` hides every `[data-gi-adults]` under it. `siteFooter` links take `adults: true`. A site
+  marks its shop, prices and sales with `data-gi-adults`.
+
 ## 0.26.0 — 2026-11-14
 
 - Settings page (GN-2066): a `controlHtml` row with `resettable: true` gets Modified and Reset.

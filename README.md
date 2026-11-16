@@ -81,6 +81,12 @@ chip.querySelector('[data-gi-action="sign-out"]')?.addEventListener('click', sig
 `account` and `signIn` take exactly what `topBar` takes. A menu entry `{ label, button: 'sign-out' }`
 is a `<button data-gi-action="sign-out">` the site binds itself.
 
+An account under 13 sees nothing that sells. Mark every bar action, footer link or page element that
+does with `data-gi-adults` (`siteFooter` links take `adults: true`), and pass `account.under13: true`:
+fillAccount sets `<html data-gi-under13>`, and `chrome.css` hides them all. A page the server already
+knows is an under-13 account's carries the attribute on its `<html>` from the start, so nothing shows
+before the script runs.
+
 Once the page knows who it shows, it watches for a sign-out made in another tab, of this site or of
 any GateIron product:
 
@@ -315,7 +321,8 @@ Pass `avatarSrc` with the picture from the person's sign-in whenever there is on
 
 ### `siteFooter(opts)`
 
-`brand`, `links`, `linksLabel`, `finePrint`, `variant: 'classroom'`, `assets`.
+`brand`, `links`, `linksLabel`, `finePrint`, `variant: 'classroom'`, `assets`. A link is
+`{ href, label, external, adults }`; `adults: true` hides it from an account under 13.
 
 `brand: 'gateiron'` is GateIron, LLC's company block with the gate. Another
 company passes `{ href, name, locality, mark: 'gate' }` or `{ href, name, locality, markHtml }`.

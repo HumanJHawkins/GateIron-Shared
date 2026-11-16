@@ -110,7 +110,7 @@ function siteFooter(opts) {
     + (b.locality ? '<small>' + esc(b.locality) + '</small>' : '') + '</span></a>';
   const links = (o.links || []).map((l) => {
     const rel = l.external ? ' target="_blank" rel="noopener"' : '';
-    return '<a href="' + esc(l.href) + '"' + rel + '>' + esc(l.label) + '</a>';
+    return '<a href="' + esc(l.href) + '"' + rel + (l.adults ? ' data-gi-adults' : '') + '>' + esc(l.label) + '</a>';
   }).join('');
   const fine = (o.finePrint || []).map((t) => '<span>' + esc(t) + '</span>').join('');
   // Nothing to show is no footer, not an empty band a site would not notice.

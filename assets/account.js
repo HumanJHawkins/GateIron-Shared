@@ -145,9 +145,13 @@
       + '</details>';
   }
 
-  /** Fills a .gi-account-slot in the browser; returns the chip or the sign-in button. */
+  /**
+   * Fills a .gi-account-slot in the browser; returns the chip or the sign-in button. `account.under13`
+   * marks the page's <html data-gi-under13>, which hides every [data-gi-adults] (chrome.css).
+   */
   function fillAccount(slot, opts) {
     var o = opts || {};
+    if (typeof document !== 'undefined' && document.documentElement) { document.documentElement.toggleAttribute('data-gi-under13', !!(o.account && o.account.under13)); }
     slot.innerHTML = o.account || o.signIn ? accountHtml(o) : '';
     return slot.firstElementChild;
   }

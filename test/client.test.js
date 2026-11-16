@@ -27,6 +27,21 @@ test('account.js in a page draws the chip the server draws', () => {
   assert.equal(api.fillAccount(slot, {}), null);
 });
 
+test('fillAccount marks the page for an account under 13, and clears the mark for any other', () => {
+  const attrs = new Set();
+  const win = { document: { addEventListener: () => {}, documentElement: { toggleAttribute: (n, on) => { if (on) { attrs.add(n); } else { attrs.delete(n); } } } } };
+  win.self = win;
+  vm.runInNewContext(source('account.js'), win);
+  const slot = { innerHTML: null, get firstElementChild() { return null; } };
+  win.GateIronChrome.fillAccount(slot, { account: { name: 'Kid', under13: true } });
+  assert.ok(attrs.has('data-gi-under13'));
+  win.GateIronChrome.fillAccount(slot, { account: { name: 'Grown' } });
+  assert.ok(!attrs.has('data-gi-under13'));
+  win.GateIronChrome.fillAccount(slot, { account: { name: 'Kid', under13: true } });
+  win.GateIronChrome.fillAccount(slot, { signIn: { href: '/signin' } });
+  assert.ok(!attrs.has('data-gi-under13'), 'signed out is not under 13');
+});
+
 test('watchAccount reloads a page whose account signed out in another tab, and nothing else', async () => {
   const run = async (who, answer, base) => {
     const posted = []; const listeners = {}; let reloaded = 0; let asked = 0; let channel = null; let url = null;
